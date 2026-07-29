@@ -12,7 +12,7 @@ import argparse
 import pathlib
 import sys
 
-from . import codec, plugindiff, reader, writer
+from . import codec, decisions, plugindiff, reader, writer
 from .convert import plugin as convert_plugin
 
 
@@ -139,6 +139,48 @@ def cmd_diff(args):
     return 0 if result.identical else 1
 
 
+def _candidate_tags(myth2_dir):
+    """Tag ids and names by type, gathered from a Myth II install.
+
+    Used to show a human their options when they have to choose a substitute
+    for a TFL tag Myth II has no equivalent of.
+    """
+    candidates = {}
+    counts = {}
+    root = pathlib.Path(myth2_dir)
+    sources = [root / "tags", root / "plugins", root]
+    for source in sources:
+        if not source.is_dir():
+            continue
+        for path in sorted(source.iterdir()):
+            if not path.is_file():
+                continue
+            try:
+                data = path.read_bytes()
+                reader.detect_game_version(data)
+                mono = reader.read_bytes(data, path.name)
+            except (OSError, reader.FormatError, ValueError):
+                continue
+            if not mono.is_sb:
+                continue
+            for tag in mono.tags:
+                key = (tag.tag_type, tag.tag_id)
+                counts[key] = counts.get(key, 0) + 1
+                candidates.setdefault(tag.tag_type, {}).setdefault(
+                    tag.tag_id, tag.name
+                )
+    return {
+        tag_type: sorted(
+            (
+                (codec.decode_string(tag_id), name, counts[(tag_type, tag_id)])
+                for tag_id, name in by_id.items()
+            ),
+            key=lambda row: -row[2],
+        )
+        for tag_type, by_id in candidates.items()
+    }
+
+
 def cmd_convert(args):
     if args.out.exists() and not args.force:
         print(
@@ -146,9 +188,30 @@ def cmd_convert(args):
             file=sys.stderr,
         )
         return 2
+
+    id_map = None
+    context = None
+    name = args.name
+    if args.decisions:
+        try:
+            chosen = decisions.load(args.decisions)
+        except (OSError, decisions.DecisionsError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        id_map = chosen.id_map()
+        context = convert_plugin.ConversionContext(
+            use_vtfl=chosen.use_vtfl, mesh_defaults=chosen.mesh_defaults
+        )
+        name = name or chosen.plugin_name
+        print(
+            f"Using decisions from {args.decisions}: {len(id_map)} tag mappings, "
+            f"{len(chosen.unresolved())} still undecided, "
+            f"{len(chosen.mesh_defaults)} mesh overrides, vtfl={chosen.use_vtfl}"
+        )
+
     try:
         report, written = convert_plugin.convert_file(
-            args.inp, args.out, name=args.name
+            args.inp, args.out, id_map=id_map, name=name, context=context
         )
     except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -157,10 +220,26 @@ def cmd_convert(args):
     for line in convert_plugin.format_report(report, str(args.inp), str(args.out)):
         print(line)
     print(f"\nWrote {written:,} bytes.")
-    if report.passed_through():
+
+    if args.emit_decisions:
+        candidates = {}
+        if args.myth2_dir:
+            print(f"Scanning {args.myth2_dir} for substitute candidates...")
+            candidates = _candidate_tags(args.myth2_dir)
+        stub = decisions.build_stub(
+            report, report.unresolved, candidates, source_name=str(args.inp)
+        )
+        args.emit_decisions.write_text(stub, encoding="utf-8")
+        print(
+            f"Wrote decisions template to {args.emit_decisions} "
+            f"({len(report.unresolved)} unresolved references to review). "
+            f"Edit it, then re-run with --decisions."
+        )
+
+    if report.passed_through() or report.unresolved:
         print(
             "This is NOT a playable plugin yet: passed-through tag bodies are still "
-            "in TFL format, and it has no entrypoints."
+            "in TFL format, and it references tags it does not contain."
         )
     return 0
 
@@ -201,6 +280,18 @@ def build_parser():
     con.add_argument("--out", required=True, type=pathlib.Path)
     con.add_argument("--name", help="plugin name to write into the header")
     con.add_argument("--force", action="store_true", help="overwrite an existing output")
+    con.add_argument(
+        "--decisions", type=pathlib.Path,
+        help="apply a decisions file (tag mappings, mesh overrides, options)",
+    )
+    con.add_argument(
+        "--emit-decisions", type=pathlib.Path, metavar="FILE",
+        help="write a decisions template listing everything needing a human choice",
+    )
+    con.add_argument(
+        "--myth2-dir", type=pathlib.Path, metavar="DIR",
+        help="a Myth II install, scanned to suggest substitutes in --emit-decisions",
+    )
     con.set_defaults(func=cmd_convert)
 
     return parser

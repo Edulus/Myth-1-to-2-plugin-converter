@@ -127,6 +127,20 @@ def convert(body, context=None):
 
     values = {field: getattr(tfl, field) for field in SHARED_FIELDS}
     values.update(SB_ONLY_DEFAULTS)
+
+    # A decisions file may override any synthesised field -- these are the
+    # values with no TFL source, so a human who knows the level may well know
+    # better than the measured mode.
+    overrides = dict(getattr(context, "mesh_defaults", None) or {}) if context else {}
+    for field, value in overrides.items():
+        if field not in SB_ONLY_DEFAULTS:
+            warnings.append(
+                f"decisions file overrides '{field}', which is not a synthesised "
+                f"mesh field; ignored"
+            )
+            continue
+        values[field] = value
+
     values["flags"], flag_warnings = _convert_flags(tfl.flags, use_vtfl)
     warnings.extend(flag_warnings)
 

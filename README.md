@@ -57,7 +57,34 @@ python -m src info <container>            # header, entrypoints and tag list
 python -m src info --types <container>     # summarise by tag type
 python -m src roundtrip <container|dir>... # verify read/write is byte-exact
 python -m src diff <a> <b>                 # compare two containers tag by tag
+python -m src convert --in <gor> --out <plugin>   # TFL -> Myth II
 ```
+
+### The decisions file
+
+Most of this converter has right answers, verified against real data. Some things do not,
+and no measurement will settle them -- which Myth II tag stands in for a TFL tag that has
+no equivalent, which synthesised values to accept, whether to enable vTFL. Those are
+judgement calls for someone who knows the level.
+
+So the tool writes them down instead of guessing silently:
+
+```sh
+# Convert, and emit a template listing every decision it could not make.
+# --myth2-dir is scanned to suggest substitutes.
+python -m src convert --in plugin.gor --out out.plugin     --emit-decisions choices.toml --myth2-dir "/path/to/Myth II"
+
+# Edit choices.toml, then feed it back.
+python -m src convert --in plugin.gor --out out.plugin --decisions choices.toml
+```
+
+The template is commented TOML carrying the evidence behind each guess -- how many of the
+reference port's 40 meshes agreed on a default, which candidate tags exist in your install
+and how widely they are used. Entries marked `CHECK` were not unanimous.
+
+Conversion still runs with decisions unmade; it reports them rather than refusing. A file
+rather than a GUI because decisions are then durable, diffable, reviewable, and shareable
+between people converting different plugins.
 
 `roundtrip` accepts a directory and skips anything in it that is not a Myth container
 (readmes, resource forks, `plugin cache`), so you can point it straight at a plugins folder.

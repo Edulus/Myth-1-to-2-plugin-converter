@@ -21,7 +21,7 @@ the game's menu -- see `entrypoints`.
 
 from dataclasses import dataclass, field
 
-from .. import codec, formats, idmap as idmap_module, reader, writer
+from .. import codec, formats, idmap as idmap_module, mesh as mesh_module, reader, writer
 from . import entrypoints, headers, tags as tag_converters
 
 
@@ -54,6 +54,7 @@ class ConversionReport:
     outcomes: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
     entrypoints: list = field(default_factory=list)
+    unresolved: dict = field(default_factory=dict)
     source_tags: int = 0
 
     def converted(self):
@@ -77,7 +78,40 @@ class ConversionReport:
         return [(o, w) for o in self.outcomes for w in o.warnings]
 
 
-def convert_container(mono, id_map=None, name=None, description=b""):
+class ConversionContext:
+    """Settings the per-tag-type converters may consult."""
+
+    def __init__(self, use_vtfl=False, mesh_defaults=None):
+        self.use_vtfl = use_vtfl
+        self.mesh_defaults = mesh_defaults or {}
+
+
+def unresolved_references(mono, id_map=None):
+    """Tags the container's mesh headers point at but do not contain.
+
+    Returns ``{(tag_type, tag_id): mesh_count}``. Mesh headers only for now --
+    other tag types hold references too (mythextract ``tag2local.py`` is the
+    full list) but their bodies are not parsed yet, so this undercounts and
+    says so rather than pretending to be complete.
+    """
+    present = {(t.tag_type, t.tag_id) for t in mono.tags}
+    missing = {}
+    for tag in mono.by_type(b"mesh"):
+        try:
+            header = mesh_module.parse_header(tag.body, mono.game_version)
+        except ValueError:
+            continue
+        for tag_type, tag_id, _field in mesh_module.referenced_tags(
+            header, mono.game_version
+        ):
+            if id_map is not None:
+                tag_id = id_map.map_id(tag_type, tag_id)
+            if (tag_type, tag_id) not in present:
+                missing[(tag_type, tag_id)] = missing.get((tag_type, tag_id), 0) + 1
+    return missing
+
+
+def convert_container(mono, id_map=None, name=None, description=b"", context=None):
     """Convert a parsed TFL container. Returns ``(sb_monolith, report)``."""
     if not mono.is_tfl:
         raise ConversionError(
@@ -85,6 +119,7 @@ def convert_container(mono, id_map=None, name=None, description=b""):
         )
 
     id_map = id_map if id_map is not None else idmap_module.default_map()
+    context = context if context is not None else ConversionContext()
     report = ConversionReport(source_tags=len(mono.tags))
 
     if len(mono.tags) > headers.INT16_MAX:
@@ -98,7 +133,7 @@ def convert_container(mono, id_map=None, name=None, description=b""):
         converter = tag_converters.converter_for(tag.tag_type)
 
         if converter is not None:
-            body, body_warnings = converter.convert(tag.body)
+            body, body_warnings = converter.convert(tag.body, context)
             status = "converted"
         else:
             body, body_warnings = tag.body, []
@@ -148,6 +183,16 @@ def convert_container(mono, id_map=None, name=None, description=b""):
     )
     report.warnings.extend(mono_warnings)
 
+    report.unresolved = unresolved_references(mono, id_map=id_map)
+    if report.unresolved:
+        total = sum(report.unresolved.values())
+        report.warnings.append(
+            f"{len(report.unresolved)} tags referenced by mesh headers are not in "
+            f"this plugin ({total} references). A TFL plugin is not self-contained; "
+            f"supply them from a converted TFL tagset, or map them with a decisions "
+            f"file (--emit-decisions)"
+        )
+
     unsupported = report.unsupported_types()
     if unsupported:
         listed = ", ".join(
@@ -176,14 +221,14 @@ def convert_container(mono, id_map=None, name=None, description=b""):
 MAX_PLUGIN_FILENAME = 32
 
 
-def convert_file(in_path, out_path, id_map=None, name=None, description=b""):
+def convert_file(in_path, out_path, id_map=None, name=None, description=b"", context=None):
     """Convert a TFL container file into a Myth II plugin file.
 
     Returns ``(report, bytes_written)``.
     """
     mono = reader.read(in_path)
     sb_mono, report = convert_container(
-        mono, id_map=id_map, name=name, description=description
+        mono, id_map=id_map, name=name, description=description, context=context
     )
 
     filename = getattr(out_path, "name", str(out_path))
@@ -255,6 +300,20 @@ def format_report(report, in_name="", out_name=""):
                 f" {outcome.label:<12}{rename:<8} {outcome.size_after:>8}B "
                 f"{change:<10} {outcome.name}"
             )
+
+    if report.unresolved:
+        lines.append("")
+        lines.append("Referenced but NOT PRESENT (needs a tagset, or a decisions file)")
+        lines.append("-" * 72)
+        for (tag_type, tag_id), count in sorted(
+            report.unresolved.items(), key=lambda kv: (-kv[1], kv[0])
+        )[:20]:
+            lines.append(
+                f" {codec.decode_string(tag_type)}.{codec.decode_string(tag_id):<6} "
+                f"referenced by {count} mesh(es)"
+            )
+        if len(report.unresolved) > 20:
+            lines.append(f" ... and {len(report.unresolved) - 20} more")
 
     unsupported = report.unsupported_types()
     if unsupported:
