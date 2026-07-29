@@ -385,3 +385,27 @@ To read and byte-exactly rewrite an SB plugin:
 format changes with fields that have no TFL source and must be defaulted. `mesh` is the
 hardest. Anything we default rather than translate is a lossy field and belongs in the
 README support matrix as such.
+
+---
+
+## 9. Addendum — learned while building Phase 1
+
+Two container-layout subtleties that only surfaced once a packer existed. Both are
+properties of the format, not of our code, so they are recorded here rather than in a
+commit message.
+
+1. **A tag's body offset does not uniquely identify its body.** Two directory entries can
+   legitimately share a `tag_data_offset` for two unrelated reasons: genuine
+   *deduplication* (several tags aliasing one body), and a **zero-length body**, which
+   necessarily sits at the same offset as whatever follows it without being related to it.
+   A packer that deduplicates on offset alone will silently drop the following tag's real
+   body. `src/writer.py` keys on `(offset, length)` and skips empty bodies, and preserves
+   directory order for ties.
+
+2. **Repacking must preserve body aliasing, not just body content.** Expanding aliased
+   bodies into separate copies produces a container that is *valid* but not byte-exact, and
+   larger than the original. Since we cannot compute the container checksums (§6), silently
+   changing the file size is exactly the kind of drift we cannot verify away later.
+
+Neither is visible from an extractor's point of view, which is why mythextract has no
+reason to encode them.
