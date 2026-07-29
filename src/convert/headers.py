@@ -127,17 +127,18 @@ def convert_mono_header(tfl_mono, tag_count, entry_count, name=None, description
       bitfield (load-order and vTFL hints), not a version, so carrying TFL's
       ``version = 1`` across would set ``TAGSETS_LAST`` by accident.
     * ``checksum`` and ``header_checksum`` are zeroed. Nobody has worked out how
-      Myth II computes them (NOTES.md section 6) and TFL's single uint32 checksum
-      is a different field of a different width. Zero is at least visibly wrong
-      rather than plausibly wrong.
+      Myth II computes them, and it turns out nobody needs to: a plugin built by
+      this tool with both fields zeroed loads and plays in Myth II 1.8.5, so
+      neither is validated (verified in-engine, NOTES.md section 11). TFL's
+      single uint32 checksum is a different field of a different width anyway.
     * ``size`` is filled in by the writer, which is the only thing that knows the
       final layout.
 
     Returns ``(sb_mono_header_record, warnings)``.
     """
     warnings = [
-        "container checksum and header_checksum written as zero -- the algorithm "
-        "is unknown (NOTES.md section 6)"
+        "container checksum and header_checksum written as zero -- Myth II 1.8.5 "
+        "does not validate either (verified in-engine, NOTES.md section 11)"
     ]
     if entry_count == 0:
         warnings.append(

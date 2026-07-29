@@ -244,6 +244,26 @@ class TestConvertFile(unittest.TestCase):
             self.assertEqual(len(fixtures.SAMPLE_TAGS), len(result.tags))
             self.assertEqual(len(fixtures.SAMPLE_TAGS), len(report.outcomes))
 
+    def test_warns_when_output_filename_is_too_long_for_myth_ii(self):
+        """Myth II silently ignores plugins with filenames over 32 characters --
+        verified in-engine. Nothing reports it, so we have to."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = pathlib.Path(tmp)
+            src = tmp / "in.gor"
+            src.write_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS))
+
+            short = tmp / ("s" * 32)
+            report, _ = convert_plugin.convert_file(src, short)
+            self.assertFalse([w for w in report.warnings if "filename" in w])
+
+            long = tmp / ("x" * 33)
+            report, _ = convert_plugin.convert_file(src, long)
+            warned = [w for w in report.warnings if "filename" in w]
+            self.assertEqual(1, len(warned))
+            self.assertIn("33 characters", warned[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -320,12 +320,9 @@ and correct offsets. **That packer is the core new work of this project**, along
 
 ## 6. Open questions to resolve before/while building
 
-1. **What are `checksum` and `header_checksum`, and does Myth II validate them?**
-   The highest-risk unknown. Phase 1 sidesteps it entirely (a byte-exact round-trip
-   preserves the originals), but Phase 2 cannot. Plan: build a plugin with a deliberately
-   wrong checksum and see whether 1.8.x loads it; if it does, we can defer. If it doesn't,
-   we reverse it from a corpus of known-good plugins. This is a real risk to Phase 2 and
-   should not be discovered late.
+1. ~~**What are `checksum` and `header_checksum`, and does Myth II validate them?**~~
+   **ANSWERED — Myth II 1.8.5 does not validate either.** See §11. We never have to compute
+   them, which removes what was the single biggest risk to the whole project.
 2. **Do TFL `tag_version` and `flags` (dropped by `tfl2sb`) carry anything we need?**
    Survey the distribution of both fields across a real TFL install.
 3. **Are `.256`, `soun`, `proj`, `core` bodies genuinely version-identical?** The reference
@@ -480,3 +477,44 @@ Those are hand-made conversions of exactly the content we are trying to convert
 automatically, which makes them the reference to diff our output against -- and a likely
 source of real TFL→SB tag ID mappings for `src/idmap.py` beyond the 25 levels in
 `tflmeshtext2sb.py`.
+
+---
+
+## 11. In-engine experiment — checksums are not validated
+
+Run against **Myth II 1.8.5 build 471b** on Windows, using *The Greatest Library*
+(487,770 bytes, 102 tags, 1 entrypoint) as the subject. Each variant was placed in the
+game's `plugins` folder and selected on its own from the New Game screen's Campaign list.
+
+| Variant | Change | Listed? | Loads and plays? |
+|---|---|---|---|
+| 1 | one byte flipped in `checksum` | yes | — |
+| 2 | one byte flipped in `header_checksum` | yes | — |
+| 3 | repacked by `src/writer.py`, source checksums carried over (now stale: 448 bytes of padding dropped, `size` changed) | yes | **yes** |
+| 4 | repacked by `src/writer.py` with **both checksums zeroed** | yes | **yes** |
+
+**Conclusion: neither checksum field is validated at scan or at load.** Variant 4 is the
+decisive one — it is exactly what this tool emits, and it plays. Writing zeros is
+therefore correct and honest, and the algorithm never needs reversing.
+
+Variant 3 also settles a second question: it drops the 448 bytes of zero padding that sat
+between the container's tag directory and its first tag body, and the game does not care.
+That matches the corpus, where 51 of 186 entrypoint-bearing plugins have no such padding
+at all. It is authoring slack, not structure. Our reader preserves it for byte-exact
+round-trips and our writer drops it when building canonically; both are fine.
+
+### A practical gotcha, found the hard way
+
+Variant 3 initially did not appear in the Campaign list at all, and the padding looked like
+the culprit. It was not. The file was named `ZZ test 3 - rebuilt by our packer` — **33
+characters**. Variant 2, at 31 characters, listed fine. Renaming it to 20 characters made it
+appear immediately, with no change to its contents.
+
+**Myth II silently ignores a plugin whose *filename* exceeds 32 characters.** That is the
+same width as the container's internal `name` field, so the limit is presumably shared.
+Nothing reports it; the plugin simply is not there. `convert` now warns when the output
+filename would exceed 32 characters.
+
+Worth recording as a caution about method, too: the corpus survey that "explained" the
+missing plugin via padding was measuring a real thing that turned out to be irrelevant. The
+experiment that settled it was renaming one file.

@@ -104,6 +104,22 @@ the pass-through bodies above, and entrypoint synthesis -- a TFL `.gor` has no e
 and a Myth II plugin needs one per playable mesh or the level never reaches the menu. That
 needs the mesh converter.
 
+The container side, however, is confirmed working: a plugin built by `src/writer.py` with
+**both checksums zeroed** loads and plays in Myth II 1.8.5. See below.
+
+## Verified in-engine
+
+Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the subject
+([NOTES.md](NOTES.md) section 11):
+
+- **Neither container checksum is validated.** A plugin we built, with `checksum` and
+  `header_checksum` both zero, loads and plays. This removes what was the project's biggest
+  risk -- the algorithm never needs reversing.
+- **Padding between the tag directory and the first body is optional.** Dropping it changes
+  nothing, matching the corpus where 51 of 186 entrypoint-bearing plugins have none.
+- **Myth II silently ignores a plugin whose filename exceeds 32 characters.** Nothing
+  reports this; the plugin simply never appears. `convert` warns about it.
+
 ## Layout
 
 ```

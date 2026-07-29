@@ -161,6 +161,13 @@ def convert_container(mono, id_map=None, name=None, description=b""):
     return sb_mono, report
 
 
+# Myth II silently ignores a plugin whose filename is longer than this. Verified
+# in-engine: a 33-character file did not appear in the Campaign list at all, and
+# appeared immediately when renamed to 20, with no change to its contents. Same
+# width as the container's internal `name` field. See NOTES.md section 11.
+MAX_PLUGIN_FILENAME = 32
+
+
 def convert_file(in_path, out_path, id_map=None, name=None, description=b""):
     """Convert a TFL container file into a Myth II plugin file.
 
@@ -170,6 +177,14 @@ def convert_file(in_path, out_path, id_map=None, name=None, description=b""):
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description
     )
+
+    filename = getattr(out_path, "name", str(out_path))
+    if len(filename) > MAX_PLUGIN_FILENAME:
+        report.warnings.append(
+            f"output filename is {len(filename)} characters; Myth II silently "
+            f"ignores plugins with filenames over {MAX_PLUGIN_FILENAME}. Rename it "
+            f"or the game will not list it at all."
+        )
     # A built container has no source layout, so bodies are packed canonically.
     data = writer.pack(sb_mono, preserve_layout=False)
 

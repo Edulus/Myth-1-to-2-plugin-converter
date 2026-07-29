@@ -16,10 +16,11 @@ Two things this deliberately does **not** do:
 
 * **Checksums are carried through untouched.** The SB header's ``checksum`` and
   ``header_checksum`` are 4 bytes each and nothing in mythextract computes
-  either; the algorithm is unknown (NOTES.md section 6). Preserving the source
-  values is what makes a byte-exact round-trip possible, and is honest -- a
-  wrong-but-plausible checksum would be worse than an unchanged one. Any tool
-  that *builds* a plugin from converted tags has to solve this first.
+  either; the algorithm is unknown. Preserving the source values is what makes a
+  byte-exact round-trip possible. It also turns out to be sufficient: Myth II
+  1.8.5 validates neither field, so a repacked plugin whose checksums no longer
+  match its contents loads and plays normally (verified in-engine, NOTES.md
+  section 11). Nothing here needs to compute them.
 
 * **Bodies are written verbatim.** Offsets *inside* a tag body are relative to
   the body, not the file (verified in NOTES.md section 3), so moving a tag within
