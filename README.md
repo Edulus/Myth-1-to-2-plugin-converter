@@ -124,6 +124,14 @@ Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the 
   nothing, matching the corpus where 51 of 186 entrypoint-bearing plugins have none.
 - **Myth II silently ignores a plugin whose filename exceeds 32 characters.** Nothing
   reports this; the plugin simply never appears. `convert` warns about it.
+- **Only plugins with no entrypoints can be activated as tagsets.** A plugin with
+  entrypoints is a *campaign*, and campaigns are single-select -- so two of them cannot load
+  together. Stripping entrypoints with `src/writer.py` turns one into a tagset, which is how
+  the stock-tag dependency problem below can be worked around.
+- **Supplying the stock TFL tags does resolve the dependency problem.** With a converted
+  TFL port loaded as a tagset, the missing-tag errors disappear and loading proceeds to the
+  next layer -- a crash in the engine's `byte_swap_data` while reading the mesh's data
+  blocks, which are still TFL-shaped. See [NOTES.md](NOTES.md) section 13.
 
 ## Layout
 

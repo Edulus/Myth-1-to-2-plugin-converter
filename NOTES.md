@@ -595,3 +595,67 @@ lossy substitution.
 Note this is orthogonal to body conversion: the 73 meshes, 17 `mons` and 90 `.256` tags
 that *are* in the plugin still need their bodies converted regardless. The dependency
 problem blocks end-to-end testing, not the remaining Phase 3 work.
+
+---
+
+## 13. In-engine experiment 2 — dependencies resolve; mesh sub-blocks do not
+
+Myth II 1.8.5 build 471b, converted *Sir Mauriac's Tale* plus a stock-tag tagset.
+
+### Only plugins without entrypoints can be tagsets
+
+The New Game screen's `Tagsets` dialog lists nothing matching "fallen", even though
+`Magma - The Fallen Lords v1.9` is installed. Its 40 entrypoints make it a *campaign*, and
+the Campaign list is single-select, so two entrypoint-bearing plugins cannot load together.
+
+The workaround is one line with our own tools: read the port, drop its entrypoints, pack it
+back out.
+
+```python
+m = reader.read(port_path)
+m.entrypoints = []
+writer.pack(m, preserve_layout=False)
+```
+
+The result — 2,110 tags, 328 MB — is offered by the game as a tagset and loads. That is
+also a useful independent check on `src/writer.py`: it rebuilt a third-party 320 MB
+container with a structural change and the engine accepted it, banner artwork and all.
+
+### Dependency resolution works
+
+With that tagset active alongside the converted plugin, the log shows both loading:
+
+```
+Starting mesh "Wild River" with 2 plugins...
+	ZZ TFL stock tagset
+	ZZ Mauriac TFL2SB
+```
+
+and **the `couldn't read header for media definition 'mawa'` error is gone**. Supplying the
+stock TFL tags from a converted port resolves the §12 dependency problem. Route 2 is viable.
+
+### The next blocker: mesh sub-block layout
+
+It now crashes deeper in:
+
+```
+Myth Crashed: EXCEPTION_ACCESS_VIOLATION
+ 0 __byte_swap_data + 0x0089 (corelibrary\cseries\byte_swapping.c:187)
+ 1 _byte_swap_data + 0x000d (corelibrary\cseries\byte_swapping.c:72)
+ 2 _initialize_mesh_for_new_map + 0x0102 (myth2code\mesh.c:447)
+ 3 _initialize_myth_for_new_map + 0x0180 (myth2code\myth.c:515)
+```
+
+Myth stores tags big-endian and byte-swaps them on load, driven by a per-structure format
+description. A fault *inside* `byte_swap_data`, reached from `initialize_mesh_for_new_map`,
+means the engine is walking the mesh's data blocks with Myth II's field description over
+TFL-shaped bytes and running off the end.
+
+This is exactly the scope `src/convert/tags/mesh.py` declines to handle and reports: the
+1024-byte header is converted, everything after it — terrain, marker palette, markers, map
+actions, media coverage, LOD data — is copied verbatim. The crash confirms that is not
+merely lossy but fatal, and identifies the mesh body sub-blocks as the next piece of work.
+
+Progression across the two experiments is worth noting as a method: each fix moved the
+failure one layer deeper and the engine named the layer each time. The log is a better
+oracle than any amount of static analysis of the format.
