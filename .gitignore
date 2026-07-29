@@ -1,0 +1,44 @@
+# Prior-art clone -- someone else's repository, never committed here
+reference/
+
+# Build / run output
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------
+# Game data / copyrighted Bungie assets -- NEVER commit these
+# ---------------------------------------------------------------
+# Myth TFL monolith tagfiles
+*.gor
+# Myth II plugins / monoliths
+*.plugin
+*.plg
+*.tags
+# Extracted tag trees and loose tags
+tags/
+plugins/
+cutscenes/
+local/
+# Media ripped from game data
+*.aifc
+*.aiff
+*.256
+*.mp4
+*.smk
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
