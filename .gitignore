@@ -2,7 +2,7 @@
 reference/
 
 # Build / run output
-output/
+/output/
 
 # Python
 __pycache__/
@@ -25,11 +25,12 @@ dist/
 *.plugin
 *.plg
 *.tags
-# Extracted tag trees and loose tags
-tags/
-plugins/
-cutscenes/
-local/
+# Extracted tag trees and loose tags. Anchored to the repo root with a leading
+# slash: an unanchored "tags/" also matches src/convert/tags/, which is source.
+/tags/
+/plugins/
+/cutscenes/
+/local/
 # Media ripped from game data
 *.aifc
 *.aiff
