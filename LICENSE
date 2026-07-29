@@ -19,30 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
---------------------------------------------------------------------------------
-
-NOTICE -- Prior art and acknowledgements
-
-This project builds directly on the format research, reverse engineering, and
-reference implementation published in:
-
-    jwheare/mythextract
-    https://github.com/jwheare/mythextract
-    MIT License, Copyright (c) 2025 James Wheare
-
-mythextract is the source of our understanding of the Myth TFL and Myth II
-monolith container layout, the TFL and SB tag header structures, the TFL-to-SB
-tag header conversion, and the written format notes in its `docs/` directory.
-Any code in this repository that is derived from or closely follows mythextract
-remains subject to its MIT license, reproduced in substance above, and is
-credited in-place at the relevant source files.
-
-mythextract is not vendored or redistributed here. It is cloned into a
-git-ignored `reference/` directory for study only.
-
---------------------------------------------------------------------------------
-
-Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their
-respective rights holders. This project is an unofficial, non-commercial
-interoperability tool. It ships no game data or other copyrighted assets.

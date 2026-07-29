@@ -149,3 +149,17 @@ No copyrighted Bungie game data (plugins, `.gor` monoliths, extracted tags, soun
 is ever committed to this repository. `.gitignore` is set up to keep it out. Tests read
 from paths supplied at runtime and skip when absent. You supply your own legally obtained
 Myth installation when running the tool.
+
+## License and credits
+
+MIT -- see [LICENSE](LICENSE).
+
+This project would not exist without [jwheare/mythextract](https://github.com/jwheare/mythextract)
+(MIT, © 2025 James Wheare), which is the source of the format research this builds on.
+[NOTICE](NOTICE) records the attribution and the trademark position;
+[NOTES.md](NOTES.md) documents what was taken from it, file by file, with citations at
+each use site in the source.
+
+Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights
+holders. This is an unofficial, non-commercial interoperability tool, not affiliated with
+or endorsed by any rights holder.
