@@ -52,6 +52,15 @@ Python 3.12+. No dependencies -- standard library only, no build step.
 
 ## The app
 
+**Windows, no Python yet:** double-click [`launch.bat`](launch.bat). It looks for Python
+3.12+ and, if it can't find one, installs it via `winget` (built into current Windows) and
+tells you to run it again. Windows may warn that the script is from an unidentified
+publisher the first time -- click **More info -> Run anyway**; there is no code signing on
+a community tool like this one. The one-time detection logic lives in
+[`scripts/launch.ps1`](scripts/launch.ps1).
+
+**Already have Python (any OS):**
+
 ```sh
 python -m src studio
 ```
