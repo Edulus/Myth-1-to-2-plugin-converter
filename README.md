@@ -21,22 +21,29 @@ tag *header* from TFL to SB form (`myth_headers.tfl2sb`). What it has no code pa
 all is **writing a monolithic container**. Details, verified struct sizes, and open
 questions are in [NOTES.md](NOTES.md).
 
-**Phase 1 complete. Gate cleared on real TFL data** -- a 93 MB, 427-tag community plugin
-(*Sir Mauriac's Tale*, Crow's Bridge Cartographers) reads and rewrites byte-for-byte.
+**Phase 1 complete. Gate cleared on both game versions against real data.**
 
-Real data immediately disproved one of our layout assumptions, which is what the gate is
-for: that plugin declares `header_size = 64` and then starts its first tag body at **128**,
-with 64 unaccounted zero bytes in between. Assuming bodies begin right after the header
-dropped those bytes and shifted every offset in the file. Unaccounted bytes are now carried
-through verbatim rather than guessed at.
+| Corpus | Files | Bytes | Result |
+|---|---:|---:|---|
+| Myth II plugins | 276 | 9.90 GB | 276/276 byte-exact |
+| Myth II core tag archives | 5 | 512 MB | 5/5 byte-exact |
+| TFL plugin (*Sir Mauriac's Tale*) | 1 | 93 MB | byte-exact |
 
-Still outstanding: **the gate has only been cleared on a TFL `.gor`.** The Myth II container
-is a different layout (entrypoint block, derived directory position) and has only been
-exercised against synthetic fixtures. Point it at a real Myth II plugin before trusting the
-SB write path:
+That covers every archive type the format defines in the wild -- `PLUGIN`, `PATCH`,
+`ADDON`, `INTERFACE`, `METASERVER` and the `FOUNDATION` install archives -- up to a
+624 MB / 923-tag plugin and a 2,649-tag one.
+
+Real data was worth the trouble immediately: it disproved a layout assumption that
+synthetic fixtures could never have caught. The TFL plugin declares `header_size = 64` and
+then starts its first tag body at **128**, with 64 unaccounted zero bytes in between.
+Assuming bodies begin right after the header dropped those bytes and shifted every offset
+in the file. Unaccounted bytes are now carried through verbatim rather than guessed at.
+
+Reproduce with:
 
 ```sh
-python -m src roundtrip "/path/to/Myth II/plugins/Some Plugin"
+python -m src roundtrip "/path/to/Myth II/plugins"
+python -m src roundtrip "/path/to/Myth II/tags"
 ```
 
 ## Requirements
@@ -46,11 +53,14 @@ Python 3.12+. No dependencies -- standard library only, no build step.
 ## Usage
 
 ```sh
-python -m src info <container>           # header, entrypoints and tag list
-python -m src info --types <container>    # summarise by tag type
-python -m src roundtrip <container>...    # verify read/write is byte-exact
-python -m src diff <a> <b>                # compare two containers tag by tag
+python -m src info <container>            # header, entrypoints and tag list
+python -m src info --types <container>     # summarise by tag type
+python -m src roundtrip <container|dir>... # verify read/write is byte-exact
+python -m src diff <a> <b>                 # compare two containers tag by tag
 ```
+
+`roundtrip` accepts a directory and skips anything in it that is not a Myth container
+(readmes, resource forks, `plugin cache`), so you can point it straight at a plugins folder.
 
 `info` and `roundtrip` accept both Myth II containers and TFL `.gor` files. `diff` compares
 across game versions too. `convert` arrives in Phase 2.

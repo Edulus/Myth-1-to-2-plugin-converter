@@ -69,17 +69,40 @@ def cmd_info(args):
     return 0
 
 
+def _expand(paths):
+    """Expand directories into their files. Not recursive -- Myth keeps plugins
+    flat in one folder, and the folder also holds readmes and stray junk."""
+    expanded = []
+    for path in paths:
+        path = pathlib.Path(path)
+        if path.is_dir():
+            expanded += sorted(p for p in path.iterdir() if p.is_file())
+        else:
+            expanded.append(path)
+    return expanded
+
+
 def cmd_roundtrip(args):
     """The Phase 1 correctness gate, runnable against real game data."""
-    failures = 0
-    for path in args.containers:
-        path = pathlib.Path(path)
+    ok = failures = skipped = 0
+    for path in _expand(args.containers):
         try:
             data = path.read_bytes()
         except OSError as exc:
             print(f"FAIL  {path.name}: {exc}")
             failures += 1
             continue
+
+        # A plugins folder is full of readmes, resource forks and .DS_Store.
+        # Those are not failures, they are just not containers.
+        try:
+            reader.detect_game_version(data)
+        except reader.FormatError:
+            skipped += 1
+            if args.verbose:
+                print(f"skip  {path.name} (not a Myth container)")
+            continue
+
         try:
             problems = writer.diagnose_round_trip(data, filename=path.name)
         except (reader.FormatError, writer.PackError) as exc:
@@ -89,14 +112,15 @@ def cmd_roundtrip(args):
 
         if problems:
             failures += 1
-            print(f"FAIL  {path.name} ({len(data)} bytes)")
+            print(f"FAIL  {path.name} ({len(data):,} bytes)")
             for problem in problems:
                 print(f"        {problem}")
         else:
-            print(f"ok    {path.name} ({len(data)} bytes)")
+            ok += 1
+            if args.verbose:
+                print(f"ok    {path.name} ({len(data):,} bytes)")
 
-    total = len(args.containers)
-    print(f"\n{total - failures}/{total} byte-exact")
+    print(f"\n{ok}/{ok + failures} byte-exact, {skipped} skipped (not containers)")
     return 1 if failures else 0
 
 
@@ -131,7 +155,12 @@ def build_parser():
     rt = sub.add_parser(
         "roundtrip", help="read and rewrite a container, checking it is byte-exact"
     )
-    rt.add_argument("containers", nargs="+", type=pathlib.Path)
+    rt.add_argument(
+        "containers", nargs="+", type=pathlib.Path, help="files, or a plugins directory"
+    )
+    rt.add_argument(
+        "-v", "--verbose", action="store_true", help="list passes and skips too"
+    )
     rt.set_defaults(func=cmd_roundtrip)
 
     dif = sub.add_parser("diff", help="compare two containers tag by tag")

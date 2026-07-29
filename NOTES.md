@@ -422,3 +422,28 @@ reason to encode them.
 This is a good argument for the round-trip gate as designed. All three points were invisible
 against synthetic fixtures built from our own understanding, and the third was caught within
 seconds of pointing the packer at real data.
+
+### Gate results
+
+The gate now passes on 282 real containers totalling ~10.5 GB: 276 Myth II plugins, the 5
+Myth II core install archives (including the 344 MB `large install`), and one TFL `.gor`.
+Between them they cover every archive type the format defines -- `PLUGIN`, `PATCH`,
+`ADDON`, `INTERFACE`, `METASERVER`, `FOUNDATION` -- up to 923 tags / 624 MB in one file and
+2,649 tags in another.
+
+Three things this settles, all previously open questions from §6:
+
+* **The SB layout really is `[header][entrypoints][directory][bodies]`** (§6 Q4, first
+  half). 276 files agree.
+* **The directory does not need re-sorting.** We write it back in the order we read it and
+  every file matches, so whatever order the engine wants, real files already have it.
+* **Checksums are not our problem yet, but they will be.** Every one of these round-trips
+  preserves the source checksum untouched, so none of them exercises the algorithm. §6 Q1
+  is unchanged and remains the biggest risk to Phase 2.
+
+Note for Phase 2: this install carries several TFL→SB ports (`Magma - The Fallen Lords
+v1.9` at 2,110 tags / 40 entrypoints, `Magma - The Fallen Lords DX 1.3` at 2,649 tags).
+Those are hand-made conversions of exactly the content we are trying to convert
+automatically, which makes them the reference to diff our output against -- and a likely
+source of real TFL→SB tag ID mappings for `src/idmap.py` beyond the 25 levels in
+`tflmeshtext2sb.py`.
