@@ -139,6 +139,26 @@ def detect_game_version(data):
     )
 
 
+def data_region(mono):
+    """The byte range a container's tag bodies live in, in its source file.
+
+    Real containers pad between the fixed structures and the first body -- the
+    TFL plugin this was first tested against starts its bodies at 128 even
+    though its header declares ``header_size = 64``. So the body region is not
+    "immediately after the header"; it is whatever lies between the fixed
+    structures and the directory (TFL) or end of file (SB).
+    """
+    if mono.is_tfl:
+        start = mono.header.header_size
+        end = mono.header.tag_list_offset
+    else:
+        start = _directory_start(mono.game_version, mono.header) + (
+            len(mono.tags) * formats.TAG_HEADER_SIZE
+        )
+        end = len(mono.source) if mono.source else start
+    return start, end
+
+
 def _directory_start(game_version, header):
     """Where the tag directory begins.
 

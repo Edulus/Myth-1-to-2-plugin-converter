@@ -75,6 +75,30 @@ class TestSyntheticRoundTrip(unittest.TestCase):
         offsets = {t.source_offset for t in mono.tags}
         self.assertEqual(1, len(offsets), "fixture should alias every body")
 
+    def test_unaccounted_bytes_before_bodies_survive(self):
+        """Real containers pad between the fixed structures and the first body.
+
+        The first plugin this was tested against declares header_size = 64 and
+        starts its first body at 128, with 64 zero bytes in between that no
+        structure accounts for. Assuming bodies begin right after the header
+        drops them and shifts every offset in the file.
+        """
+        for gap in (0, 64, 7):
+            with self.subTest(kind="tfl", gap=gap):
+                data = fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS, body_gap=gap)
+                self.assert_round_trips(data, f"synthetic-tfl-gap{gap}")
+            with self.subTest(kind="sb", gap=gap):
+                data = fixtures.build_sb_mono(fixtures.SAMPLE_TAGS, body_gap=gap)
+                self.assert_round_trips(data, f"synthetic-sb-gap{gap}")
+
+        # And the gap really is unaccounted for, so the fixture is testing
+        # what it claims to.
+        mono = reader.read_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS, body_gap=64))
+        gaps = reader.find_gaps(mono)
+        self.assertEqual(1, len(gaps))
+        self.assertEqual(64, gaps[0].size)
+        self.assertEqual(128, mono.tags[0].source_offset)
+
     def test_non_zero_padding_survives(self):
         """'Unused' bytes in real tags are not zero. Zero-filling them on encode
         would break byte-exactness, so prove they are carried through."""

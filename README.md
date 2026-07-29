@@ -21,21 +21,23 @@ tag *header* from TFL to SB form (`myth_headers.tfl2sb`). What it has no code pa
 all is **writing a monolithic container**. Details, verified struct sizes, and open
 questions are in [NOTES.md](NOTES.md).
 
-**Phase 1 code complete, gate not yet cleared.** The reader, the packer, a byte-exact
-round-trip test and a `plugindiff`-style comparison all exist and pass against synthetic
-containers. They have **not** been run against a real Myth II plugin, because there is no
-Myth installation on this machine. Until that happens the gate is provisional: synthetic
-fixtures prove the reader and writer agree with each other and with the format as
-[NOTES.md](NOTES.md) describes it, but only real game data proves that description matches
-what Bungie shipped.
+**Phase 1 complete. Gate cleared on real TFL data** -- a 93 MB, 427-tag community plugin
+(*Sir Mauriac's Tale*, Crow's Bridge Cartographers) reads and rewrites byte-for-byte.
 
-To clear the gate, point it at a plugin:
+Real data immediately disproved one of our layout assumptions, which is what the gate is
+for: that plugin declares `header_size = 64` and then starts its first tag body at **128**,
+with 64 unaccounted zero bytes in between. Assuming bodies begin right after the header
+dropped those bytes and shifted every offset in the file. Unaccounted bytes are now carried
+through verbatim rather than guessed at.
+
+Still outstanding: **the gate has only been cleared on a TFL `.gor`.** The Myth II container
+is a different layout (entrypoint block, derived directory position) and has only been
+exercised against synthetic fixtures. Point it at a real Myth II plugin before trusting the
+SB write path:
 
 ```sh
 python -m src roundtrip "/path/to/Myth II/plugins/Some Plugin"
 ```
-
-Phase 2 does not start until that reports byte-exact.
 
 ## Requirements
 

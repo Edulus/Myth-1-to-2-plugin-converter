@@ -92,18 +92,21 @@ def build_sb_mono(
     checksum=b"\x01\x02\x03\x04",
     header_checksum=b"\x05\x06\x07\x08",
     alias_bodies=False,
+    body_gap=0,
 ):
     """Assemble a Myth II container.
 
     ``tags`` is a list of ``(name, tag_type, tag_id, body)``. With
     ``alias_bodies``, every directory entry points at the *first* tag's body --
     the deduplication real containers use, which the writer has to preserve.
+    ``body_gap`` inserts unaccounted padding before the first body, as real
+    containers do (see ``build_tfl_mono``).
 
-    Layout: [128B header][entrypoints][directory][bodies]
+    Layout: [128B header][entrypoints][directory][gap][bodies]
     """
     entry_block = b"".join(entrypoints)
     directory_start = SB_MONO_HEADER_SIZE + len(entry_block)
-    first_body = directory_start + len(tags) * TAG_HEADER_SIZE
+    first_body = directory_start + len(tags) * TAG_HEADER_SIZE + body_gap
 
     directory = b""
     bodies = b""
@@ -120,7 +123,8 @@ def build_sb_mono(
     if alias_bodies:
         bodies = tags[0][3]
 
-    total_size = first_body + len(bodies)
+    bodies = bytes(body_gap) + bodies
+    total_size = first_body - body_gap + len(bodies)
 
     header = struct.pack(
         ">h H 32s 64s H H 4s L L 4s",
@@ -142,13 +146,21 @@ def build_sb_mono(
     return data
 
 
-def build_tfl_mono(tags, name=b"test.gor", checksum=0x1234ABCD, flags=0, mod_time=0):
+def build_tfl_mono(
+    tags, name=b"test.gor", checksum=0x1234ABCD, flags=0, mod_time=0, body_gap=64
+):
     """Assemble a TFL ``.gor`` container.
 
-    Layout: [64B header][bodies][directory @ tag_list_offset]
+    Layout: [64B header][gap][bodies][directory @ tag_list_offset]
+
+    ``body_gap`` defaults to 64 because that is what the first real plugin
+    tested against does: it declares ``header_size = 64`` and then starts its
+    first body at 128, with 64 unaccounted zero bytes in between. The reader and
+    writer must carry those through rather than assume bodies begin at the end
+    of the header.
     """
-    bodies = b""
-    cursor = GOR_HEADER_SIZE
+    bodies = bytes(body_gap)
+    cursor = GOR_HEADER_SIZE + body_gap
     directory = b""
     for tag_name, tag_type, tag_id, body in tags:
         directory += tfl_tag_header(tag_name, tag_type, tag_id, cursor, len(body))

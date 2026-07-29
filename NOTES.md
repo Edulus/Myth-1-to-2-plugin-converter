@@ -409,3 +409,16 @@ commit message.
 
 Neither is visible from an extractor's point of view, which is why mythextract has no
 reason to encode them.
+
+3. **Tag bodies do not start where the header says they do.** The first real plugin tested
+   (*Sir Mauriac's Tale*, a 93 MB / 427-tag TFL `.gor`) declares `header_size = 64` and
+   then places its first tag body at **128**, with 64 zero bytes in between that no
+   structure accounts for. Whether the convention is "align to 128", "reserve a second
+   header slot", or something else is unknown, and guessing is unnecessary: the reader
+   locates bodies only by absolute `tag_data_offset`, and the writer copies unaccounted
+   bytes through verbatim, keyed to the body that follows them. Worth re-checking against a
+   Myth II container, where the block after the directory may follow a different rule.
+
+This is a good argument for the round-trip gate as designed. All three points were invisible
+against synthetic fixtures built from our own understanding, and the third was caught within
+seconds of pointing the packer at real data.

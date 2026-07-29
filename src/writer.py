@@ -33,46 +33,89 @@ class PackError(ValueError):
     """The structure cannot be serialised into a valid container."""
 
 
-def _body_offsets(tags, first_body_offset, preserve_layout):
-    """Assign each tag's body a file offset.
+def _plan_bodies(mono, first_body_offset, preserve_layout):
+    """Lay out the body region. Returns ``(offsets_by_tag_index, body_bytes)``.
 
-    With ``preserve_layout``, bodies keep their source file order and any
-    aliasing (two directory entries pointing at the same body, which real
-    containers use to deduplicate). That is what makes a round-trip byte-exact.
-    Otherwise bodies are laid out in directory order.
+    With ``preserve_layout``, three properties of the source file are carried
+    through, all of which real containers rely on and none of which are visible
+    to an extractor:
+
+    * **Order.** Bodies keep their source file order, not directory order.
+    * **Aliasing.** Several directory entries may point at one body -- how
+      containers deduplicate. Expanding those into copies produces a valid but
+      larger, non-byte-exact file.
+    * **Gaps.** Bytes between bodies that no structure accounts for. The first
+      real plugin tested had 64 zero bytes between its header (which declares
+      ``header_size = 64``) and its first body at 128. Rather than guess whether
+      that alignment is universal, unaccounted bytes are copied verbatim and
+      travel with the body that follows them.
+
+    Without ``preserve_layout``, bodies are packed contiguously in directory
+    order and gaps are dropped -- what a freshly built plugin wants.
     """
-    if preserve_layout:
-        # Stable, so tags sharing an offset keep their directory order -- which
-        # matters when a zero-length body precedes a real one at that offset.
-        order = sorted(range(len(tags)), key=lambda i: tags[i].source_offset)
-    else:
-        order = range(len(tags))
-
-    offsets = {}  # index -> file offset
-    by_source = {}  # (source offset, length) -> assigned offset
+    tags = mono.tags
+    segments = []
+    offsets = {}
     cursor = first_body_offset
+
+    if not preserve_layout:
+        for i, tag in enumerate(tags):
+            offsets[i] = cursor
+            segments.append(tag.body)
+            cursor += len(tag.body)
+        return offsets, b"".join(segments)
+
+    # Stable, so tags sharing an offset keep their directory order -- which
+    # matters when a zero-length body precedes a real one at that offset.
+    order = sorted(range(len(tags)), key=lambda i: tags[i].source_offset)
+
+    have_source = bool(mono.source)
+    if have_source:
+        source_start, source_end = reader.data_region(mono)
+        source_end = min(source_end, len(mono.source))
+    else:
+        source_start = source_end = 0
+    source_cursor = source_start
+
+    by_source = {}  # (source offset, source length) -> (assigned offset, body)
     for i in order:
         tag = tags[i]
         # Key on length as well as offset. A zero-length body sits at the same
         # offset as whatever follows it without being an alias of it, so keying
-        # on offset alone would collapse the two and drop the real body.
-        source_key = (tag.source_offset, len(tag.body))
-        if preserve_layout and tag.body and source_key in by_source:
-            offsets[i] = by_source[source_key]
+        # on offset alone would collapse the two and drop the real body. Use the
+        # length recorded in the source directory, not the current body length,
+        # so a caller that replaced a body does not change what counts as an
+        # alias.
+        source_size = tag.header.tag_data_size
+        source_key = (tag.source_offset, source_size)
+        alias = by_source.get(source_key)
+        # Only share an offset when the bodies really are identical -- two tags
+        # that aliased in the source may have been converted differently since.
+        if tag.body and alias is not None and alias[1] == tag.body:
+            offsets[i] = alias[0]
             continue
+
+        if have_source and tag.source_offset > source_cursor:
+            gap = mono.source[source_cursor : tag.source_offset]
+            segments.append(gap)
+            cursor += len(gap)
+
         offsets[i] = cursor
-        by_source[source_key] = cursor
+        by_source.setdefault(source_key, (cursor, tag.body))
+        segments.append(tag.body)
         cursor += len(tag.body)
-    return offsets, cursor
+        # Advance by the tag's extent *in the source*, so that shrinking or
+        # growing a body does not turn part of the old body into a fake gap.
+        source_cursor = max(source_cursor, tag.source_offset + source_size)
 
+    # Any padding between the last body and the directory (TFL) or end of
+    # file (SB).
+    if have_source and source_end > source_cursor:
+        trailing = mono.source[source_cursor:source_end]
+        segments.append(trailing)
+        cursor += len(trailing)
 
-def _emit_bodies(tags, offsets, first_body_offset, total_size):
-    """Concatenate bodies into the region starting at ``first_body_offset``."""
-    buffer = bytearray(total_size - first_body_offset)
-    for i, tag in enumerate(tags):
-        start = offsets[i] - first_body_offset
-        buffer[start : start + len(tag.body)] = tag.body
-    return bytes(buffer)
+    return offsets, b"".join(segments)
 
 
 def pack(mono, preserve_layout=True):
@@ -111,7 +154,8 @@ def pack(mono, preserve_layout=True):
         # TFL puts the directory at the end, after the bodies.
         first_body_offset = formats.GOR_HEADER_SIZE
 
-    offsets, body_end = _body_offsets(mono.tags, first_body_offset, preserve_layout)
+    offsets, bodies = _plan_bodies(mono, first_body_offset, preserve_layout)
+    body_end = first_body_offset + len(bodies)
 
     if mono.game_version == formats.SB:
         total_size = body_end
@@ -154,8 +198,6 @@ def pack(mono, preserve_layout=True):
         raise PackError(
             f"Entrypoint block encoded to {len(entrypoints)} bytes, expected {entry_size}"
         )
-
-    bodies = _emit_bodies(mono.tags, offsets, first_body_offset, body_end)
 
     if mono.game_version == formats.SB:
         out = header.encode() + entrypoints + bytes(directory) + bodies
