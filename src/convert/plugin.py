@@ -137,7 +137,7 @@ def convert_container(mono, id_map=None, name=None, description=b""):
     # Done after tag conversion so IDs are already remapped and stli bodies
     # already carry Myth II formatting codes.
     entry_records, entry_warnings = entrypoints.synthesise(
-        converted_tags, mono.game_version, id_map=id_map
+        mono.tags, converted_tags, mono.game_version, id_map=id_map
     )
     report.entrypoints = entry_records
     report.warnings.extend(entry_warnings)

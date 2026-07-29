@@ -173,5 +173,119 @@ class TestEntrypointSynthesis(unittest.TestCase):
         self.assertEqual([], reader.find_gaps(result))
 
 
+class TestMeshBodyConversion(unittest.TestCase):
+    """The TFL and Myth II mesh headers are both 1024 bytes, so an unconverted
+    TFL body looks valid to Myth II and is silently misread from offset 76 on."""
+
+    def _convert(self, body):
+        from src.convert.tags import mesh as mesh_converter
+
+        return mesh_converter.convert(body)
+
+    def test_output_is_a_valid_myth_ii_mesh_header(self):
+        body = fixtures.mesh_body(description_tag=b"30cc", flags=0x2A)
+        converted, _ = self._convert(body)
+
+        self.assertEqual(len(body), len(converted), "header size is unchanged")
+        header = mesh.parse_header(converted, formats.SB)
+        self.assertEqual(b"30cc", header.map_description_string_list_tag)
+        self.assertEqual(0x2A, header.flags)
+
+    def test_shared_fields_survive_the_round_trip(self):
+        body = fixtures.mesh_body(description_tag=b"30cc", storyline_tag=b"30tx")
+        converted, _ = self._convert(body)
+
+        before = mesh.parse_header(body, formats.TFL)
+        after = mesh.parse_header(converted, formats.SB)
+        from src.convert.tags import mesh as mesh_converter
+
+        for field in mesh_converter.SHARED_FIELDS:
+            self.assertEqual(
+                getattr(before, field), getattr(after, field), f"{field} changed"
+            )
+
+    def test_myth_ii_only_fields_get_the_measured_defaults(self):
+        """Values measured across the 40 meshes of Magma - The Fallen Lords v1.9,
+        rather than invented."""
+        converted, _ = self._convert(fixtures.mesh_body())
+        header = mesh.parse_header(converted, formats.SB)
+
+        self.assertEqual(2048, header.ceiling_height)  # 40/40 in the port
+        self.assertEqual(0.5, header.reverb_volume)  # 40/40
+        self.assertEqual(0.5, header.reverb_damping)  # 40/40
+        self.assertEqual(b"\xff" * 4, header.connector_tag)  # 40/40 unset
+        self.assertEqual(0, header.extra_flags)
+
+    def test_tfl_only_fields_are_reported_when_they_carry_something(self):
+        import struct
+
+        body = bytearray(fixtures.mesh_body())
+        # render_variables_tag sits at offset 76 -- where Myth II has connector_tag.
+        body[76 - 4 : 76] = b"rvar"
+        _, warnings = self._convert(bytes(body))
+        self.assertTrue(
+            [w for w in warnings if "render_variables_tag" in w],
+            f"expected a dropped-field warning, got {warnings}",
+        )
+
+    def test_short_body_is_left_alone_and_reported(self):
+        converted, warnings = self._convert(b"too short")
+        self.assertEqual(b"too short", converted)
+        self.assertTrue([w for w in warnings if "shorter than" in w])
+
+    def test_trailing_body_data_is_preserved_verbatim(self):
+        """Only the header is converted. Terrain, markers and map actions are
+        copied untouched -- and said to be."""
+        trailing = bytes(range(256)) * 4
+        body = fixtures.mesh_body(trailing=trailing)
+        converted, _ = self._convert(body)
+        self.assertEqual(trailing, converted[mesh.MESH_HEADER_SIZE :])
+
+    def test_map_actions_and_markers_are_flagged_as_unconverted(self):
+        import struct
+
+        body = bytearray(fixtures.mesh_body())
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        struct.pack_into(">L", body, offsets["map_action_count"], 7)
+        struct.pack_into(">L", body, offsets["marker_count"], 12)
+
+        _, warnings = self._convert(bytes(body))
+        self.assertTrue([w for w in warnings if "7 map actions" in w])
+        self.assertTrue([w for w in warnings if "12 markers" in w])
+
+    def test_vtfl_flag_is_opt_in(self):
+        from src.convert.tags import mesh as mesh_converter
+
+        class Ctx:
+            use_vtfl = True
+
+        plain, _ = mesh_converter.convert(fixtures.mesh_body())
+        self.assertFalse(
+            mesh.parse_header(plain, formats.SB).flags & mesh.MeshFlags.USES_VTFL
+        )
+
+        opted, warnings = mesh_converter.convert(fixtures.mesh_body(), Ctx())
+        self.assertTrue(
+            mesh.parse_header(opted, formats.SB).flags & mesh.MeshFlags.USES_VTFL
+        )
+        self.assertTrue([w for w in warnings if "USES_VTFL" in w])
+
+    def test_entrypoints_still_work_after_mesh_conversion(self):
+        """Entrypoint synthesis reads mesh headers from the *source* tags, since
+        the converted ones are now in Myth II layout."""
+        tfl = reader.read_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS))
+        sb, _ = convert_plugin.convert_container(tfl)
+
+        self.assertEqual(1, len(sb.entrypoints))
+        self.assertEqual(
+            "The Siege of |bCrow's Bridge|p",
+            codec.decode_string(sb.entrypoints[0].entry_long_name),
+        )
+        # And the converted mesh really is Myth II layout now.
+        converted_mesh = [t for t in sb.tags if t.tag_type == b"mesh"][0]
+        header = mesh.parse_header(converted_mesh.body, formats.SB)
+        self.assertEqual(2048, header.ceiling_height)
+
+
 if __name__ == "__main__":
     unittest.main()

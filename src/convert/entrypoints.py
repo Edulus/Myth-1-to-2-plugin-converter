@@ -30,33 +30,39 @@ ENTRY_NAME_WIDTH = 32
 ENTRY_LONG_NAME_WIDTH = 64
 
 
-def synthesise(tags, game_version, id_map=None):
-    """Build entrypoint records for every mesh tag in ``tags``.
+def synthesise(source_tags, converted_tags, game_version, id_map=None):
+    """Build entrypoint records for every mesh tag.
 
-    ``tags`` are the *converted* `reader.Tag` objects, so their IDs are already
-    remapped and their `stli` bodies already carry Myth II formatting codes.
-    Mesh bodies are still in their source layout, so ``game_version`` says how to
-    parse them.
+    Takes both sides deliberately. Mesh *headers* are read from ``source_tags``,
+    still in their original layout, because by this point the mesh converter has
+    rewritten the converted bodies into Myth II form -- reading those with the
+    TFL layout would be wrong. Everything else comes from ``converted_tags``:
+    the remapped tag IDs, and `stli` bodies whose markup has already been
+    converted.
+
+    The two lists are parallel: one converted tag per source tag, same order.
 
     Returns ``(entrypoints, warnings)``.
     """
     warnings = []
     entrypoints = []
 
-    stli_by_id = {t.tag_id: t for t in tags if t.tag_type == b"stli"}
+    stli_by_id = {t.tag_id: t for t in converted_tags if t.tag_type == b"stli"}
 
-    for tag in tags:
-        if tag.tag_type != b"mesh":
+    for source, converted in zip(source_tags, converted_tags):
+        if converted.tag_type != b"mesh":
             continue
 
-        long_name, note = _printable_name(tag, game_version, stli_by_id, id_map)
+        long_name, note = _printable_name(
+            source, converted, game_version, stli_by_id, id_map
+        )
         if note:
             warnings.append(note)
 
         entrypoints.append(
             formats.EntrypointRecord.build(
-                entry_id=_fit(tag.tag_id, ENTRY_ID_WIDTH),
-                entry_name=_fit(tag.header.name, ENTRY_NAME_WIDTH),
+                entry_id=_fit(converted.tag_id, ENTRY_ID_WIDTH),
+                entry_name=_fit(converted.header.name, ENTRY_NAME_WIDTH),
                 entry_long_name=_fit(long_name, ENTRY_LONG_NAME_WIDTH),
             )
         )
@@ -64,13 +70,13 @@ def synthesise(tags, game_version, id_map=None):
     return entrypoints, warnings
 
 
-def _printable_name(tag, game_version, stli_by_id, id_map):
+def _printable_name(source, converted, game_version, stli_by_id, id_map):
     """The level name Myth II shows in its menus. Returns ``(name, warning)``."""
-    label = codec.decode_string(tag.tag_id)
-    fallback = tag.header.name.split(b"\0", 1)[0]
+    label = codec.decode_string(converted.tag_id)
+    fallback = converted.header.name.split(b"\0", 1)[0]
 
     try:
-        header = mesh_module.parse_header(tag.body, game_version)
+        header = mesh_module.parse_header(source.body, game_version)
     except ValueError as exc:
         return fallback, f"mesh.{label}: {exc}; using the tag name as the level name"
 

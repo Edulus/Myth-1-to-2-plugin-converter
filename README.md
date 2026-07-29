@@ -91,7 +91,7 @@ run that is meant to be the real gate.
 | `.256` `d256` | pass-through | body unconverted | -- |
 | `mons` | pass-through | **body unconverted** -- 512B in TFL vs 1024B in Myth II, so this is wrong, not merely lossy | -- |
 | `unit` `arti` | pass-through | `arti` is 128B vs 168B | -- |
-| `mesh` | header parsed; **body pass-through** | same size as Myth II but different field meanings from offset 76 on | -- |
+| `mesh` | **header converts** | 6 TFL-only fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); **map actions and markers copied unconverted** | 38 Myth II-only fields, defaulted from measurements of `Magma - The Fallen Lords v1.9` |
 | `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
 | *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
