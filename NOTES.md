@@ -441,6 +441,39 @@ Three things this settles, all previously open questions from §6:
   preserves the source checksum untouched, so none of them exercises the algorithm. §6 Q1
   is unchanged and remains the biggest risk to Phase 2.
 
+### Tag header fields, measured (answers §6 Q2)
+
+**Q2 was: do TFL's `tag_version` and `flags`, which `tfl2sb` drops, carry anything we
+need?** Measured across the 427 tags of a real TFL plugin, and against 35,683 Myth II tag
+headers from 211 real plugins. Short answer: no, dropping both is safe — but the survey
+turned up two *other* fields mythextract normalises that we should not copy.
+
+**TFL `tag_version`** — 70 distinct values from 0 to 1321, spread smoothly, correlating with
+tag complexity (meshes reach 1321, 774, 711; string lists sit at 0–1). That is an
+**authoring revision counter**, not a format version. Nothing to translate. Safe to drop.
+
+**TFL `flags`** — only four bits ever set (`0x0001`, `0x0002`, `0x0004`, `0x2000`), giving
+nine observed values. Meaning unknown, but Myth II's own tag-header `flags` field is `0` in
+**35,656 of 35,683** real tags, so whatever TFL recorded there, Myth II does not expect it.
+Safe to drop.
+
+**But two fields `normalise_tag_header` zeroes are wrong for tags inside a container.**
+mythextract zeroes `identifier`, `type` and `destination` and sets `owner_index = -1`, which
+is correct for its purpose — writing a standalone extracted tag file. For a tag *in a
+plugin*, real data says otherwise:
+
+| SB tag header field | mythextract writes | Real plugins (n=35,683) |
+|---|---|---|
+| `identifier` | `0` | **`0` occurs once.** Unique per tag, near-sequential, clustered in a narrow negative int16 band — an authoring-tool handle counter |
+| `type` | `0` (`TAG`) | Mirrors the **container's** archive type in 194 of 211 plugins; tags inside a `PLUGIN` are `type=PLUGIN` |
+| `flags` | `0` | `0` in 35,656 — mythextract is right |
+| `owner_index` | `-1` | `-1` in 35,657 — mythextract is right |
+| `destination` | `0` | varies (`0`, `-1`, `3`, `2`, `1`); `0` most common — mythextract is fine |
+
+So our converter assigns unique sequential identifiers and mirrors the container type. It is
+still unknown whether the engine *reads* `identifier` at load time; matching observed
+practice is the conservative choice, and it costs nothing.
+
 Note for Phase 2: this install carries several TFL→SB ports (`Magma - The Fallen Lords
 v1.9` at 2,110 tags / 40 entrypoints, `Magma - The Fallen Lords DX 1.3` at 2,649 tags).
 Those are hand-made conversions of exactly the content we are trying to convert

@@ -1,0 +1,248 @@
+"""Convert a whole TFL container into a Myth II plugin.
+
+Reads a TFL ``.gor``, converts each tag's header and (where a converter exists)
+its body, remaps tag IDs, and hands the result to `src.writer` to be packed into
+a Myth II container.
+
+What this does **not** do yet is as important as what it does, and the result
+reports both:
+
+* **Bodies of unsupported tag types pass through unchanged.** A `mons` body is
+  512 bytes in TFL and 1024 in Myth II (NOTES.md section 4); passing one through
+  produces a correctly-headed tag with wrong contents. Every such tag is listed
+  in the report.
+* **No entrypoints are synthesised.** A TFL ``.gor`` has none, and a Myth II
+  plugin needs one per playable mesh or the level never reaches the menu. That
+  needs mesh parsing.
+* **Container checksums are written as zero**, because the algorithm is unknown.
+
+The output is therefore not a playable plugin yet. It is a structurally valid
+Myth II container carrying correctly converted `text` and `stli` tags, which is
+exactly what Phase 2 set out to produce.
+"""
+
+from dataclasses import dataclass, field
+
+from .. import codec, formats, idmap as idmap_module, reader, writer
+from . import headers, tags as tag_converters
+
+
+class ConversionError(ValueError):
+    """The input cannot be converted."""
+
+
+@dataclass
+class TagOutcome:
+    tag_type: bytes
+    tfl_id: bytes
+    sb_id: bytes
+    name: str
+    status: str  # "converted" | "passed-through"
+    size_before: int
+    size_after: int
+    warnings: list = field(default_factory=list)
+
+    @property
+    def label(self):
+        return f"{codec.decode_string(self.tag_type)}.{codec.decode_string(self.tfl_id)}"
+
+    @property
+    def renamed(self):
+        return self.tfl_id != self.sb_id
+
+
+@dataclass
+class ConversionReport:
+    outcomes: list = field(default_factory=list)
+    warnings: list = field(default_factory=list)
+    source_tags: int = 0
+
+    def converted(self):
+        return [o for o in self.outcomes if o.status == "converted"]
+
+    def passed_through(self):
+        return [o for o in self.outcomes if o.status == "passed-through"]
+
+    def unsupported_types(self):
+        """Tag types that were passed through, with counts. The honest summary
+        of how far from playable the output is."""
+        counts = {}
+        for outcome in self.passed_through():
+            counts[outcome.tag_type] = counts.get(outcome.tag_type, 0) + 1
+        return dict(sorted(counts.items()))
+
+    def renamed(self):
+        return [o for o in self.outcomes if o.renamed]
+
+    def tag_warnings(self):
+        return [(o, w) for o in self.outcomes for w in o.warnings]
+
+
+def convert_container(mono, id_map=None, name=None, description=b""):
+    """Convert a parsed TFL container. Returns ``(sb_monolith, report)``."""
+    if not mono.is_tfl:
+        raise ConversionError(
+            "input is already a Myth II container; nothing to convert"
+        )
+
+    id_map = id_map if id_map is not None else idmap_module.default_map()
+    report = ConversionReport(source_tags=len(mono.tags))
+
+    if len(mono.tags) > headers.INT16_MAX:
+        raise ConversionError(
+            f"{len(mono.tags)} tags: cannot assign a unique int16 tag identifier "
+            f"to each (max {headers.INT16_MAX})"
+        )
+
+    converted_tags = []
+    for index, tag in enumerate(mono.tags):
+        converter = tag_converters.converter_for(tag.tag_type)
+
+        if converter is not None:
+            body, body_warnings = converter.convert(tag.body)
+            status = "converted"
+        else:
+            body, body_warnings = tag.body, []
+            status = "passed-through"
+
+        mapped = id_map.lookup(tag.tag_type, tag.tag_id)
+        sb_id, mapped_name = mapped if mapped else (tag.tag_id, None)
+
+        header, header_warnings = headers.convert_tag_header(
+            tag.header,
+            len(body),
+            tag_id=sb_id,
+            name=mapped_name,
+            # Unique within the container, and mirroring the container's own
+            # archive type -- both matching what real plugins do (see
+            # convert/headers.py SB_DEFAULTS).
+            identifier=index + 1,
+            archive_type=formats.ArchiveType.PLUGIN,
+        )
+        converted_tags.append(reader.Tag(header=header, body=body))
+
+        report.outcomes.append(
+            TagOutcome(
+                tag_type=tag.tag_type,
+                tfl_id=tag.tag_id,
+                sb_id=sb_id,
+                name=tag.name,
+                status=status,
+                size_before=len(tag.body),
+                size_after=len(body),
+                warnings=body_warnings + header_warnings,
+            )
+        )
+
+    mono_header, mono_warnings = headers.convert_mono_header(
+        mono, tag_count=len(converted_tags), entry_count=0,
+        name=name, description=description,
+    )
+    report.warnings.extend(mono_warnings)
+
+    unsupported = report.unsupported_types()
+    if unsupported:
+        listed = ", ".join(
+            f"{codec.decode_string(t)}x{n}" for t, n in unsupported.items()
+        )
+        report.warnings.append(
+            f"{len(report.passed_through())} tags of {len(unsupported)} types were "
+            f"passed through with unconverted bodies: {listed}"
+        )
+
+    sb_mono = reader.Monolith(
+        game_version=formats.SB,
+        header=mono_header,
+        tags=converted_tags,
+        entrypoints=[],
+        filename=mono.filename,
+        source=b"",  # built, not read: there is no source layout to preserve
+    )
+    return sb_mono, report
+
+
+def convert_file(in_path, out_path, id_map=None, name=None, description=b""):
+    """Convert a TFL container file into a Myth II plugin file.
+
+    Returns ``(report, bytes_written)``.
+    """
+    mono = reader.read(in_path)
+    sb_mono, report = convert_container(
+        mono, id_map=id_map, name=name, description=description
+    )
+    # A built container has no source layout, so bodies are packed canonically.
+    data = writer.pack(sb_mono, preserve_layout=False)
+
+    # Cheap self-check: whatever we just wrote must read back as the same tags.
+    verify = reader.read_bytes(data, filename=str(out_path))
+    if len(verify.tags) != len(sb_mono.tags):
+        raise ConversionError(
+            f"wrote {len(sb_mono.tags)} tags but the result reads back as "
+            f"{len(verify.tags)}"
+        )
+    for expected, actual in zip(sb_mono.tags, verify.tags):
+        if expected.body != actual.body:
+            raise ConversionError(
+                f"body of {codec.decode_string(expected.tag_type)}."
+                f"{codec.decode_string(expected.tag_id)} did not survive packing"
+            )
+
+    with open(out_path, "wb") as out:
+        out.write(data)
+    return report, len(data)
+
+
+def format_report(report, in_name="", out_name=""):
+    """Render a conversion report as printable lines."""
+    lines = []
+    if in_name or out_name:
+        lines.append(f"in  {in_name}")
+        lines.append(f"out {out_name}")
+        lines.append("")
+
+    converted = report.converted()
+    passed = report.passed_through()
+    lines.append(
+        f"{report.source_tags} tags: {len(converted)} converted, "
+        f"{len(passed)} passed through unchanged"
+    )
+
+    if converted:
+        lines.append("")
+        lines.append("Converted")
+        lines.append("-" * 72)
+        for outcome in converted:
+            delta = outcome.size_after - outcome.size_before
+            change = f"{delta:+d}B" if delta else "same size"
+            rename = (
+                f" -> {codec.decode_string(outcome.sb_id)}" if outcome.renamed else ""
+            )
+            lines.append(
+                f" {outcome.label:<12}{rename:<8} {outcome.size_after:>8}B "
+                f"{change:<10} {outcome.name}"
+            )
+
+    unsupported = report.unsupported_types()
+    if unsupported:
+        lines.append("")
+        lines.append("Passed through with UNCONVERTED bodies")
+        lines.append("-" * 72)
+        for tag_type, count in unsupported.items():
+            lines.append(f" {codec.decode_string(tag_type):<6} {count:>5}")
+
+    tag_warnings = report.tag_warnings()
+    if tag_warnings:
+        lines.append("")
+        lines.append("Per-tag warnings")
+        lines.append("-" * 72)
+        for outcome, warning in tag_warnings:
+            lines.append(f" {outcome.label:<12} {warning}")
+
+    if report.warnings:
+        lines.append("")
+        lines.append("Warnings")
+        lines.append("-" * 72)
+        for warning in report.warnings:
+            lines.append(f" ! {warning}")
+
+    return lines

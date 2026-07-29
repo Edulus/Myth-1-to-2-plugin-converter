@@ -13,6 +13,7 @@ import pathlib
 import sys
 
 from . import codec, plugindiff, reader, writer
+from .convert import plugin as convert_plugin
 
 
 def _load(path):
@@ -138,6 +139,32 @@ def cmd_diff(args):
     return 0 if result.identical else 1
 
 
+def cmd_convert(args):
+    if args.out.exists() and not args.force:
+        print(
+            f"error: {args.out} already exists (use --force to overwrite)",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        report, written = convert_plugin.convert_file(
+            args.inp, args.out, name=args.name
+        )
+    except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    for line in convert_plugin.format_report(report, str(args.inp), str(args.out)):
+        print(line)
+    print(f"\nWrote {written:,} bytes.")
+    if report.passed_through():
+        print(
+            "This is NOT a playable plugin yet: passed-through tag bodies are still "
+            "in TFL format, and it has no entrypoints."
+        )
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="myth-plugin-converter",
@@ -168,6 +195,13 @@ def build_parser():
     dif.add_argument("right", type=pathlib.Path)
     dif.add_argument("--all", action="store_true", help="include unchanged tags")
     dif.set_defaults(func=cmd_diff)
+
+    con = sub.add_parser("convert", help="convert a TFL container into a Myth II plugin")
+    con.add_argument("--in", dest="inp", required=True, type=pathlib.Path)
+    con.add_argument("--out", required=True, type=pathlib.Path)
+    con.add_argument("--name", help="plugin name to write into the header")
+    con.add_argument("--force", action="store_true", help="overwrite an existing output")
+    con.set_defaults(func=cmd_convert)
 
     return parser
 

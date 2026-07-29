@@ -84,16 +84,25 @@ run that is meant to be the real gate.
 
 ## Tag type support matrix
 
-Nothing converts yet. Phase 1 reads and rewrites containers without touching tag bodies, so
-every type currently passes through byte-for-byte.
-
-| Tag type | Status | Known lossy fields | SB-only fields synthesised |
+| Tag type | Status | Known lossy fields | Myth II fields synthesised |
 |---|---|---|---|
-| *(all)* | pass-through | -- | -- |
+| `text` | **converts** | a literal `\` becomes `\|`; when followed by `i`/`b`/`p` it is indistinguishable from markup and no warning is possible | -- |
+| `stli` | **converts** | as `text` | -- |
+| `.256` `d256` | pass-through | body unconverted | -- |
+| `mons` | pass-through | **body unconverted** -- 512B in TFL vs 1024B in Myth II, so this is wrong, not merely lossy | -- |
+| `unit` `arti` | pass-through | `arti` is 128B vs 168B | -- |
+| `mesh` | pass-through | same size, different field meanings | -- |
+| `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
+| *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
+| *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
 
-This table gets a row per tag type as Phase 3 lands them, tracking status
-(pass-through / converts / not-started), fields we lose, and fields we default because TFL
-has no source for them.
+"Pass-through" means the body is copied byte-for-byte and the tag is reported as
+unconverted. It is never silently presented as converted.
+
+**The output is not a playable plugin yet.** Two things stand between here and playable:
+the pass-through bodies above, and entrypoint synthesis -- a TFL `.gor` has no entrypoints,
+and a Myth II plugin needs one per playable mesh or the level never reaches the menu. That
+needs the mesh converter.
 
 ## Layout
 
