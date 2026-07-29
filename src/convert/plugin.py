@@ -11,20 +11,18 @@ reports both:
   512 bytes in TFL and 1024 in Myth II (NOTES.md section 4); passing one through
   produces a correctly-headed tag with wrong contents. Every such tag is listed
   in the report.
-* **No entrypoints are synthesised.** A TFL ``.gor`` has none, and a Myth II
-  plugin needs one per playable mesh or the level never reaches the menu. That
-  needs mesh parsing.
-* **Container checksums are written as zero**, because the algorithm is unknown.
+* **Container checksums are written as zero.** The algorithm is unknown, and
+  measurement showed it does not matter: Myth II 1.8.5 validates neither field
+  (NOTES.md section 11).
 
-The output is therefore not a playable plugin yet. It is a structurally valid
-Myth II container carrying correctly converted `text` and `stli` tags, which is
-exactly what Phase 2 set out to produce.
+Entrypoints *are* synthesised, one per mesh tag, so converted levels appear in
+the game's menu -- see `entrypoints`.
 """
 
 from dataclasses import dataclass, field
 
 from .. import codec, formats, idmap as idmap_module, reader, writer
-from . import headers, tags as tag_converters
+from . import entrypoints, headers, tags as tag_converters
 
 
 class ConversionError(ValueError):
@@ -55,6 +53,7 @@ class TagOutcome:
 class ConversionReport:
     outcomes: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
+    entrypoints: list = field(default_factory=list)
     source_tags: int = 0
 
     def converted(self):
@@ -134,8 +133,17 @@ def convert_container(mono, id_map=None, name=None, description=b""):
             )
         )
 
+    # Entrypoints have to be built from the mesh tags -- TFL has no equivalent.
+    # Done after tag conversion so IDs are already remapped and stli bodies
+    # already carry Myth II formatting codes.
+    entry_records, entry_warnings = entrypoints.synthesise(
+        converted_tags, mono.game_version, id_map=id_map
+    )
+    report.entrypoints = entry_records
+    report.warnings.extend(entry_warnings)
+
     mono_header, mono_warnings = headers.convert_mono_header(
-        mono, tag_count=len(converted_tags), entry_count=0,
+        mono, tag_count=len(converted_tags), entry_count=len(entry_records),
         name=name, description=description,
     )
     report.warnings.extend(mono_warnings)
@@ -154,7 +162,7 @@ def convert_container(mono, id_map=None, name=None, description=b""):
         game_version=formats.SB,
         header=mono_header,
         tags=converted_tags,
-        entrypoints=[],
+        entrypoints=entry_records,
         filename=mono.filename,
         source=b"",  # built, not read: there is no source layout to preserve
     )
@@ -221,6 +229,17 @@ def format_report(report, in_name="", out_name=""):
         f"{report.source_tags} tags: {len(converted)} converted, "
         f"{len(passed)} passed through unchanged"
     )
+    lines.append(f"{len(report.entrypoints)} entrypoints synthesised from mesh tags")
+
+    if report.entrypoints:
+        lines.append("")
+        lines.append("Levels the game will list")
+        lines.append("-" * 72)
+        for record in report.entrypoints:
+            lines.append(
+                f" {codec.decode_string(record.entry_id):<6} "
+                f"{codec.decode_string(record.entry_long_name)}"
+            )
 
     if converted:
         lines.append("")

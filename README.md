@@ -91,7 +91,7 @@ run that is meant to be the real gate.
 | `.256` `d256` | pass-through | body unconverted | -- |
 | `mons` | pass-through | **body unconverted** -- 512B in TFL vs 1024B in Myth II, so this is wrong, not merely lossy | -- |
 | `unit` `arti` | pass-through | `arti` is 128B vs 168B | -- |
-| `mesh` | pass-through | same size, different field meanings | -- |
+| `mesh` | header parsed; **body pass-through** | same size as Myth II but different field meanings from offset 76 on | -- |
 | `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
 | *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
@@ -99,10 +99,15 @@ run that is meant to be the real gate.
 "Pass-through" means the body is copied byte-for-byte and the tag is reported as
 unconverted. It is never silently presented as converted.
 
-**The output is not a playable plugin yet.** Two things stand between here and playable:
-the pass-through bodies above, and entrypoint synthesis -- a TFL `.gor` has no entrypoints,
-and a Myth II plugin needs one per playable mesh or the level never reaches the menu. That
-needs the mesh converter.
+**Entrypoints are synthesised**, one per mesh tag, so converted levels appear in Myth II's
+menu by name -- confirmed in-engine. Starting one still fails, for two separate reasons:
+
+1. The pass-through bodies above are still in TFL format.
+2. **A TFL plugin is not self-contained.** It references the stock TFL tag library the way
+   a Myth II plugin references the base game. The test plugin's mesh headers alone point at
+   84 tags it does not contain. Converting a plugin in isolation cannot fix that -- the
+   stock tags have to come from a TFL installation supplied as a second input, or be mapped
+   onto Myth II equivalents. See [NOTES.md](NOTES.md) section 12.
 
 The container side, however, is confirmed working: a plugin built by `src/writer.py` with
 **both checksums zeroed** loads and plays in Myth II 1.8.5. See below.

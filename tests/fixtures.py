@@ -190,6 +190,44 @@ def build_tfl_mono(
     return header + bodies + directory
 
 
+# --- Mesh bodies -------------------------------------------------------------
+# A mesh header is 1024 bytes. Rather than lay all ~100 fields out by hand, these
+# fixtures write zeros and poke the few fields the entrypoint tests care about at
+# hardcoded offsets. The offsets below are stated here independently of
+# ``src/mesh.py`` so the two cross-check each other -- ``test_mesh.py`` asserts
+# they agree. Both layouts happen to place these three fields identically; where
+# TFL and Myth II diverge is further into the struct.
+MESH_HEADER_SIZE = 1024
+MESH_OFFSET_FLAGS = 76
+MESH_OFFSET_MAP_DESCRIPTION_STLI = 140
+MESH_OFFSET_PREGAME_STORYLINE = 176
+
+MESH_FLAG_SINGLE_PLAYER_MAP = 1 << 16
+
+
+def mesh_body(description_tag=b"\xff\xff\xff\xff", storyline_tag=b"\xff\xff\xff\xff",
+              flags=0, trailing=b""):
+    """A minimal mesh tag body: a 1024-byte header plus optional trailing data."""
+    body = bytearray(MESH_HEADER_SIZE)
+    body[MESH_OFFSET_FLAGS : MESH_OFFSET_FLAGS + 4] = struct.pack(">L", flags)
+    body[MESH_OFFSET_MAP_DESCRIPTION_STLI : MESH_OFFSET_MAP_DESCRIPTION_STLI + 4] = (
+        description_tag
+    )
+    body[MESH_OFFSET_PREGAME_STORYLINE : MESH_OFFSET_PREGAME_STORYLINE + 4] = storyline_tag
+    return bytes(body) + trailing
+
+
+# A TFL container holding one solo mesh, its description string list, and its
+# narration text -- the smallest thing that exercises entrypoint synthesis.
+MESH_TAGS = [
+    (b"301 crows bridge", b"mesh", b"30cb",
+     mesh_body(description_tag=b"30cc", storyline_tag=b"30tx",
+               flags=MESH_FLAG_SINGLE_PLAYER_MAP)),
+    (b"301 description", b"stli", b"30cc", b"The Siege of \\bCrow's Bridge\\p\0Second line\0"),
+    (b"301 storyline", b"text", b"30tx", b"They came at dawn.\r\rWe held."),
+]
+
+
 # A small, varied set of tags reused across tests. Bodies are deliberately odd
 # lengths, and one is empty, to catch off-by-one offset arithmetic.
 SAMPLE_TAGS = [

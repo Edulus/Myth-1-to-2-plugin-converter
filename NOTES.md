@@ -518,3 +518,80 @@ filename would exceed 32 characters.
 Worth recording as a caution about method, too: the corpus survey that "explained" the
 missing plugin via padding was measuring a real thing that turned out to be irrelevant. The
 experiment that settled it was renaming one file.
+
+---
+
+## 12. Mesh headers, entrypoints, and the dependency problem
+
+### Mesh header port, validated against real data
+
+`src/mesh.py` ports `MeshHeaderFmt` and `MeshHeaderFmtTFL`. Both are 1024 bytes, which is
+what makes them dangerous: the same offset means different things in the two games. The
+divergence starts at offset 76 (TFL `render_variables_tag` / Myth II `connector_tag`) and
+the layouts never re-converge — TFL has `teams_*` and `annotation_*` blocks where Myth II
+has lighting colours, and Myth II adds reverb, connectors, cutscene filenames, fog and
+narration fields where TFL has 730 bytes of padding.
+
+Validated by measurement rather than by fixture: for every entrypoint in the Myth II
+corpus, the printable level name was derived from the mesh's
+`map_description_string_list_tag` and compared against what the plugin actually ships —
+**667 exact matches, no mismatches**. The 32 non-resolving cases are meshes whose string
+list lives in a different archive. The TFL side was checked against the test plugin: all
+73 meshes resolve their description string list, yielding real level names.
+
+### Entrypoint synthesis, measured not guessed
+
+Across 703 entrypoints in 166 real plugins: every `entry_id` resolves to a `mesh` tag in
+the same container, every `entry_name` equals that mesh tag's name exactly, and the
+entrypoint count equals the mesh count in all 166. So it is **one entrypoint per mesh**,
+ID and name lifted from the mesh tag, with only the printable name coming from the
+description string list.
+
+Confirmed in-engine: the converted test plugin lists all 25 of its single-player levels in
+Myth II's New Game screen by their correct names, including markup converted from TFL's
+`\i` to Myth II's `|i`. The other 48 meshes are multiplayer maps, which is why they do not
+appear there.
+
+### The dependency problem — the real blocker
+
+Starting a converted level fails. The engine log is precise:
+
+```
+Starting mesh "Tandem" with 1 plugin...
+Error: couldn't read header for media definition 'mawa'.
+Error: mesh definition postprocess failed on 'zm04 - zm22 - bstm - bstm'.
+```
+
+`medi.mawa` is not a format problem. **It is not in the plugin at all**, and never was.
+
+**A TFL plugin is not self-contained.** It references the stock TFL tag library the way a
+Myth II plugin references the base game's. Walking the mesh headers of the test plugin
+finds 84 distinct referenced tags that the plugin does not contain:
+
+| Where the missing tag lives | Count |
+|---|---:|
+| Nowhere on this system | 50 |
+| The Magma TFL→Myth II port plugin | 24 |
+| Myth II's own core install | 10 |
+
+So converting a TFL plugin in isolation cannot produce a working plugin, no matter how
+good the body converters get. The stock tags it depends on have to come from somewhere:
+
+1. **A TFL installation as a second input.** The honest fix, and what mythextract's
+   `loadtags.py` is built for — resolve the plugin against the game directory, then convert
+   the referenced stock tags too. Requires TFL game data, which is not on this machine.
+2. **Target an existing TFL→Myth II port as a required tagset.** The Magma port already
+   contains 24 of the 84 under their *original TFL IDs*, so they resolve with no remapping
+   at all. Cheaper, but the output then depends on a third-party plugin.
+3. **Map TFL stock IDs onto Myth II equivalents** where one exists — this is what
+   `src/idmap.py` is for, and what the remaining 50 would need.
+
+With the Magma port loaded, several levels drop to a **single** unresolved tag, always mesh
+lighting (`meli.deml` for 59 meshes, `meli.mo#1` for 8). Myth II ships 25 distinct `meli`
+tags, all 64-byte bodies, so a mapping is plausible — though picking one is an aesthetic
+judgement about lighting, not a correctness one, and belongs in `idmap` as an explicitly
+lossy substitution.
+
+Note this is orthogonal to body conversion: the 73 meshes, 17 `mons` and 90 `.256` tags
+that *are* in the plugin still need their bodies converted regardless. The dependency
+problem blocks end-to-end testing, not the remaining Phase 3 work.
