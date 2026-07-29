@@ -27,13 +27,25 @@ all 40, the three reverb values are identical in all 40, and the lighting
 fractions and colours agree in 35-39 of 40. Using a real port's values beats
 inventing plausible ones.
 
-**What this does not convert.** Only the 1024-byte header. Everything after it —
-terrain, marker palette, markers, map actions, media coverage, LOD data — is
-copied verbatim. Map actions in particular are known to differ: mythextract's
-``mesh_tag.ParamType.PROJECTILE_OR_WORLD_POINT_2D`` documents one parameter type
-code meaning ``WORLD_POINT_2D`` in TFL and ``PROJECTILE`` in Myth II. Markers
-carry tag IDs that an ID map would need to reach. Both are reported, not hidden.
+**What else this converts, and what it still does not.** Markers themselves and
+marker-palette entries need no structural change at all -- both are the same
+size and layout in TFL and Myth II (NOTES.md section 14) -- but a palette
+entry's tag reference is remapped through the ID map, same as any other tag
+reference. Map-action parameter **type codes** are corrected: TFL's numbering
+is missing a slot Myth II uses for a standalone ``PROJECTILE`` type, so every
+TFL code from 12 up means something different in Myth II
+(`src.mesh.resolve_param_type`); left uncorrected, that mismatch cascades into
+every later parameter in the buffer and is a plausible cause of the
+``EXCEPTION_ACCESS_VIOLATION`` seen when loading an otherwise-converted mesh.
+
+**What this still does not do:** tag references *inside* map-action parameter
+data (a `SOUND` or `PROJECTILE`-typed parameter's element bytes) are not yet
+remapped through the ID map, only the palette's. Terrain, media coverage and
+mesh LOD data are copied verbatim untouched, and are not known to need
+anything else.
 """
+
+import struct
 
 from ... import codec, formats, mesh as mesh_module
 
@@ -101,10 +113,12 @@ def convert(body, context=None):
     """Convert a TFL mesh body. Returns ``(new_body, warnings)``.
 
     ``context`` may carry ``use_vtfl`` to set the mesh's vTFL compatibility flag
-    (see `_convert_flags`).
+    (see `_convert_flags`) and ``id_map`` to remap marker-palette tag
+    references.
     """
     warnings = []
     use_vtfl = bool(getattr(context, "use_vtfl", False)) if context else False
+    id_map = getattr(context, "id_map", None) if context else None
 
     if len(body) < mesh_module.MESH_HEADER_SIZE:
         return body, [
@@ -156,20 +170,37 @@ def convert(body, context=None):
     converted = header.encode()
     assert len(converted) == mesh_module.MESH_HEADER_SIZE
 
-    trailing = body[mesh_module.MESH_HEADER_SIZE :]
-    if tfl.map_action_count:
-        warnings.append(
-            f"{tfl.map_action_count} map actions copied unconverted -- parameter "
-            f"type codes differ between the games (mythextract "
-            f"ParamType.PROJECTILE_OR_WORLD_POINT_2D)"
-        )
-    if tfl.marker_count:
-        warnings.append(
-            f"{tfl.marker_count} markers copied unconverted -- they carry tag IDs "
-            f"that ID remapping does not yet reach"
-        )
+    trailing = bytearray(body[mesh_module.MESH_HEADER_SIZE :])
 
-    return converted + trailing, warnings
+    if tfl.map_action_count:
+        start, size = tfl.map_actions_offset, tfl.map_action_buffer_size
+        end = start + size
+        try:
+            new_actions, action_warnings = mesh_module.convert_tfl_map_actions(
+                bytes(trailing[start:end]), tfl.map_action_count
+            )
+            trailing[start:end] = new_actions
+            warnings.extend(action_warnings)
+        except (struct.error, ValueError) as exc:
+            warnings.append(
+                f"map actions left unconverted -- could not be parsed: {exc}"
+            )
+
+    if tfl.marker_palette_entries:
+        start, size = tfl.marker_palette_offset, tfl.marker_palette_size
+        end = start + size
+        try:
+            new_palette, palette_warnings = mesh_module.remap_marker_palette(
+                bytes(trailing[start:end]), tfl.marker_palette_entries, id_map
+            )
+            trailing[start:end] = new_palette
+            warnings.extend(palette_warnings)
+        except struct.error as exc:
+            warnings.append(
+                f"marker palette left unconverted -- could not be parsed: {exc}"
+            )
+
+    return converted + bytes(trailing), warnings
 
 
 def _convert_flags(flags, use_vtfl):

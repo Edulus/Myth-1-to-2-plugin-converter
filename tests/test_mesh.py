@@ -1,5 +1,6 @@
 """Tests for mesh header parsing and entrypoint synthesis."""
 
+import os
 import pathlib
 import sys
 import unittest
@@ -70,6 +71,225 @@ class TestMeshHeaderLayout(unittest.TestCase):
         found = {(t, i) for t, i, _ in mesh.referenced_tags(header, formats.TFL)}
         self.assertIn((b"stli", b"30cc"), found)
         self.assertNotIn((b"text", b"\xff" * 4), found)
+
+
+class TestMarkerAndMapActionStructs(unittest.TestCase):
+    """The pure structural facts from NOTES.md section 14: markers, marker
+    palette entries and map-action heads are byte-identical between TFL and
+    Myth II. Sizes cross-checked against mythextract's own declared formats
+    and two independent community tools that ported real levels this way."""
+
+    def test_sizes_match_the_reference_structs(self):
+        self.assertEqual(64, mesh.MarkerHead.size)
+        self.assertEqual(32, mesh.MarkerPaletteEntry.size)
+        self.assertEqual(64, mesh.MapActionHead.size)
+
+
+class TestParamTypeResolution(unittest.TestCase):
+    def test_sb_never_reinterprets(self):
+        for raw in range(21):
+            self.assertEqual(
+                mesh.ParamType(raw), mesh.resolve_param_type(raw, formats.SB)
+            )
+
+    def test_tfl_ambiguous_codes_resolve_per_notes_section_14(self):
+        cases = {
+            12: mesh.ParamType.WORLD_POINT_2D,
+            14: mesh.ParamType.OBJECT_IDENTIFIER,
+            16: mesh.ParamType.SOUND_SOURCE_IDENTIFIER,
+            18: mesh.ParamType.LOCAL_PROJECTILE_GROUP_IDENTIFIER,
+        }
+        for raw, expected in cases.items():
+            self.assertEqual(expected, mesh.resolve_param_type(raw, formats.TFL))
+
+    def test_tfl_unambiguous_codes_pass_through(self):
+        """Codes TFL and Myth II agree on (everything except 12/14/16/18) are
+        unaffected by the TFL branch."""
+        for raw in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 20):
+            self.assertEqual(
+                mesh.ParamType(raw), mesh.resolve_param_type(raw, formats.TFL)
+            )
+
+    def test_unknown_code_raises_rather_than_guesses(self):
+        with self.assertRaises(ValueError):
+            mesh.resolve_param_type(99, formats.TFL)
+
+
+class TestParamDataLength(unittest.TestCase):
+    """Every case here is one of the three worked examples in mythextract's
+    docs/ActionParamElementFormat.txt, so the byte counts are not guesses."""
+
+    def test_string_is_1_byte_per_char_aligned_to_4(self):
+        # "Villagers OBJE\0": 15 bytes incl. null, padded to 16.
+        self.assertEqual(16, mesh.param_data_length(mesh.ParamType.STRING, 15))
+
+    def test_action_identifier_is_2_bytes_per_element_padded_to_even_count(self):
+        # 3 elements x 2 bytes + 2 pad bytes = 8.
+        self.assertEqual(
+            8, mesh.param_data_length(mesh.ParamType.ACTION_IDENTIFIER, 3)
+        )
+
+    def test_world_point_2d_is_8_bytes_per_pair(self):
+        self.assertEqual(8, mesh.param_data_length(mesh.ParamType.WORLD_POINT_2D, 1))
+        self.assertEqual(16, mesh.param_data_length(mesh.ParamType.WORLD_POINT_2D, 2))
+
+    def test_tag_reference_types_are_4_bytes_each(self):
+        for t in (mesh.ParamType.SOUND, mesh.ParamType.FIELD_NAME, mesh.ParamType.PROJECTILE):
+            self.assertEqual(12, mesh.param_data_length(t, 3))
+
+
+class TestConvertTflMapActions(unittest.TestCase):
+    def _action(self, params_bytes, num_params, action_id=1):
+        head = mesh.MapActionHead.build(
+            id=action_id, expiration_mode=0, type=b"trig", flags=0,
+            trigger_time_lower_bound=0, trigger_time_delta=0,
+            num_params=num_params, size=len(params_bytes), offset=0, indent=0,
+        ).encode()
+        return head + params_bytes
+
+    def test_ambiguous_type_is_shifted_data_is_not(self):
+        import struct
+
+        param = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 100, 200)
+        buf = self._action(param, num_params=1)
+
+        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        self.assertEqual([], warnings)
+        self.assertEqual(13, struct.unpack_from(">H", new_buf, 64)[0])
+        self.assertEqual(param[2:], new_buf[64 + 2 :])  # count/name/data untouched
+
+    def test_unambiguous_type_is_not_touched(self):
+        import struct
+
+        param = struct.pack(">HH4s", 3, 1, b"link") + b"\x00\x00\x00\x2a"
+        buf = self._action(param, num_params=1)
+
+        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        self.assertEqual([], warnings)
+        self.assertEqual(buf, new_buf)
+
+    def test_multiple_params_walk_correctly(self):
+        """A shifted param followed by an unshifted one -- proves the offset
+        bookkeeping (which depends on correct byte-length calculation) does
+        not desync partway through."""
+        import struct
+
+        param1 = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 1, 2)
+        param2 = struct.pack(">HH4s", 5, 1, b"cnt1") + struct.pack(">L", 42)
+        buf = self._action(param1 + param2, num_params=2)
+
+        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        self.assertEqual([], warnings)
+        self.assertEqual(13, struct.unpack_from(">H", new_buf, 64)[0])
+        self.assertEqual(5, struct.unpack_from(">H", new_buf, 64 + len(param1))[0])
+
+    def test_unknown_type_warns_and_stops_that_actions_walk(self):
+        """An unrecognised type means byte length can no longer be trusted --
+        continuing to walk would risk corrupting whatever comes after."""
+        import struct
+
+        param1 = struct.pack(">HH4s", 250, 1, b"????") + b"\x00" * 4
+        param2 = struct.pack(">HH4s", 3, 1, b"link") + b"\x00" * 4
+        buf = self._action(param1 + param2, num_params=2)
+
+        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        self.assertEqual(1, len(warnings))
+        self.assertIn("unrecognised parameter type 250", warnings[0])
+        self.assertEqual(buf, new_buf, "left fully untouched once trust is lost")
+
+    def test_multiple_actions(self):
+        import struct
+
+        param_a = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 1, 2)
+        param_b = struct.pack(">HH4s", 12, 1, b"cent") + struct.pack(">2L", 3, 4)
+        head_a = mesh.MapActionHead.build(
+            id=1, expiration_mode=0, type=b"trig", flags=0,
+            trigger_time_lower_bound=0, trigger_time_delta=0,
+            num_params=1, size=len(param_a), offset=0, indent=0,
+        ).encode()
+        head_b = mesh.MapActionHead.build(
+            id=2, expiration_mode=0, type=b"trig", flags=0,
+            trigger_time_lower_bound=0, trigger_time_delta=0,
+            num_params=1, size=len(param_b), offset=len(param_a), indent=0,
+        ).encode()
+        buf = head_a + head_b + param_a + param_b
+
+        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=2)
+        self.assertEqual([], warnings)
+        action_head_end = 2 * mesh.MAP_ACTION_HEAD_SIZE
+        self.assertEqual(13, struct.unpack_from(">H", new_buf, action_head_end)[0])
+        self.assertEqual(
+            13, struct.unpack_from(">H", new_buf, action_head_end + len(param_a))[0]
+        )
+
+
+class TestRemapMarkerPalette(unittest.TestCase):
+    def _palette(self, entries):
+        return b"".join(
+            mesh.MarkerPaletteEntry.build(
+                type=int(marker_type), flags=0, marker_tag=tag,
+                team_index=-1, netgame_flags=0,
+            ).encode()
+            for marker_type, tag in entries
+        )
+
+    def test_remaps_a_scenery_reference(self):
+        from src.idmap import IdMap
+
+        buf = self._palette([(mesh.MarkerType.SCENERY, b"oldi")])
+        id_map = IdMap()
+        id_map.add(b"scen", b"oldi", b"newi")
+
+        new_buf, warnings = mesh.remap_marker_palette(buf, 1, id_map)
+        self.assertEqual([], warnings)
+        entry = mesh.MarkerPaletteEntry.unpack(new_buf, 0)
+        self.assertEqual(b"newi", entry.marker_tag)
+
+    def test_unmapped_reference_is_left_alone(self):
+        from src.idmap import IdMap
+
+        buf = self._palette([(mesh.MarkerType.SCENERY, b"unkn")])
+        new_buf, _ = mesh.remap_marker_palette(buf, 1, IdMap())
+        self.assertEqual(buf, new_buf)
+
+    def test_no_id_map_leaves_everything_alone(self):
+        buf = self._palette([(mesh.MarkerType.SCENERY, b"oldi")])
+        new_buf, _ = mesh.remap_marker_palette(buf, 1, None)
+        self.assertEqual(buf, new_buf)
+
+    def test_unset_and_type_without_a_tag_are_skipped(self):
+        from src.idmap import IdMap
+
+        buf = self._palette(
+            [
+                (mesh.MarkerType.SCENERY, b"\xff\xff\xff\xff"),  # unset
+                (mesh.MarkerType.OBSERVER, b"oldi"),  # no tag type at all
+            ]
+        )
+        id_map = IdMap()
+        id_map.add(b"scen", b"oldi", b"newi")  # would match if type were SCENERY
+
+        new_buf, _ = mesh.remap_marker_palette(buf, 2, id_map)
+        self.assertEqual(buf, new_buf, "neither entry should have been touched")
+
+    def test_multiple_entries_each_remapped_independently(self):
+        from src.idmap import IdMap
+
+        buf = self._palette(
+            [
+                (mesh.MarkerType.SCENERY, b"tre1"),
+                (mesh.MarkerType.UNIT, b"unt1"),
+            ]
+        )
+        id_map = IdMap()
+        id_map.add(b"scen", b"tre1", b"tre2")
+        id_map.add(b"unit", b"unt1", b"unt2")
+
+        new_buf, _ = mesh.remap_marker_palette(buf, 2, id_map)
+        e0 = mesh.MarkerPaletteEntry.unpack(new_buf, 0)
+        e1 = mesh.MarkerPaletteEntry.unpack(new_buf, mesh.MARKER_PALETTE_ENTRY_SIZE)
+        self.assertEqual(b"tre2", e0.marker_tag)
+        self.assertEqual(b"unt2", e1.marker_tag)
 
 
 class TestEntrypointSynthesis(unittest.TestCase):
@@ -241,17 +461,76 @@ class TestMeshBodyConversion(unittest.TestCase):
         converted, _ = self._convert(body)
         self.assertEqual(trailing, converted[mesh.MESH_HEADER_SIZE :])
 
-    def test_map_actions_and_markers_are_flagged_as_unconverted(self):
+    def test_map_action_param_types_are_corrected(self):
+        """The actual fix for the EXCEPTION_ACCESS_VIOLATION in byte_swap_data
+        (NOTES.md section 14): TFL param type 12 means WORLD_POINT_2D, which
+        Myth II numbers 13. Left uncorrected, the engine misreads every
+        parameter after the first wrongly-typed one."""
         import struct
 
-        body = bytearray(fixtures.mesh_body())
-        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
-        struct.pack_into(">L", body, offsets["map_action_count"], 7)
-        struct.pack_into(">L", body, offsets["marker_count"], 12)
+        head = mesh.MapActionHead.build(
+            id=1, expiration_mode=0, type=b"trig", flags=0,
+            trigger_time_lower_bound=0, trigger_time_delta=0,
+            num_params=1, size=16, offset=0, indent=0,
+        ).encode()
+        param = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 100, 200)
+        actions = head + param
 
-        _, warnings = self._convert(bytes(body))
-        self.assertTrue([w for w in warnings if "7 map actions" in w])
-        self.assertTrue([w for w in warnings if "12 markers" in w])
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        header_bytes = bytearray(fixtures.mesh_body(trailing=actions))
+        struct.pack_into(">L", header_bytes, offsets["map_action_count"], 1)
+        struct.pack_into(">L", header_bytes, offsets["map_actions_offset"], 0)
+        struct.pack_into(">L", header_bytes, offsets["map_action_buffer_size"], len(actions))
+
+        converted, warnings = self._convert(bytes(header_bytes))
+        self.assertEqual([], warnings)
+        new_type = struct.unpack_from(">H", converted, mesh.MESH_HEADER_SIZE + 64)[0]
+        self.assertEqual(13, new_type, "TFL raw 12 must become Myth II's WORLD_POINT_2D (13)")
+        # The actual position data is untouched -- only the type code changes.
+        self.assertEqual(
+            struct.pack(">2L", 100, 200),
+            converted[mesh.MESH_HEADER_SIZE + 64 + 8 :][:8],
+        )
+
+    def test_marker_palette_tag_is_remapped(self):
+        import struct
+
+        from src.idmap import IdMap
+        from src.convert.tags import mesh as mesh_converter
+        from src.convert import plugin as convert_plugin
+
+        entry = mesh.MarkerPaletteEntry.build(
+            type=int(mesh.MarkerType.SCENERY), flags=0,
+            marker_tag=b"oldi", team_index=-1, netgame_flags=0,
+        ).encode()
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        header_bytes = bytearray(fixtures.mesh_body(trailing=entry))
+        struct.pack_into(">L", header_bytes, offsets["marker_palette_entries"], 1)
+        struct.pack_into(">L", header_bytes, offsets["marker_palette_offset"], 0)
+        struct.pack_into(">L", header_bytes, offsets["marker_palette_size"], len(entry))
+
+        id_map = IdMap()
+        id_map.add(b"scen", b"oldi", b"newi")
+        context = convert_plugin.ConversionContext(id_map=id_map)
+
+        converted, warnings = mesh_converter.convert(bytes(header_bytes), context)
+        self.assertEqual([], warnings)
+        remapped = mesh.MarkerPaletteEntry.unpack(converted, mesh.MESH_HEADER_SIZE)
+        self.assertEqual(b"newi", remapped.marker_tag)
+
+    def test_malformed_trailing_data_is_reported_not_crashed(self):
+        """Counts that do not match the available bytes must not raise -- a
+        converter that crashes on one bad mesh takes the whole plugin with it."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        header_bytes = bytearray(fixtures.mesh_body(trailing=b""))
+        struct.pack_into(">L", header_bytes, offsets["map_action_count"], 7)
+        struct.pack_into(">L", header_bytes, offsets["map_action_buffer_size"], 0)
+
+        converted, warnings = self._convert(bytes(header_bytes))
+        self.assertTrue([w for w in warnings if "map actions" in w and "could not be parsed" in w])
 
     def test_vtfl_flag_is_opt_in(self):
         from src.convert.tags import mesh as mesh_converter
@@ -285,6 +564,69 @@ class TestMeshBodyConversion(unittest.TestCase):
         converted_mesh = [t for t in sb.tags if t.tag_type == b"mesh"][0]
         header = mesh.parse_header(converted_mesh.body, formats.SB)
         self.assertEqual(2048, header.ceiling_height)
+
+
+class TestRealPluginMeshBodies(unittest.TestCase):
+    """The gate that actually matters for section 14: every mesh in a real
+    93 MB TFL plugin must walk without error. Skips cleanly without a sample,
+    same convention as tests/test_roundtrip.py."""
+
+    def _sample_path(self):
+        import pathlib
+
+        single = os.environ.get("MYTH_SAMPLE_PLUGIN")
+        if single and pathlib.Path(single).is_file():
+            return pathlib.Path(single)
+        directory = os.environ.get("MYTH_SAMPLE_DIR")
+        if directory:
+            for entry in sorted(pathlib.Path(directory).iterdir()):
+                if entry.is_file() and entry.suffix.lower() == ".gor":
+                    return entry
+        return None
+
+    def test_every_mesh_in_a_real_plugin_walks_cleanly(self):
+        path = self._sample_path()
+        if not path:
+            self.skipTest(
+                "No sample supplied. Set MYTH_SAMPLE_PLUGIN=<file.gor> or "
+                "MYTH_SAMPLE_DIR=<dir> to run this gate."
+            )
+
+        m = reader.read(path)
+        if m.is_sb:
+            self.skipTest(f"{path.name} is a Myth II container, not TFL")
+
+        meshes = m.by_type(b"mesh")
+        self.assertGreater(len(meshes), 0, "sample has no mesh tags")
+
+        total_actions = total_palette = 0
+        for tag in meshes:
+            header = mesh.parse_header(tag.body, formats.TFL)
+            trailing = tag.body[mesh.MESH_HEADER_SIZE :]
+
+            if header.map_action_count:
+                start, size = header.map_actions_offset, header.map_action_buffer_size
+                _, warnings = mesh.convert_tfl_map_actions(
+                    bytes(trailing[start : start + size]), header.map_action_count
+                )
+                self.assertEqual(
+                    [], warnings, f"mesh.{tag.tag_id}: {warnings}"
+                )
+                total_actions += header.map_action_count
+
+            if header.marker_palette_entries:
+                start = header.marker_palette_offset
+                size = header.marker_palette_size
+                _, warnings = mesh.remap_marker_palette(
+                    bytes(trailing[start : start + size]),
+                    header.marker_palette_entries,
+                    id_map=None,
+                )
+                self.assertEqual([], warnings, f"mesh.{tag.tag_id}: {warnings}")
+                total_palette += header.marker_palette_entries
+
+        self.assertGreater(total_actions, 0, "sample has no map actions to exercise")
+        self.assertGreater(total_palette, 0, "sample has no palette entries to exercise")
 
 
 if __name__ == "__main__":

@@ -659,3 +659,154 @@ merely lossy but fatal, and identifies the mesh body sub-blocks as the next piec
 Progression across the two experiments is worth noting as a method: each fix moved the
 failure one layer deeper and the engine named the layer each time. The log is a better
 oracle than any amount of static analysis of the format.
+
+---
+
+## 14. Markers, marker palette, and map actions — from a 2011 community tool
+
+The user found and shared [Iron's Mesh Converter](https://tain.totalcodex.net/items/show/mesh-converter-mac-and-windows-w-source-code)
+(Mac and Windows binaries, released with source, uploaded 2011, 1,481 downloads).
+Its README documents a fully manual TFL-to-Myth-II mesh porting workflow —
+rebuild the terrain and the unit/scenery/model lists by hand in each game's
+level editor ("Loathing"), matching them exactly, then run a small C program
+that splices the TFL mesh's markers and map actions into the freshly-built
+Myth II mesh. Both the Mac (`converter.c`) and Windows (`winconverter.c`)
+source files are included and are near-identical.
+
+This is source code that shipped real, playable ported levels (the author
+references completing "the second TFL Mappack"), and it is the only place
+this project has found an actual **working** implementation of the mesh
+body conversion this tool has been missing. Cross-referenced against
+mythextract's own struct declarations and doc examples before trusting any
+of it — three independent sources agreeing is a much stronger basis than
+one 13-year-old hobbyist tool with a README that says "sometimes it gets it
+horribly wrong."
+
+### Markers, marker palette entries, and map-action heads need no conversion
+
+All three are the **same size and field layout in TFL and Myth II** —
+unlike the mesh header itself (§4), which is the same size but different
+layout, this is the first mesh sub-structure found to be genuinely shared.
+Verified three ways:
+
+* mythextract declares one `MarkerHeadFmt` (64 bytes), one
+  `MarkerPaletteEntryFmt` (32 bytes), and one `ActionHeadFmt` (64 bytes) —
+  no TFL variant of any of the three, and no game-version branch when
+  reading them.
+* Both the Mac and Windows converter tools copy all three wholesale —
+  `fwrite(tfl_data + tfl_header.markers_offset + 1088, ...)` — with no
+  per-record field remapping at all.
+* The byte sizes match exactly by direct calculation from both mythextract's
+  field lists and the tools' C structs (`struct marker_data` = 64 bytes,
+  `struct m2_marker_palette_entry` = 32 bytes, `struct map_action` = 64
+  bytes).
+
+Ported into `src/mesh.py` as `MarkerHead`, `MarkerPaletteEntry`,
+`MapActionHead` — one struct each, no `_TFL_` variant needed, the first
+mesh sub-structure in this project not to need one.
+
+### A structural discovery this project had missed: offsets don't need to move at all
+
+Both community tools spend most of their code recomputing offsets
+(`insert_section`, `data_size +=`, `if X_offset >= Y_offset: X_offset +=
+size`) because they are **splicing TFL data into a separately-built Myth II
+mesh** that started with different section sizes. That entirely doesn't
+apply to this project: we convert one mesh's header in place, and every
+offset stored in it (`markers_offset`, `marker_palette_offset`,
+`map_actions_offset`, ...) is already a `SHARED_FIELDS` entry copied
+verbatim by the existing header converter, unchanged. Since the header is
+1024 bytes long in both formats and offsets are body-relative (§3), the
+trailing data literally never has to move. This makes the actual fix here
+much smaller than the two community tools' offset-juggling code would
+suggest — it is a surgical patch of specific bytes in place, not a splice.
+
+### The real bug: TFL's ParamType numbering is missing a slot
+
+This is very likely a direct cause of the `EXCEPTION_ACCESS_VIOLATION`
+inside `byte_swap_data` from §13. Both community tools independently
+implement a fixup that increments certain map-action parameter type codes
+by one when converting from TFL, triggered on TFL raw values 13-19
+generally and specifically on raw value 12 when the parameter's 4-character
+name matches one of eleven geometry-related names (`wayp`, `cent`, `deci`,
+`line`, `grce`, `poly`, `poin`, `focu`, `dest`, `pnts`, `radi`).
+
+mythextract's own **read-side** handling of this (`parse_map_actions`,
+`scripts/mesh_tag.py:1285-1296`) gives the complete, principled version of
+the same fact, and is what `src/mesh.py:resolve_param_type` ports:
+
+```python
+tfl = (game_version == 1)
+if param_type == ParamType.PROJECTILE_OR_WORLD_POINT_2D:      # raw 12
+    param_type = ParamType.WORLD_POINT_2D if tfl else ParamType.PROJECTILE
+if tfl and param_type == ParamType.WORLD_RECTANGLE_2D:         # raw 14
+    param_type = ParamType.OBJECT_IDENTIFIER
+if tfl and param_type == ParamType.MODEL_IDENTIFIER:           # raw 16
+    param_type = ParamType.SOUND_SOURCE_IDENTIFIER
+if tfl and param_type == ParamType.WORLD_POINT_3D:              # raw 18
+    param_type = ParamType.LOCAL_PROJECTILE_GROUP_IDENTIFIER
+```
+
+In plain terms: Myth II's `ParamType` enum has a slot for a standalone
+`PROJECTILE` element type (value 12, named `PROJECTILE_OR_WORLD_POINT_2D` in
+mythextract precisely because of this ambiguity) that TFL's enum does not
+have. Every TFL code from 12 upward therefore means something one position
+earlier than the same numeric code means in Myth II. Cross-checked directly
+against `docs/ActionParamElementFormat.txt`'s own worked example: type 13,
+field name `wayp`, is documented as `WORLD_POINT_2D` — exactly the target
+the community tools' `type++` fixup produces from TFL's raw 12.
+
+This is a materially better fact than what either community tool
+implements: their field-name whitelist for the raw-12 case is incomplete by
+their own admission ("sometimes it gets it horribly wrong"), whereas the
+rule above requires no whitelist at all — it is a direct function of the
+raw type code alone.
+
+**Nothing about the underlying data changes.** The scale factors, byte
+widths, and element counts for every parameter type are identical between
+the games (confirmed against all three of `docs/ActionParamElementFormat.txt`'s
+worked examples). Converting a parameter is therefore never a matter of
+re-encoding values — only of correcting **which 2-byte type code sits in
+front of already-correct data**, so `src/mesh.py:convert_tfl_map_actions`
+walks the parameter stream (correctly computing each parameter's byte
+length via `param_data_length`, itself ported from mythextract's own sizing
+rules) and rewrites only that one field per parameter, in place.
+
+### Marker palette: the natural point to apply ID remapping
+
+A marker's actual tag reference lives one level removed — on the *palette
+entry* its `palette_index` points at (`marker_tag`, a plain 4-byte tag id),
+not on the marker record itself. `src/mesh.py:remap_marker_palette` applies
+the plugin's `id_map` here, exactly the same substitution mechanism already
+used for the top-level tag directory and mesh header fields. This also
+means `unresolved_references()` in `convert/plugin.py` was undercounting:
+it previously only walked mesh *header* fields. Extended to also walk each
+mesh's marker palette, the real test plugin's honest reference count goes
+from 84 tags (582 references, header fields only) to **383 tags (4,006
+references, headers + palettes)**. That is not a regression — the
+dependency was always there; the tooling simply could not see most of it
+until now.
+
+### Validated against the real plugin, not just synthetic fixtures
+
+Every one of the 73 meshes in the 93 MB test plugin was walked with the new
+code: **2,760 real map actions, 7,942 real parameters, 4,068 real marker
+palette entries, zero parse errors, zero "unrecognised type" warnings.** 589
+of those 7,942 parameters carried a TFL raw type of 12 or 14 and needed the
+shift; the fix changed exactly 589 bytes (the low byte of a big-endian
+`uint16` going from 12→13 or 14→15 never touches the high byte) and nothing
+else. No parameter in this plugin used raw 16 or 18, so
+`MODEL_IDENTIFIER`→`SOUND_SOURCE_IDENTIFIER` and
+`WORLD_POINT_3D`→`LOCAL_PROJECTILE_GROUP_IDENTIFIER` remain validated only
+against mythextract's documented rule, not against real bytes from this
+particular plugin.
+
+### Still not done
+
+Tag references *inside* map-action parameter **data** (a `SOUND`- or
+`PROJECTILE`-typed parameter's element bytes, per `PARAM_TYPE_TAG` in
+`src/mesh.py`) are not yet remapped through `id_map` — only the marker
+palette's references are. That is a data-completeness gap, not a
+structural one: the type-code fix above is what should stop the crash;
+finishing ID remapping inside action parameters is follow-up work toward a
+fully self-contained conversion, using the same `PARAM_TYPE_TAG` mapping
+already ported and ready for it.

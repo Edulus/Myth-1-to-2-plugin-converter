@@ -167,7 +167,7 @@ run that is meant to be the real gate.
 | `.256` `d256` | pass-through | body unconverted | -- |
 | `mons` | pass-through | **body unconverted** -- 512B in TFL vs 1024B in Myth II, so this is wrong, not merely lossy | -- |
 | `unit` `arti` | pass-through | `arti` is 128B vs 168B | -- |
-| `mesh` | **header converts** | 6 TFL-only fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); **map actions and markers copied unconverted** | 38 Myth II-only fields, defaulted from measurements of `Magma - The Fallen Lords v1.9` |
+| `mesh` | **header + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9` |
 | `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
 | *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
@@ -180,10 +180,11 @@ menu by name -- confirmed in-engine. Starting one still fails, for two separate 
 
 1. The pass-through bodies above are still in TFL format.
 2. **A TFL plugin is not self-contained.** It references the stock TFL tag library the way
-   a Myth II plugin references the base game. The test plugin's mesh headers alone point at
-   84 tags it does not contain. Converting a plugin in isolation cannot fix that -- the
-   stock tags have to come from a TFL installation supplied as a second input, or be mapped
-   onto Myth II equivalents. See [NOTES.md](NOTES.md) section 12.
+   a Myth II plugin references the base game. Counting mesh header fields *and* marker
+   palette entries, the test plugin's meshes point at 383 tags (4,006 references) they do
+   not contain. Converting a plugin in isolation cannot fix that -- the stock tags have to
+   come from a TFL installation supplied as a second input, or be mapped onto Myth II
+   equivalents. See [NOTES.md](NOTES.md) sections 12-14.
 
 The container side, however, is confirmed working: a plugin built by `src/writer.py` with
 **both checksums zeroed** loads and plays in Myth II 1.8.5. See below.
@@ -208,6 +209,13 @@ Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the 
   TFL port loaded as a tagset, the missing-tag errors disappear and loading proceeds to the
   next layer -- a crash in the engine's `byte_swap_data` while reading the mesh's data
   blocks, which are still TFL-shaped. See [NOTES.md](NOTES.md) section 13.
+- **Markers, marker-palette entries, and map-action headers need no format conversion at
+  all** -- verified against a real, working 2011 community tool's source code as well as
+  mythextract's own declared struct formats. The one genuine bug found: TFL's map-action
+  parameter type numbering is missing a slot Myth II has, so every TFL type code from 12
+  up is off by one -- a very plausible cause of the crash above. Fixed and validated
+  against all 2,760 map actions / 7,942 parameters in the real test plugin. See
+  [NOTES.md](NOTES.md) section 14.
 
 ## Layout
 

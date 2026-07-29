@@ -18,6 +18,19 @@ source files. NOTES.md documents what was taken from it, file by file.
 mythextract is not vendored or redistributed here. It is cloned into a
 git-ignored `reference/` directory for study only.
 
+The mesh marker, marker-palette, and map-action structures in `src/mesh.py`
+(and the map-action parameter type table specifically) were additionally
+cross-checked against:
+
+    Iron's Mesh Converter (Mac and Windows, with source)
+    https://tain.totalcodex.net/items/show/mesh-converter-mac-and-windows-w-source-code
+    "released as-is with permission from iron", uploaded 2011
+
+No code from that tool is vendored or reproduced here; it was consulted only
+as a second, independent source to validate struct layouts and the TFL/Myth II
+parameter-type mapping already derived from mythextract, and the reasoning is
+recorded in NOTES.md section 14.
+
 
 Trademarks and game data
 ------------------------

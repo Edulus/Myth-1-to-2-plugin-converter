@@ -19,6 +19,7 @@ Entrypoints *are* synthesised, one per mesh tag, so converted levels appear in
 the game's menu -- see `entrypoints`.
 """
 
+import struct
 from dataclasses import dataclass, field
 
 from .. import codec, formats, idmap as idmap_module, mesh as mesh_module, reader, writer
@@ -81,36 +82,71 @@ class ConversionReport:
 class ConversionContext:
     """Settings the per-tag-type converters may consult."""
 
-    def __init__(self, use_vtfl=False, mesh_defaults=None):
+    def __init__(self, use_vtfl=False, mesh_defaults=None, id_map=None):
         self.use_vtfl = use_vtfl
         self.mesh_defaults = mesh_defaults or {}
+        self.id_map = id_map
 
 
 def unresolved_references(mono, id_map=None):
-    """Tags the container's mesh headers point at but do not contain.
+    """Tags the container's mesh headers *and marker palettes* point at but do
+    not contain.
 
-    Returns ``{(tag_type, tag_id): mesh_count}``. Mesh headers only for now --
-    other tag types hold references too (mythextract ``tag2local.py`` is the
-    full list) but their bodies are not parsed yet, so this undercounts and
-    says so rather than pretending to be complete.
+    Returns ``{(tag_type, tag_id): reference_count}``. Covers mesh header
+    fields and marker-palette entries (scenery/unit/model/projectile/ambient
+    sound/local-projectile-group/animation references -- see
+    `src.mesh.MARKER_TYPE_TO_TAG`). Still not the full picture: other tag
+    types hold references too (mythextract ``tag2local.py`` is the full list),
+    and tag references embedded in map-action parameter data are not walked
+    yet -- so this undercounts, and says so, rather than pretending to be
+    complete.
     """
     present = {(t.tag_type, t.tag_id) for t in mono.tags}
     missing = {}
+
+    def note(tag_type, tag_id):
+        resolved = id_map.map_id(tag_type, tag_id) if id_map else tag_id
+        if (tag_type, resolved) not in present:
+            missing[(tag_type, tag_id)] = missing.get((tag_type, tag_id), 0) + 1
+
     for tag in mono.by_type(b"mesh"):
         try:
             header = mesh_module.parse_header(tag.body, mono.game_version)
         except ValueError:
             continue
+
+        # Resolve through the ID map, but key the result on the *original* ID.
+        # Keying on the mapped one would rename the thing the user is being
+        # asked about, so a later "did they decide this?" lookup could never
+        # match -- and the reference would look permanently undecided.
         for tag_type, tag_id, _field in mesh_module.referenced_tags(
             header, mono.game_version
         ):
-            # Resolve through the ID map, but key the result on the *original*
-            # ID. Keying on the mapped one would rename the thing the user is
-            # being asked about, so a later "did they decide this?" lookup could
-            # never match -- and the reference would look permanently undecided.
-            resolved = id_map.map_id(tag_type, tag_id) if id_map else tag_id
-            if (tag_type, resolved) not in present:
-                missing[(tag_type, tag_id)] = missing.get((tag_type, tag_id), 0) + 1
+            note(tag_type, tag_id)
+
+        if not header.marker_palette_entries:
+            continue
+        trailing = tag.body[mesh_module.MESH_HEADER_SIZE :]
+        start = header.marker_palette_offset
+        end = start + header.marker_palette_size
+        try:
+            entries = mesh_module.MarkerPaletteEntry.unpack_many(
+                trailing[start:end], 0, header.marker_palette_entries
+            )
+        except (struct.error, ValueError):
+            continue
+        for entry in entries:
+            try:
+                marker_type = mesh_module.MarkerType(entry.type)
+            except ValueError:
+                continue
+            tag_type = mesh_module.MARKER_TYPE_TO_TAG.get(marker_type)
+            if tag_type is None:
+                continue
+            if codec.all_on(entry.marker_tag) or codec.all_off(entry.marker_tag):
+                continue
+            note(tag_type, entry.marker_tag)
+
     return missing
 
 
@@ -123,6 +159,10 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
 
     id_map = id_map if id_map is not None else idmap_module.default_map()
     context = context if context is not None else ConversionContext()
+    # A single source of truth: whatever id_map this call resolved to is what
+    # per-tag-type converters see too, regardless of what a caller-supplied
+    # context happened to be constructed with.
+    context.id_map = id_map
     report = ConversionReport(source_tags=len(mono.tags))
 
     if len(mono.tags) > headers.INT16_MAX:

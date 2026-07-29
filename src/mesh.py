@@ -22,6 +22,7 @@ which is why moving a mesh tag between containers does not require rewriting it.
 """
 
 import enum
+import struct
 
 from . import codec, formats
 
@@ -361,3 +362,312 @@ def referenced_tags(header, game_version):
         if value and not codec.all_on(value) and not codec.all_off(value):
             found.append((tag_type, value, field))
     return found
+
+
+# --- Markers, marker palette, map actions -------------------------------------
+#
+# Everything below is *shared* between TFL and Myth II -- one struct each, no
+# TFL/SB variant -- which is the opposite of the header above. Verified three
+# ways: mythextract's own struct declarations (``MarkerHeadFmt``,
+# ``MarkerPaletteEntryFmt``, ``ActionHeadFmt``, all read without a
+# game-version branch), and two independent community tools that ported real
+# TFL levels to Myth II by copying these three structures byte-for-byte --
+# "Iron's Mesh Converter" (Mac and Windows builds, both with source,
+# distributed with permission at
+# tain.totalcodex.net/items/show/mesh-converter-mac-and-windows-w-source-code).
+# See NOTES.md section 14.
+#
+# What is *not* shared: the map-action **parameter type codes**. TFL's
+# ``ParamType`` numbering is missing the slot Myth II uses for a standalone
+# ``PROJECTILE`` type, so every TFL code from 12 up means something different
+# from the same numeric code in Myth II. That mismatch is a plausible direct
+# cause of the ``EXCEPTION_ACCESS_VIOLATION`` inside the engine's
+# ``byte_swap_data`` seen when loading an otherwise-converted mesh: a
+# misread parameter type means a misread element count, which desyncs every
+# subsequent read in the buffer. ``resolve_param_type`` and
+# ``param_data_length`` exist to fix exactly that, ported from mythextract's
+# own (read-side) handling of it in ``parse_map_actions``
+# (scripts/mesh_tag.py:1285-1296) and cross-checked against both community
+# tools' independently-arrived-at ``type++`` fixups for the same value range.
+
+MARKER_HEAD_SIZE = 64
+MARKER_PALETTE_ENTRY_SIZE = 32
+MAP_ACTION_HEAD_SIZE = 64
+
+# mythextract scripts/mesh_tag.py:658-673 (``MarkerHeadFmt``). Decoders for
+# position/angle scale factors are dropped -- this project's codec does not
+# do value decoding (see codec.py) -- since a structural pass-through never
+# needs the scaled float value, only the raw bytes.
+MarkerHead = codec.Struct(
+    "MarkerHead",
+    [
+        ("L", "flags"),
+        ("H", "type"),  # MarkerType
+        ("H", "palette_index"),
+        ("H", "id"),
+        ("H", "min_difficulty"),
+        ("L", "pos_x"),
+        ("L", "pos_y"),
+        ("l", "pos_z"),
+        ("8x", None),
+        ("H", "yaw"),
+        ("2x", None),
+        ("2x", None),
+        ("20x", None),
+        ("6x", None),
+    ],
+)
+
+# mythextract scripts/mesh_tag.py:677-686 (``MarkerPaletteEntryFmt``).
+MarkerPaletteEntry = codec.Struct(
+    "MarkerPaletteEntry",
+    [
+        ("H", "type"),  # MarkerType
+        ("H", "flags"),
+        ("4s", "marker_tag"),  # the tag reference this palette slot resolves to
+        ("h", "team_index"),
+        ("2x", None),
+        ("L", "netgame_flags"),
+        ("10x", None),
+        ("6x", None),
+    ],
+)
+
+# mythextract scripts/mesh_tag.py:111-122 (``ActionHeadFmt``).
+MapActionHead = codec.Struct(
+    "MapActionHead",
+    [
+        ("H", "id"),
+        ("H", "expiration_mode"),
+        ("4s", "type"),  # the action kind, e.g. b'soun' -- not a tag reference
+        ("L", "flags"),
+        ("L", "trigger_time_lower_bound"),
+        ("L", "trigger_time_delta"),
+        ("H", "num_params"),
+        ("H", "size"),
+        ("L", "offset"),
+        ("H", "indent"),
+        ("34x", None),
+    ],
+)
+
+assert MarkerHead.size == MARKER_HEAD_SIZE, MarkerHead.size
+assert MarkerPaletteEntry.size == MARKER_PALETTE_ENTRY_SIZE, MarkerPaletteEntry.size
+assert MapActionHead.size == MAP_ACTION_HEAD_SIZE, MapActionHead.size
+
+
+class MarkerType(enum.IntEnum):
+    """mythextract scripts/mesh_tag.py:402-414. 12 valid values (0-11); a
+    stored type of 12 or more marks the end of real data in at least one
+    community tool's experience with loose TFL mesh files (Iron's Mesh
+    Converter, ``load_tfl``) -- consistent with this being one past the
+    highest valid member, ``ANIMATION``."""
+
+    OBSERVER = 0
+    SCENERY = 1
+    UNKNOWN_1 = 2
+    UNIT = 3
+    UNKNOWN_2 = 4
+    AMBIENT_SOUND = 5
+    MODEL = 6
+    UNKNOWN_3 = 7
+    UNKNOWN_4 = 8
+    PROJECTILE = 9
+    LOCAL_PROJECTILE_GROUP = 10
+    ANIMATION = 11
+
+
+# mythextract scripts/mesh_tag.py:415-423 (``Marker2Tag``). Types absent here
+# (OBSERVER, the UNKNOWN_* slots) have no palette tag to look up.
+MARKER_TYPE_TO_TAG = {
+    MarkerType.SCENERY: b"scen",
+    MarkerType.UNIT: b"unit",
+    MarkerType.AMBIENT_SOUND: b"amso",
+    MarkerType.MODEL: b"mode",
+    MarkerType.PROJECTILE: b"proj",
+    MarkerType.LOCAL_PROJECTILE_GROUP: b"lpgr",
+    MarkerType.ANIMATION: b"anim",
+}
+
+
+class ParamType(enum.IntEnum):
+    """mythextract scripts/mesh_tag.py:688-709 (``ParamType``). This is Myth
+    II's numbering; a raw TFL value needs `resolve_param_type` first."""
+
+    FLAG = 0
+    STRING = 1
+    MONSTER_IDENTIFIER = 2
+    ACTION_IDENTIFIER = 3
+    ANGLE = 4
+    INTEGER = 5
+    WORLD_DISTANCE = 6
+    FIELD_NAME = 7
+    FIXED = 8
+    PROJECTILE = 9
+    STRING_LIST = 10
+    SOUND = 11
+    PROJECTILE_OR_WORLD_POINT_2D = 12  # TFL = WORLD_POINT_2D / SB = PROJECTILE
+    WORLD_POINT_2D = 13
+    WORLD_RECTANGLE_2D = 14
+    OBJECT_IDENTIFIER = 15
+    MODEL_IDENTIFIER = 16
+    SOUND_SOURCE_IDENTIFIER = 17
+    WORLD_POINT_3D = 18
+    LOCAL_PROJECTILE_GROUP_IDENTIFIER = 19
+    MODEL_ANIMATION_IDENTIFIER = 20
+
+
+# Parameter types that hold a tag reference as their element data, and the
+# marker/tag type that reference resolves against. mythextract
+# scripts/mesh_tag.py:424-435 (``param_id_marker``); STRING_LIST and
+# ACTION_IDENTIFIER are deliberately excluded -- a string-list reference is a
+# stli tag id but is looked up directly, and an action identifier refers to
+# another map action in the same mesh, never a tag.
+PARAM_TYPE_TAG = {
+    ParamType.MONSTER_IDENTIFIER: b"unit",
+    ParamType.SOUND_SOURCE_IDENTIFIER: b"amso",
+    ParamType.OBJECT_IDENTIFIER: b"proj",
+    ParamType.MODEL_IDENTIFIER: b"mode",
+    ParamType.LOCAL_PROJECTILE_GROUP_IDENTIFIER: b"lpgr",
+    ParamType.MODEL_ANIMATION_IDENTIFIER: b"anim",
+    ParamType.PROJECTILE: b"proj",
+    ParamType.SOUND: b"soun",
+}
+
+
+def resolve_param_type(raw_type, game_version):
+    """The true semantic `ParamType` for a stored raw type code.
+
+    TFL and Myth II share one enum, but TFL's on-disk numbering omits the slot
+    Myth II uses for a standalone ``PROJECTILE`` type, so every TFL code from
+    12 up means something different from the same numeric code in Myth II.
+    Ported from mythextract's ``parse_map_actions``
+    (scripts/mesh_tag.py:1285-1296), which already gets this right for
+    *reading* a TFL mesh; this is the same table.
+
+    Raises ``ValueError`` if ``raw_type`` is not a known code at all (not just
+    a TFL/SB ambiguity) -- that is data we do not understand, not data we can
+    silently reinterpret.
+    """
+    canonical = ParamType(raw_type)
+    if game_version != formats.TFL:
+        return canonical
+    if canonical == ParamType.PROJECTILE_OR_WORLD_POINT_2D:
+        return ParamType.WORLD_POINT_2D
+    if canonical == ParamType.WORLD_RECTANGLE_2D:
+        return ParamType.OBJECT_IDENTIFIER
+    if canonical == ParamType.MODEL_IDENTIFIER:
+        return ParamType.SOUND_SOURCE_IDENTIFIER
+    if canonical == ParamType.WORLD_POINT_3D:
+        return ParamType.LOCAL_PROJECTILE_GROUP_IDENTIFIER
+    return canonical
+
+
+def _align(boundary, value):
+    """mythextract scripts/mesh_tag.py:722-723 (``align``)."""
+    return (value + boundary - 1) & ~(boundary - 1)
+
+
+def param_data_length(param_type, count):
+    """Bytes of parameter data following a param's 8-byte header (type, count,
+    name), given its true semantic type and stored element count.
+
+    Ported from mythextract's sizing rules in ``parse_map_actions``
+    (scripts/mesh_tag.py:1298-1335). Deliberately returns only a byte count,
+    not decoded values: converting a param never needs to touch its data,
+    only (sometimes) its type code, so there is nothing to gain from decoding
+    the numbers only to re-encode them unchanged. Cross-checked against the
+    three worked examples in docs/ActionParamElementFormat.txt.
+    """
+    if param_type == ParamType.STRING:
+        return _align(4, count)
+    if param_type in (ParamType.SOUND, ParamType.FIELD_NAME, ParamType.PROJECTILE):
+        return count * 4
+    if param_type == ParamType.WORLD_POINT_2D:
+        return count * 2 * 4
+    if param_type == ParamType.WORLD_POINT_3D:
+        return count * 3 * 4
+    if param_type in (ParamType.FIXED, ParamType.INTEGER, ParamType.WORLD_DISTANCE):
+        return count * 4
+    if param_type == ParamType.FLAG:
+        return _align(4, count)
+    return _align(2, count) * 2  # ANGLE and the default 2-byte-element types
+
+
+def convert_tfl_map_actions(action_buffer, action_count):
+    """Rewrite parameter type codes in a TFL map-action buffer to Myth II's.
+
+    ``action_buffer`` is exactly ``map_action_buffer_size`` bytes, starting at
+    a mesh's ``map_actions_offset`` (mythextract ``parse_map_actions`` slices
+    the same span before walking it). Only the 2-byte type discriminator at
+    the front of each parameter is ever rewritten; every other byte --
+    counts, names, and all parameter data -- is copied unchanged, because a
+    TFL-vs-Myth-II type mismatch changes what a code *means*, never how the
+    data behind it is encoded.
+
+    Returns ``(new_buffer, warnings)``. On an unrecognised parameter type,
+    the rest of that action's parameters are left untouched and a warning is
+    recorded, since the byte length of an unrecognised type cannot be
+    trusted and guessing risks desyncing every later parameter.
+    """
+    warnings = []
+    out = bytearray(action_buffer)
+    action_head_end = action_count * MAP_ACTION_HEAD_SIZE
+
+    for action in MapActionHead.unpack_many(action_buffer, 0, action_count):
+        offset = action_head_end + action.offset
+        remaining = action.num_params
+        while remaining > 0:
+            raw_type, count = struct.unpack_from(">HH", action_buffer, offset)
+            try:
+                semantic = resolve_param_type(raw_type, formats.TFL)
+            except ValueError:
+                warnings.append(
+                    f"map action {action.id} ({codec.decode_string(action.type)}): "
+                    f"unrecognised parameter type {raw_type}; left unconverted from "
+                    f"here on, along with {remaining - 1} later parameter(s) in "
+                    f"this action"
+                )
+                break
+            new_raw = int(semantic)
+            if new_raw != raw_type:
+                struct.pack_into(">H", out, offset, new_raw)
+            offset += 8 + param_data_length(semantic, count)
+            remaining -= 1
+
+    return bytes(out), warnings
+
+
+def remap_marker_palette(palette_buffer, entry_count, id_map):
+    """Rewrite each marker-palette entry's tag reference through ``id_map``.
+
+    ``palette_buffer`` is exactly ``marker_palette_size`` bytes, starting at a
+    mesh's ``marker_palette_offset``. The entry structure itself needs no
+    conversion (see module note); only the 4-byte tag id each entry carries
+    may need remapping, and only entries whose type resolves to a known tag
+    type via `MARKER_TYPE_TO_TAG` carry one at all.
+
+    Returns ``(new_buffer, warnings)``.
+    """
+    out = bytearray(palette_buffer)
+    warnings = []
+
+    for i in range(entry_count):
+        offset = i * MARKER_PALETTE_ENTRY_SIZE
+        entry = MarkerPaletteEntry.unpack(palette_buffer, offset)
+
+        try:
+            marker_type = MarkerType(entry.type)
+        except ValueError:
+            continue
+        tag_type = MARKER_TYPE_TO_TAG.get(marker_type)
+        if tag_type is None:
+            continue
+        if codec.all_on(entry.marker_tag) or codec.all_off(entry.marker_tag):
+            continue
+
+        mapped = id_map.map_id(tag_type, entry.marker_tag) if id_map else entry.marker_tag
+        if mapped != entry.marker_tag:
+            out[offset + 4 : offset + 8] = mapped
+
+    return bytes(out), warnings
