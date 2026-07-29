@@ -57,8 +57,30 @@ python -m src info <container>            # header, entrypoints and tag list
 python -m src info --types <container>     # summarise by tag type
 python -m src roundtrip <container|dir>... # verify read/write is byte-exact
 python -m src diff <a> <b>                 # compare two containers tag by tag
-python -m src convert --in <gor> --out <plugin>   # TFL -> Myth II
+python -m src plan --in <gor>                     # what a conversion would do
+python -m src convert --in <gor> --out <plugin>   # do it
 ```
+
+### Plan, then convert
+
+`plan` builds the conversion in memory and reports it without writing anything -- so you
+can look at the model, decide, and only then commit. It exits non-zero while anything is
+still being guessed at, which makes it usable as a gate.
+
+```sh
+# A page you can operate: every decision the converter cannot make, with the
+# candidates from your own install, and the decisions file forming as you choose.
+python -m src plan --in plugin.gor --myth2-dir "/path/to/Myth II" --html plan.html
+```
+
+That page is the view and the control surface; its output is `decisions.toml`, which is an
+input to the model. Model, view, control:
+
+| | |
+|---|---|
+| **Model** | `src/plan.py` -- computes every outcome, writes nothing |
+| **View** | `src/views/text.py`, `src/views/html.py` -- render a plan, decide nothing |
+| **Control** | `src/decisions.py` -- choices that feed back and change the plan |
 
 ### The decisions file
 

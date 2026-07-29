@@ -12,7 +12,8 @@ import argparse
 import pathlib
 import sys
 
-from . import codec, decisions, plugindiff, reader, writer
+from . import codec, decisions, plan as plan_module, plugindiff, reader, writer
+from .views import html as html_view, text as text_view
 from .convert import plugin as convert_plugin
 
 
@@ -181,6 +182,47 @@ def _candidate_tags(myth2_dir):
     }
 
 
+def cmd_plan(args):
+    """Show what a conversion would do, without doing it.
+
+    The model/view/control split: this builds the plan (model), renders it
+    (view), and optionally emits a page that collects decisions (control) whose
+    output feeds back in via --decisions.
+    """
+    chosen = None
+    if args.decisions:
+        try:
+            chosen = decisions.load(args.decisions)
+        except (OSError, decisions.DecisionsError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
+    candidates = {}
+    if args.myth2_dir:
+        print(f"Scanning {args.myth2_dir} for substitute candidates...", file=sys.stderr)
+        candidates = _candidate_tags(args.myth2_dir)
+
+    try:
+        plan = plan_module.build(
+            args.inp, decisions=chosen, candidates=candidates, name=args.name
+        )
+    except (reader.FormatError, convert_plugin.ConversionError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if args.html:
+        args.html.write_text(
+            html_view.render(plan, title=args.title or "Conversion plan"),
+            encoding="utf-8",
+        )
+        print(f"Wrote {args.html}")
+    else:
+        for line in text_view.render(plan, verbose=args.verbose):
+            print(line)
+
+    return 0 if plan.is_ready() else 1
+
+
 def cmd_convert(args):
     if args.out.exists() and not args.force:
         print(
@@ -293,6 +335,26 @@ def build_parser():
         help="a Myth II install, scanned to suggest substitutes in --emit-decisions",
     )
     con.set_defaults(func=cmd_convert)
+
+    pln = sub.add_parser(
+        "plan", help="show what a conversion would do, without writing anything"
+    )
+    pln.add_argument("--in", dest="inp", required=True, type=pathlib.Path)
+    pln.add_argument("--name", help="plugin name to write into the header")
+    pln.add_argument(
+        "--decisions", type=pathlib.Path, help="apply a decisions file first"
+    )
+    pln.add_argument(
+        "--myth2-dir", type=pathlib.Path, metavar="DIR",
+        help="a Myth II install, scanned to suggest substitutes",
+    )
+    pln.add_argument(
+        "--html", type=pathlib.Path, metavar="FILE",
+        help="write an interactive page instead of a text report",
+    )
+    pln.add_argument("--title", help="title for the page")
+    pln.add_argument("-v", "--verbose", action="store_true", help="list everything")
+    pln.set_defaults(func=cmd_plan)
 
     return parser
 
