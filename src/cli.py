@@ -182,6 +182,13 @@ def _candidate_tags(myth2_dir):
     }
 
 
+def cmd_studio(args):
+    from .studio import serve
+
+    serve(port=args.port, open_browser=not args.no_browser)
+    return 0
+
+
 def cmd_plan(args):
     """Show what a conversion would do, without doing it.
 
@@ -355,6 +362,15 @@ def build_parser():
     pln.add_argument("--title", help="title for the page")
     pln.add_argument("-v", "--verbose", action="store_true", help="list everything")
     pln.set_defaults(func=cmd_plan)
+
+    stu = sub.add_parser(
+        "studio", help="open the guided browser app (local only)"
+    )
+    stu.add_argument("--port", type=int, default=0, help="port (default: pick a free one)")
+    stu.add_argument(
+        "--no-browser", action="store_true", help="do not open a browser automatically"
+    )
+    stu.set_defaults(func=cmd_studio)
 
     return parser
 

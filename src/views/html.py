@@ -36,6 +36,11 @@ def _plan_data(plan):
         "source": plan.source,
         "summary": plan.summary(),
         "ready": plan.is_ready(),
+        # Total vs still-open matter differently: a reference mapped onto a tag
+        # that lives in the Myth II install is settled even though it is still
+        # listed here, so the UI must count `undecided`, not `unresolved`.
+        "undecided": len(plan.undecided()),
+        "needsReview": len(plan.needs_review()),
         "options": plan.options,
         "decisionsPath": plan.decisions_path,
         "unresolved": [

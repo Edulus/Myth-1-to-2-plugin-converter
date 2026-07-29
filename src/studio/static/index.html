@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Myth plugin converter</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div>
+      <strong>Myth plugin converter</strong>
+      <span class="tag">The Fallen Lords &rarr; Soulblighter</span>
+    </div>
+  </div>
+  <div class="modes" role="tablist" aria-label="Mode">
+    <button id="mode-guided" class="mode on" role="tab" aria-selected="true">Guided</button>
+    <button id="mode-expert" class="mode" role="tab" aria-selected="false">Expert</button>
+  </div>
+</header>
+
+<div id="banner" class="banner" hidden>
+  <strong>Heads up.</strong> This converter cannot yet produce a map that plays.
+  Roughly half of a plugin&rsquo;s tags are still copied across in Fallen Lords format,
+  and Soulblighter crashes when it tries to load one. You can convert, install and
+  inspect &mdash; and the last step shows you how to read the crash. A playable
+  result is still being worked on.
+  <button class="link" id="banner-dismiss">Hide</button>
+</div>
+
+<!-- ======================= GUIDED ======================= -->
+<main id="guided">
+
+  <nav class="steps" aria-label="Progress">
+    <ol id="steplist"></ol>
+  </nav>
+
+  <!-- 1 -------------------------------------------------- -->
+  <section class="step" data-step="0">
+    <h1>Converting a Fallen Lords map to Soulblighter</h1>
+    <p class="lede">
+      Myth: The Fallen Lords and Myth II: Soulblighter store their content the same
+      broad way, but not identically. A map made for the first game will not load in
+      the second. This walks you through what has to change and what you have to decide.
+    </p>
+
+    <div class="teach">
+      <h3>The one idea you need first</h3>
+      <p>
+        Both games keep everything &mdash; maps, units, sounds, artwork, text &mdash; in
+        numbered pieces called <b>tags</b>. A tag has a four-character id like
+        <code>mawa</code> and a type like <code>mesh</code> (a map) or
+        <code>mons</code> (a monster). A <b>plugin</b> is just a container holding
+        a pile of tags.
+      </p>
+      <p>
+        Converting means rewriting each tag into the shape Soulblighter expects, then
+        packing them into a Soulblighter container. Some tags translate cleanly. Some
+        have no equivalent and need a decision from you. That is what this tool is for.
+      </p>
+    </div>
+
+    <div class="rowbtns">
+      <button class="primary" data-goto="1">Start</button>
+    </div>
+  </section>
+
+  <!-- 2 -------------------------------------------------- -->
+  <section class="step" data-step="1" hidden>
+    <h2>Step 1 &middot; Your two ingredients</h2>
+    <p class="lede">You need the map you want to convert, and a copy of Soulblighter.</p>
+
+    <div class="pickers">
+      <div class="picker">
+        <h3>The Fallen Lords plugin</h3>
+        <p class="hint">
+          Usually a <code>.gor</code> file, or a file with no extension, from a Fallen
+          Lords <code>plugins</code> folder.
+        </p>
+        <div class="pathrow">
+          <input type="text" id="plugin-path" placeholder="Path to the plugin file" spellcheck="false">
+          <button data-browse="plugin">Browse&hellip;</button>
+        </div>
+        <button class="primary" id="open-plugin">Open</button>
+        <div class="result" id="plugin-result"></div>
+      </div>
+
+      <div class="picker">
+        <h3>Your Myth II install</h3>
+        <p class="hint">
+          The folder containing <code>tags</code> and <code>plugins</code>. Needed for
+          two reasons: to see which tags Soulblighter already has, and to install the
+          finished plugin.
+        </p>
+        <div class="pathrow">
+          <input type="text" id="myth2-path" placeholder="Path to the Myth II folder" spellcheck="false">
+          <button data-browse="myth2">Browse&hellip;</button>
+        </div>
+        <div id="suggestions" class="suggestions"></div>
+        <button class="primary" id="set-myth2">Use this folder</button>
+        <div class="result" id="myth2-result"></div>
+      </div>
+    </div>
+
+    <div class="rowbtns">
+      <button data-goto="0" class="ghost">Back</button>
+      <button class="primary" data-goto="2" id="to-inside" disabled>Next</button>
+    </div>
+  </section>
+
+  <!-- 3 -------------------------------------------------- -->
+  <section class="step" data-step="2" hidden>
+    <h2>Step 2 &middot; What is inside your plugin</h2>
+    <p class="lede">Here is what we found, and what it means.</p>
+    <div id="inside"></div>
+
+    <div class="teach">
+      <h3>Reading that list</h3>
+      <p>
+        <code>mesh</code> tags are the maps themselves &mdash; one per playable level.
+        <code>.256</code> are collections of artwork, <code>mons</code> are monsters,
+        <code>stli</code> and <code>text</code> hold the words you read in-game.
+      </p>
+      <p>
+        <b>Converted</b> means we rewrote that tag into Soulblighter's format.
+        <b>Copied as-is</b> means we do not know how to translate it yet, so it goes
+        across untouched &mdash; which for most types means the game will not
+        understand it. Nothing is silently faked.
+      </p>
+    </div>
+
+    <div class="rowbtns">
+      <button data-goto="1" class="ghost">Back</button>
+      <button class="primary" data-goto="3">Next</button>
+    </div>
+  </section>
+
+  <!-- 4 -------------------------------------------------- -->
+  <section class="step" data-step="3" hidden>
+    <h2>Step 3 &middot; The catch nobody warns you about</h2>
+    <div class="teach big">
+      <p>
+        <b>A Fallen Lords plugin is not self-contained.</b> It leans on the original
+        game's built-in library &mdash; the standard water, wind, lighting, ambient
+        sounds every map uses. Those tags live in Fallen Lords itself, not in the plugin.
+      </p>
+      <p>
+        Soulblighter does not have them. So a converted plugin points at things that
+        are not there, and the level fails to load.
+      </p>
+    </div>
+
+    <div id="catch"></div>
+
+    <div class="teach">
+      <h3>Two ways out</h3>
+      <p>
+        <b>Substitute.</b> Pick the closest Soulblighter tag instead. Quick, and good
+        enough for things like water or lighting where an approximation is fine. You do
+        that on the next step.
+      </p>
+      <p>
+        <b>Supply the originals.</b> Load a converted Fallen Lords <b>tagset</b>
+        alongside your plugin &mdash; a plugin containing the original library, already
+        converted by someone else. More faithful.
+      </p>
+      <p class="hint">
+        A tagset is just a plugin with no maps in it. Soulblighter only offers a plugin
+        as a tagset if it contains no levels, which is why a converted Fallen Lords
+        <em>campaign</em> cannot be used as one directly.
+      </p>
+    </div>
+
+    <div class="rowbtns">
+      <button data-goto="2" class="ghost">Back</button>
+      <button class="primary" data-goto="4">Make my choices</button>
+    </div>
+  </section>
+
+  <!-- 5 -------------------------------------------------- -->
+  <section class="step" data-step="4" hidden>
+    <h2>Step 4 &middot; Your choices</h2>
+    <p class="lede">
+      Nothing here has a correct answer &mdash; that is precisely why you are being asked.
+      Leaving something unresolved is a legitimate choice if you plan to supply a tagset.
+    </p>
+
+    <h3 class="subhead">Missing tags</h3>
+    <div id="decisions" class="decisions"></div>
+
+    <h3 class="subhead">Invented values</h3>
+    <p class="hint">
+      Soulblighter maps carry settings Fallen Lords maps never had, so we invent them.
+      These come from measuring a hand-made conversion of the original game. Where that
+      conversion was not unanimous, it is marked &mdash; those are worth your judgement.
+    </p>
+    <div id="synth" class="decisions"></div>
+
+    <h3 class="subhead">Options</h3>
+    <div id="options" class="decisions"></div>
+
+    <div class="rowbtns">
+      <button data-goto="3" class="ghost">Back</button>
+      <button class="primary" data-goto="5">Convert</button>
+    </div>
+  </section>
+
+  <!-- 6 -------------------------------------------------- -->
+  <section class="step" data-step="5" hidden>
+    <h2>Step 5 &middot; Convert and install</h2>
+    <div class="teach">
+      <h3>Naming it</h3>
+      <p>
+        Keep the file name under <b>32 characters</b>. Soulblighter silently ignores
+        plugins with longer names &mdash; no error, the plugin simply never appears.
+      </p>
+    </div>
+
+    <label class="field">
+      <span>File name</span>
+      <input type="text" id="out-name" spellcheck="false">
+      <em id="name-len"></em>
+    </label>
+    <label class="field">
+      <span>Where to write it</span>
+      <input type="text" id="out-dir" spellcheck="false">
+    </label>
+    <label class="checkline">
+      <input type="checkbox" id="install-here" checked>
+      Put it straight into my Myth II <code>plugins</code> folder
+    </label>
+
+    <div class="rowbtns">
+      <button data-goto="4" class="ghost">Back</button>
+      <button class="primary" id="do-convert">Convert now</button>
+    </div>
+    <div class="result" id="convert-result"></div>
+
+    <div class="rowbtns" id="after-convert" hidden>
+      <button class="primary" data-goto="6">What next</button>
+    </div>
+  </section>
+
+  <!-- 7 -------------------------------------------------- -->
+  <section class="step" data-step="6" hidden>
+    <h2>Step 6 &middot; Try it, and read the failure</h2>
+
+    <div class="teach">
+      <h3>Loading it</h3>
+      <ol class="numbered">
+        <li>Quit Soulblighter if it is running &mdash; it reads plugins at startup.</li>
+        <li>Start it, choose <b>New Game</b>.</li>
+        <li>Find your plugin in the <b>Campaign</b> list on the left.</li>
+        <li>Pick a level, then <b>OK</b>.</li>
+      </ol>
+      <p class="hint">
+        If you converted a tagset too, add it with the <b>Tagsets</b> button before
+        picking a level.
+      </p>
+    </div>
+
+    <div class="teach">
+      <h3>When it fails &mdash; and it will, for now</h3>
+      <p>
+        Soulblighter keeps a log at <code>myth_log.txt</code> in its folder, and it is
+        specific about what went wrong. Two you are likely to see:
+      </p>
+      <dl class="errors">
+        <dt><code>couldn't read header for media definition 'xxxx'</code></dt>
+        <dd>A tag the map needs is missing. Substitute it, or load a tagset that has it.</dd>
+        <dt><code>EXCEPTION_ACCESS_VIOLATION</code> in <code>byte_swap_data</code></dt>
+        <dd>
+          The map's internal data is still in Fallen Lords shape. Nothing you can fix
+          from here &mdash; this is the part of the converter still being built.
+        </dd>
+      </dl>
+      <button id="read-log">Read my Myth II log</button>
+      <pre id="log" hidden></pre>
+    </div>
+
+    <div class="rowbtns">
+      <button data-goto="5" class="ghost">Back</button>
+      <button class="ghost" data-goto="0">Start over</button>
+    </div>
+  </section>
+</main>
+
+<!-- ======================= EXPERT ======================= -->
+<main id="expert" hidden>
+  <div class="expert-bar">
+    <div class="pathrow grow">
+      <input type="text" id="x-plugin" placeholder="TFL plugin path" spellcheck="false">
+      <button data-browse="plugin">Browse&hellip;</button>
+      <button id="x-open">Open</button>
+    </div>
+    <div class="pathrow grow">
+      <input type="text" id="x-myth2" placeholder="Myth II folder" spellcheck="false">
+      <button data-browse="myth2">Browse&hellip;</button>
+      <button id="x-set">Scan</button>
+    </div>
+    <button class="primary" id="x-replan">Re-plan</button>
+  </div>
+  <div id="x-status" class="status"></div>
+  <div id="x-body"></div>
+</main>
+
+<!-- file browser -->
+<dialog id="browser">
+  <div class="browserhead">
+    <strong id="browser-title">Choose</strong>
+    <code id="browser-path"></code>
+  </div>
+  <ul id="browser-list"></ul>
+  <div class="rowbtns">
+    <button id="browser-up" class="ghost">Up one level</button>
+    <button id="browser-pick" class="primary">Use this folder</button>
+    <button id="browser-close" class="ghost">Cancel</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

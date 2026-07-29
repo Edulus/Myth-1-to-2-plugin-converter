@@ -104,9 +104,12 @@ def unresolved_references(mono, id_map=None):
         for tag_type, tag_id, _field in mesh_module.referenced_tags(
             header, mono.game_version
         ):
-            if id_map is not None:
-                tag_id = id_map.map_id(tag_type, tag_id)
-            if (tag_type, tag_id) not in present:
+            # Resolve through the ID map, but key the result on the *original*
+            # ID. Keying on the mapped one would rename the thing the user is
+            # being asked about, so a later "did they decide this?" lookup could
+            # never match -- and the reference would look permanently undecided.
+            resolved = id_map.map_id(tag_type, tag_id) if id_map else tag_id
+            if (tag_type, resolved) not in present:
                 missing[(tag_type, tag_id)] = missing.get((tag_type, tag_id), 0) + 1
     return missing
 

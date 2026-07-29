@@ -50,6 +50,24 @@ python -m src roundtrip "/path/to/Myth II/tags"
 
 Python 3.12+. No dependencies -- standard library only, no build step.
 
+## The app
+
+```sh
+python -m src studio
+```
+
+Opens a guided app in your browser for converting a map. Built for someone doing this for
+the first time: it explains what tags and plugins are, why a Fallen Lords plugin is not
+self-contained, what each decision costs, and how to read the game's log when a level fails
+to start. An **Expert** tab drops the hand-holding once you know the ropes.
+
+Unlike `plan --html`, the studio can act -- browse for your files, find your Myth II
+install, run the conversion, and write the plugin into your plugins folder.
+
+It binds to `127.0.0.1` only, refuses cross-site requests, and requires a token minted at
+startup and passed in the URL it prints. It reads and writes real files on your machine and
+is not safe to expose beyond your own computer.
+
 ## Usage
 
 ```sh
