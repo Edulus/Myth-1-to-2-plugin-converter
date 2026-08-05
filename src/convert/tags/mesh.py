@@ -59,7 +59,12 @@ SB_ONLY_DEFAULTS = {
     "light_fraction": 25,  # 38/40
     "dark_color": bytes.fromhex("000000000f5c0000"),  # 35/40
     "light_color": bytes.fromhex("ffffa14700000000"),  # 37/40
-    "transition_point": 62259,  # 32/40 (varies with terrain; this is the mode)
+    # 32/40. Not terrain-derived, despite the variation: the Fear manual
+    # defines it as "the zero point -- the illumination level at which there is
+    # no lightening or darkening on the mesh", i.e. a global brightness control
+    # (lower = brighter map, higher = darker). A per-map artistic choice, which
+    # is exactly why it is worth a human's attention rather than a default.
+    "transition_point": 62259,
     "ceiling_height": 2048,  # 40/40
     "min_vtfl_version": 0,  # 40/40
     "max_vtfl_version": 0,  # 40/40

@@ -10,10 +10,12 @@ things do not, and no amount of measurement will settle them:
    level is an aesthetic judgement by someone who knows the level.
 
 2. **Which synthesised values to accept.** `ceiling_height` was 2048 in all 40
-   meshes of the reference port, so it is safe. `transition_point` was the mode
-   of only 32 of 40 and genuinely varies with terrain, so it is a coin-flip
-   dressed as a default. The tool should say which is which and let a human
-   override either.
+   meshes of the reference port, and the Fear manual says it is ignored unless
+   the mesh's "Has Ceiling" flag is set, so it is doubly safe. `transition_point`
+   was the mode of only 32 of 40, and the manual defines it as the global
+   lighting zero point -- a per-map artistic choice about how bright the whole
+   map looks. That is a coin-flip dressed as a default. The tool should say
+   which is which and let a human override either.
 
 3. **Strategy** -- vTFL compatibility on or off, what to call the plugin.
 

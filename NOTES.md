@@ -810,3 +810,124 @@ structural one: the type-code fix above is what should stop the crash;
 finishing ID remapping inside action parameters is follow-up work toward a
 fully self-contained conversion, using the same `PARAM_TYPE_TAG` mapping
 already ported and ready for it.
+
+---
+
+## 15. The Fear and Loathing manuals — the terrain question, answered
+
+The user supplied the official Myth II editor manuals: **Fear** (the tag editor)
+and **Loathing** (the map editor), v1.8.5, as saved HTML. These are the primary
+authority on what every tag field *means*, as opposed to how it is laid out —
+which is the one thing neither mythextract nor the community converter source
+could tell us.
+
+**They are copyright 1998 Bungie Software / Tyson (Ferrex) Green, distributed by
+Project Magma.** They are git-ignored (`*Documentation*.html`) and never
+committed, on the same principle as game data: read locally, cite here, do not
+redistribute. Everything below is a fact learned from them, not a copy of them.
+
+### The terrain resolution question is settled
+
+§13 left an open question: is Myth II's 32×32-cells-per-submesh a genuinely
+finer grid, or just different bookkeeping over the same cells? The manuals plus
+one measurement settle it.
+
+Loathing, on the basic unit of map size:
+
+> "A submesh is a 256x256 pixel section of the mesh. This is the basic unit of
+> size for mesh tags, and as such, all meshes must have dimensions that are a
+> multiple of 256 pixels."
+>
+> "A submesh is a 256x256 unit. Therefore, a 1792x1792 size map would have
+> forty-nine submeshes (7x7)."
+
+So one submesh is 256×256 colormap pixels in Myth II. Myth II puts 32×32 cells
+in that space (8 pixels per cell); TFL puts 16×16 (16 pixels per cell).
+
+The measurement that closes it: **marker world-coordinate extents are identical
+between the two games for the same submesh dimensions.** Comparing the test
+plugin's TFL meshes against Myth II's own campaign meshes from `small install`:
+
+| Submeshes | TFL mesh | extent (world units) | Myth II mesh | extent (world units) |
+|---|---|---|---|---|
+| 3×3 | `cp00` | x 6.6–92.5 | `00 Training Map` | x 6.0–92.1 |
+| 5×5 | `apev` | x 5.0–152.3 | `08 library` | x 1.7–153.8 |
+| 7×6 | `FX#1` | x 5.0–221.7 | `01 village` | x 3.1–215.5 |
+
+One submesh spans **32 world units in both games**. Therefore:
+
+* Myth II: 32 cells per submesh ÷ 32 world units = **1 cell per world unit**
+* TFL: 16 cells per submesh ÷ 32 world units = **1 cell per 2 world units**
+
+**Conclusion: Myth II has genuinely double the linear cell resolution (4× the
+cells) over an identically-sized map.** Converting TFL terrain therefore requires
+real upsampling — each TFL cell becoming a 2×2 block of Myth II cells — not a
+relabelling. Four independent lines of evidence now agree: the measured
+`mesh_size` formula (§13), the community converter's
+`SUBMESH_WIDTH_BITS` 4-vs-5 comment (§14), the Loathing manual above, and the
+marker extents here.
+
+A useful corollary: because the world-coordinate extent is unchanged, **marker
+positions need no rescaling** — which is exactly why Iron's converter can copy
+markers verbatim and have them "land in their exact original positions".
+
+### The world unit was halved between the games — a flag for the unit converters
+
+Fear, in the lightning tag section, explaining a bug Bungie left behind:
+
+> "When Bungie made myth 2 they halved the size of a world unit as part of making
+> the mesh more detailed. Most values throughout the game, such as unit and
+> projectile speeds, were doubled to take this into account. They forgot,
+> however, to look at the lightning code."
+
+This independently explains Iron's otherwise cryptic workflow instruction —
+*"Set the height parameters to double what TFL Loathing had"* — and is the
+strongest hint yet about what `mons`, `unit` and `proj` conversion will involve:
+**TFL gameplay values (speeds, ranges, distances) plausibly need doubling**, not
+merely re-laying-out.
+
+Deliberately **not** acted on yet, and worth stating why. Two measurements
+suggest it does *not* apply to mesh data:
+
+* Marker coordinates are numerically compatible as stored (table above), and the
+  community tool relies on exactly that.
+* Raw terrain heights occupy comparable ranges in both games — TFL meshes span
+  roughly −1,992…5,080, Myth II's own campaign meshes −3,344…5,799 — rather than
+  Myth II's being systematically doubled.
+
+So the doubling appears to be about gameplay statistics inside unit/projectile
+tags, not about coordinates in mesh tags. Since the precise physical-scale
+semantics are not yet pinned down, this is recorded as a lead for the `mons`/
+`proj` converters to verify empirically, not as a rule to apply.
+
+Fear also notes a related gameplay divergence worth remembering for `mons`:
+Myth II introduced elevation-dependent missile range ("your archers can only
+shoot 20 world units? Wrong. Put them on a high hilltop…"), where "In TFL this
+was not the case — maximum range was maximum range."
+
+### The manuals grade our synthesised mesh defaults
+
+§12 chose 38 Myth II-only mesh header values by measuring a community port. The
+manuals give those fields meaning, and mostly vindicate the measurements:
+
+| Field | What Fear says | Our default | Verdict |
+|---|---|---|---|
+| Dark Color Fraction | "1.00 results in maximum color, while numbers in the 0.75 to 0.9 range are more common" | 229 (≈0.90 of 255) | in the documented range |
+| Light Color Fraction | "usually much smaller than the Dark Color Fraction, in the 0.10 to 0.50 range" | 25 (≈0.10 of 255) | at the documented floor |
+| Transition Point | "the zero point — the illumination level at which there is no lightening or darkening on the mesh" | 62259 | **correction**: a global brightness control, *not* terrain-derived as our comment claimed. Rightly flagged `CHECK` |
+| Ceiling Height | "the height of the ceiling in world Units. This number is **ignored if the Has Ceiling flag is not checked**" | 2048 | de-risked — inert on most maps |
+| TFL Min/Max Version | "the minimum/maximum version of the TFL gameplay (vTFL/Unity) patch that this mesh supports" | 0 | documents what our `use_vtfl` option is actually talking to |
+| Minimum Player Zoom | "Valid range is between −5.0 and −0.99998" | 0.0 | outside the stated range, but measured 40/40 and the field is 1.8.2+, so 0 reads as "unset" |
+
+### What else is in them
+
+Fear's *Section III: Tag Specific Documentation* is a field-by-field reference
+for **every** tag type this project still has to convert — `mons`, `unit`,
+`proj`, `prgr`, `lpgr`, `core`, `soun`, `amso`, `phys`, `scen`, `part`, `medi`,
+collections, and the rest. Loathing's covers the map editor's own model of
+meshes, markers, passability and map actions.
+
+That makes them the natural reference for the remaining tag-body converters:
+mythextract gives the byte layout, the community tool gives worked conversion
+logic, and these manuals give the semantics needed to know *which* fields
+actually matter and what a sane value looks like.
