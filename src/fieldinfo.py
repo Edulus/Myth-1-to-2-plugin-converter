@@ -196,6 +196,25 @@ MESH_FIELDS = {
         label="Connector data size",
         summary="Size of the connector block. Follows from the connector count.",
     ),
+    # Written into every terrain cell rather than the header, but from a user's
+    # point of view it is the same kind of decision: a Myth II value with no TFL
+    # source that somebody has to choose.
+    "media_height": FieldInfo(
+        label="Water level",
+        summary=(
+            "The height the water surface sits at. Myth II stores this per "
+            "terrain cell; TFL has no equivalent, so one level is applied to "
+            "the whole map."
+        ),
+        scale=WORLD_POINT_SF,
+        unit="world units",
+        note=(
+            "Zero is sea level and a safe starting point. If a converted map's "
+            "rivers or lakes sit too high or too low, this is the value to "
+            "change. Which cells are water is preserved from the original; only "
+            "the surface height has to be chosen."
+        ),
+    ),
 }
 
 

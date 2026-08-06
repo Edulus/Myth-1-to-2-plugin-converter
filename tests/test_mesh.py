@@ -411,6 +411,19 @@ class TestMeshBodyConversion(unittest.TestCase):
         self.assertEqual(b"30cc", header.map_description_string_list_tag)
         self.assertEqual(0x2A, header.flags)
 
+    # Offsets and sizes describing the body's own layout are deliberately
+    # recomputed: terrain quadruples in cell count, so everything after it
+    # moves. Every other shared field must still cross unchanged.
+    RECOMPUTED = {
+        "mesh_offset", "mesh_size",
+        "marker_palette_offset", "marker_palette_size",
+        "markers_offset", "markers_size",
+        "map_actions_offset", "map_action_buffer_size",
+        "media_coverage_region_offset", "media_coverage_region_size",
+        "mesh_LOD_data_offset", "mesh_LOD_data_size",
+        "data_offset", "data_size",
+    }
+
     def test_shared_fields_survive_the_round_trip(self):
         body = fixtures.mesh_body(description_tag=b"30cc", storyline_tag=b"30tx")
         converted, _ = self._convert(body)
@@ -419,10 +432,15 @@ class TestMeshBodyConversion(unittest.TestCase):
         after = mesh.parse_header(converted, formats.SB)
         from src.convert.tags import mesh as mesh_converter
 
+        checked = 0
         for field in mesh_converter.SHARED_FIELDS:
+            if field in self.RECOMPUTED:
+                continue
+            checked += 1
             self.assertEqual(
                 getattr(before, field), getattr(after, field), f"{field} changed"
             )
+        self.assertGreater(checked, 20, "should still be checking most fields")
 
     def test_myth_ii_only_fields_get_the_measured_defaults(self):
         """Values measured across the 40 meshes of Magma - The Fallen Lords v1.9,
@@ -453,13 +471,96 @@ class TestMeshBodyConversion(unittest.TestCase):
         self.assertEqual(b"too short", converted)
         self.assertTrue([w for w in warnings if "shorter than" in w])
 
-    def test_trailing_body_data_is_preserved_verbatim(self):
-        """Only the header is converted. Terrain, markers and map actions are
-        copied untouched -- and said to be."""
-        trailing = bytes(range(256)) * 4
-        body = fixtures.mesh_body(trailing=trailing)
-        converted, _ = self._convert(body)
-        self.assertEqual(trailing, converted[mesh.MESH_HEADER_SIZE :])
+    def test_body_is_rebuilt_with_recomputed_offsets(self):
+        """The body is no longer copied through: terrain quadruples in cell
+        count, so every block after it has to move and the header has to say
+        where they went."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        # A 1x1-submesh mesh: 16x16 TFL cells at 8 bytes.
+        cells = 16 * 16
+        terrain = bytes(cells * 8)
+        body = bytearray(fixtures.mesh_body(trailing=terrain))
+        struct.pack_into(">H", body, offsets["submesh_width"], 1)
+        struct.pack_into(">H", body, offsets["submesh_height"], 1)
+        struct.pack_into(">L", body, offsets["mesh_offset"], 0)
+        struct.pack_into(">L", body, offsets["mesh_size"], len(terrain))
+
+        converted, warnings = self._convert(bytes(body))
+        self.assertEqual([], warnings)
+        after = mesh.parse_header(converted, formats.SB)
+
+        # 32x32 cells at 12 bytes -- four times the cells, six times the bytes.
+        self.assertEqual(32 * 32 * 12, after.mesh_size)
+        self.assertEqual(6 * len(terrain), after.mesh_size)
+
+        # Level-of-detail data must exist and be exactly half a byte per cell.
+        self.assertEqual((32 * 32) // 2, after.mesh_LOD_data_size)
+
+        # The body actually contains everything the header promises.
+        trailing = converted[mesh.MESH_HEADER_SIZE :]
+        self.assertEqual(after.data_size, len(trailing))
+        self.assertLessEqual(
+            after.mesh_LOD_data_offset + after.mesh_LOD_data_size, len(trailing)
+        )
+
+    def test_terrain_cells_are_duplicated_into_2x2_blocks(self):
+        """Nearest-neighbour: one TFL cell becomes the four Myth II cells
+        covering the same ground, values unchanged."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        # 1x1 submesh, every cell distinguishable by its height.
+        terrain = bytearray()
+        for i in range(16 * 16):
+            terrain += struct.pack(">hbbBBH", i, 0, 0, 0, 0, 0xFFFF)
+        body = bytearray(fixtures.mesh_body(trailing=bytes(terrain)))
+        struct.pack_into(">H", body, offsets["submesh_width"], 1)
+        struct.pack_into(">H", body, offsets["submesh_height"], 1)
+        struct.pack_into(">L", body, offsets["mesh_offset"], 0)
+        struct.pack_into(">L", body, offsets["mesh_size"], len(terrain))
+
+        converted, _ = self._convert(bytes(body))
+        after = mesh.parse_header(converted, formats.SB)
+        out = converted[mesh.MESH_HEADER_SIZE + after.mesh_offset :]
+
+        def height_at(x, y):
+            return struct.unpack_from(">h", out, (y * 32 + x) * 12)[0]
+
+        # Source cell (3, 5) has height 5*16+3 = 83 and must fill the 2x2 block
+        # at (6, 10).
+        for dx in (0, 1):
+            for dy in (0, 1):
+                self.assertEqual(83, height_at(6 + dx, 10 + dy))
+        # A different source cell must not bleed into it.
+        self.assertNotEqual(83, height_at(8, 10))
+
+    def test_media_height_is_written_into_every_cell(self):
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        terrain = bytes(16 * 16 * 8)
+        body = bytearray(fixtures.mesh_body(trailing=terrain))
+        struct.pack_into(">H", body, offsets["submesh_width"], 1)
+        struct.pack_into(">H", body, offsets["submesh_height"], 1)
+        struct.pack_into(">L", body, offsets["mesh_offset"], 0)
+        struct.pack_into(">L", body, offsets["mesh_size"], len(terrain))
+
+        from src.convert import plugin as convert_plugin
+        from src.convert.tags import mesh as mesh_converter
+
+        context = convert_plugin.ConversionContext(mesh_defaults={"media_height": -512})
+        converted, warnings = mesh_converter.convert(bytes(body), context)
+        self.assertEqual([], warnings, "media_height is a recognised override")
+
+        after = mesh.parse_header(converted, formats.SB)
+        out = converted[mesh.MESH_HEADER_SIZE + after.mesh_offset :]
+        for index in (0, 17, 1023):
+            media_height = struct.unpack_from(">h", out, index * 12 + 8)[0]
+            self.assertEqual(-512, media_height)
+            model_index = struct.unpack_from(">H", out, index * 12 + 10)[0]
+            self.assertEqual(mesh.NO_MODEL_INDEX, model_index)
 
     def test_map_action_param_types_are_corrected(self):
         """The actual fix for the EXCEPTION_ACCESS_VIOLATION in byte_swap_data
@@ -530,7 +631,26 @@ class TestMeshBodyConversion(unittest.TestCase):
         struct.pack_into(">L", header_bytes, offsets["map_action_buffer_size"], 0)
 
         converted, warnings = self._convert(bytes(header_bytes))
-        self.assertTrue([w for w in warnings if "map actions" in w and "could not be parsed" in w])
+        self.assertTrue(
+            [w for w in warnings if "map actions" in w],
+            f"expected a map action warning, got {warnings}",
+        )
+        # Still produced a usable mesh rather than raising.
+        self.assertGreaterEqual(len(converted), mesh.MESH_HEADER_SIZE)
+
+    def test_a_block_outside_the_body_is_reported_not_fatal(self):
+        """A header claiming a block bigger than the body it lives in must cost
+        that block, not the whole level."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        body = bytearray(fixtures.mesh_body(trailing=b"\x00" * 64))
+        struct.pack_into(">L", body, offsets["markers_offset"], 0)
+        struct.pack_into(">L", body, offsets["markers_size"], 1 << 20)
+
+        converted, warnings = self._convert(bytes(body))
+        self.assertTrue([w for w in warnings if "markers" in w and "outside" in w])
+        self.assertGreaterEqual(len(converted), mesh.MESH_HEADER_SIZE)
 
     def test_vtfl_flag_is_opt_in(self):
         from src.convert.tags import mesh as mesh_converter

@@ -231,7 +231,7 @@ def _mesh_defaults_section(mesh_converter):
         "[mesh_defaults]",
         "",
     ]
-    for field, value in mesh_converter.SB_ONLY_DEFAULTS.items():
+    for field, value in mesh_converter.SYNTHESISED.items():
         if not isinstance(value, (int, float, bool)):
             continue  # byte fields are not usefully editable as text
 

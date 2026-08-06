@@ -74,15 +74,17 @@ class TestAgainstOurOwnDefaults(unittest.TestCase):
 
     def test_every_documented_field_is_a_real_synthesised_field(self):
         """Guards against documenting a field the converter does not set --
-        which would put text in the UI next to a control that does nothing."""
-        unknown = set(fieldinfo.MESH_FIELDS) - set(mesh_converter.SB_ONLY_DEFAULTS)
+        which would put text in the UI next to a control that does nothing.
+        Checked against SYNTHESISED, which covers both the header fields and
+        the per-cell ones like media_height."""
+        unknown = set(fieldinfo.MESH_FIELDS) - set(mesh_converter.SYNTHESISED)
         self.assertEqual(set(), unknown)
 
     def test_the_numeric_defaults_are_all_documented(self):
         """Every value a user is asked to judge should come with an explanation."""
         numeric = {
             name
-            for name, value in mesh_converter.SB_ONLY_DEFAULTS.items()
+            for name, value in mesh_converter.SYNTHESISED.items()
             if isinstance(value, (int, float, bool))
         }
         # Structural bookkeeping is computed, not chosen, so it needs no prose.
@@ -95,7 +97,7 @@ class TestAgainstOurOwnDefaults(unittest.TestCase):
         disagreement between the manual and what real ports actually ship."""
         tripped = {
             name
-            for name, value in mesh_converter.SB_ONLY_DEFAULTS.items()
+            for name, value in mesh_converter.SYNTHESISED.items()
             if isinstance(value, (int, float, bool))
             and fieldinfo.check(name, value)
         }

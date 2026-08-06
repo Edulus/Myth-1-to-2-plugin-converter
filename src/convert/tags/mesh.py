@@ -109,6 +109,21 @@ TFL_ONLY_FIELDS = (
     "annotation_size",
 )
 
+# Synthesised values that live in the terrain cells rather than the header.
+# TFL cells simply do not have these, so like SB_ONLY_DEFAULTS they have to be
+# invented -- but they are written per cell by the terrain converter, not
+# packed into the mesh header.
+CELL_DEFAULTS = {
+    # The height of the water *surface*. Constant across virtually every native
+    # Myth II mesh, and absent from TFL cells entirely, so a single value is
+    # applied to the whole mesh. Zero is sea level, which is where TFL maps put
+    # water in the absence of anywhere else to record it.
+    "media_height": 0,
+}
+
+# Everything a decisions file may override, header and cell alike.
+SYNTHESISED = {**SB_ONLY_DEFAULTS, **CELL_DEFAULTS}
+
 _TFL_FIELDS = set(mesh_module.TFLMeshHeader.names)
 _SB_FIELDS = set(mesh_module.SBMeshHeader.names)
 SHARED_FIELDS = tuple(f for f in mesh_module.SBMeshHeader.names if f in _TFL_FIELDS)
@@ -152,13 +167,16 @@ def convert(body, context=None):
     # better than the measured mode.
     overrides = dict(getattr(context, "mesh_defaults", None) or {}) if context else {}
     for field, value in overrides.items():
-        if field not in SB_ONLY_DEFAULTS:
+        if field not in SYNTHESISED:
             warnings.append(
                 f"decisions file overrides '{field}', which is not a synthesised "
                 f"mesh field; ignored"
             )
             continue
-        values[field] = value
+        # Cell-level values are applied by the terrain converter, not packed
+        # into the header, so they must not reach SBMeshHeader.build.
+        if field in SB_ONLY_DEFAULTS:
+            values[field] = value
 
     values["flags"], flag_warnings = _convert_flags(tfl.flags, use_vtfl)
     warnings.extend(flag_warnings)
@@ -171,41 +189,151 @@ def convert(body, context=None):
     ):
         values[field] = values[field].ljust(width, b"\0")
 
+    trailing = body[mesh_module.MESH_HEADER_SIZE :]
+    blocks, block_warnings = _convert_blocks(tfl, trailing, id_map, context)
+    warnings.extend(block_warnings)
+
+    # Terrain changes size, so every block after it moves. Rather than patch
+    # offsets one by one, the body is laid out afresh in a known order and the
+    # header is told where everything ended up.
+    data, offsets = _lay_out_body(blocks)
+    values.update(offsets)
+    values["data_offset"] = mesh_module.MESH_HEADER_SIZE
+    values["data_size"] = len(data)
+
     header = mesh_module.SBMeshHeader.build(**values)
     converted = header.encode()
     assert len(converted) == mesh_module.MESH_HEADER_SIZE
 
-    trailing = bytearray(body[mesh_module.MESH_HEADER_SIZE :])
+    return converted + data, warnings
 
-    if tfl.map_action_count:
-        start, size = tfl.map_actions_offset, tfl.map_action_buffer_size
-        end = start + size
-        try:
-            new_actions, action_warnings = mesh_module.convert_tfl_map_actions(
-                bytes(trailing[start:end]), tfl.map_action_count
-            )
-            trailing[start:end] = new_actions
-            warnings.extend(action_warnings)
-        except (struct.error, ValueError) as exc:
-            warnings.append(
-                f"map actions left unconverted -- could not be parsed: {exc}"
-            )
 
-    if tfl.marker_palette_entries:
-        start, size = tfl.marker_palette_offset, tfl.marker_palette_size
-        end = start + size
+def _slice(trailing, offset, size):
+    """A block out of the mesh body, or None if it does not fit."""
+    if size <= 0:
+        return b""
+    end = offset + size
+    if offset < 0 or end > len(trailing):
+        return None
+    return bytes(trailing[offset:end])
+
+
+def _convert_blocks(tfl, trailing, id_map, context):
+    """Convert each variable-length block of a TFL mesh body.
+
+    Returns ``({name: bytes}, warnings)``. A block that cannot be read is
+    reported and replaced with an empty one rather than aborting the mesh --
+    losing scenery placement is bad, losing the level entirely is worse.
+    """
+    warnings = []
+    blocks = {}
+
+    # -- terrain: the one block whose size changes --------------------------
+    terrain = _slice(trailing, tfl.mesh_offset, tfl.mesh_size)
+    media_height = int(_override(context, "media_height", 0))
+    if terrain is None:
+        blocks["terrain"] = b""
+        warnings.append(
+            f"terrain block at {tfl.mesh_offset}+{tfl.mesh_size} lies outside the "
+            f"mesh body; the level will have no ground"
+        )
+    else:
         try:
-            new_palette, palette_warnings = mesh_module.remap_marker_palette(
-                bytes(trailing[start:end]), tfl.marker_palette_entries, id_map
+            blocks["terrain"] = mesh_module.upsample_terrain(
+                terrain, tfl.submesh_width, tfl.submesh_height, media_height
             )
-            trailing[start:end] = new_palette
+        except (ValueError, struct.error) as exc:
+            blocks["terrain"] = b""
+            warnings.append(f"terrain could not be converted: {exc}")
+
+    # -- marker palette: tag references may need remapping -------------------
+    palette = _slice(trailing, tfl.marker_palette_offset, tfl.marker_palette_size)
+    if palette is None:
+        blocks["palette"] = b""
+        warnings.append("marker palette lies outside the mesh body; dropped")
+    elif tfl.marker_palette_entries:
+        try:
+            blocks["palette"], palette_warnings = mesh_module.remap_marker_palette(
+                palette, tfl.marker_palette_entries, id_map
+            )
             warnings.extend(palette_warnings)
         except struct.error as exc:
-            warnings.append(
-                f"marker palette left unconverted -- could not be parsed: {exc}"
-            )
+            blocks["palette"] = palette
+            warnings.append(f"marker palette left unremapped: {exc}")
+    else:
+        blocks["palette"] = palette
 
-    return converted + bytes(trailing), warnings
+    # -- markers: same layout in both games, copied verbatim -----------------
+    markers = _slice(trailing, tfl.markers_offset, tfl.markers_size)
+    if markers is None:
+        blocks["markers"] = b""
+        warnings.append("markers lie outside the mesh body; dropped")
+    else:
+        blocks["markers"] = markers
+
+    # -- map actions: parameter type codes need correcting -------------------
+    actions = _slice(trailing, tfl.map_actions_offset, tfl.map_action_buffer_size)
+    if actions is None:
+        blocks["actions"] = b""
+        warnings.append("map actions lie outside the mesh body; dropped")
+    elif tfl.map_action_count:
+        try:
+            blocks["actions"], action_warnings = mesh_module.convert_tfl_map_actions(
+                actions, tfl.map_action_count
+            )
+            warnings.extend(action_warnings)
+        except (struct.error, ValueError) as exc:
+            blocks["actions"] = actions
+            warnings.append(f"map actions left unconverted: {exc}")
+    else:
+        blocks["actions"] = actions
+
+    # -- level of detail: must exist, and must match the new cell count ------
+    blocks["lod"] = mesh_module.build_lod_data(tfl.submesh_width, tfl.submesh_height)
+
+    return blocks, warnings
+
+
+def _lay_out_body(blocks):
+    """Concatenate the blocks and report where each landed.
+
+    Order follows what TFL and Myth II meshes both use in practice: terrain,
+    marker palette, markers, map actions, then level-of-detail data.
+
+    The media coverage region is deliberately dropped. It is the one
+    resolution-dependent block whose encoding is not understood here, and 14 of
+    the 87 real Myth II meshes surveyed ship with it empty -- so an empty one is
+    known-valid, where a wrongly-sized one would not be.
+    """
+    order = ["terrain", "palette", "markers", "actions", "lod"]
+    data = bytearray()
+    at = {}
+    for name in order:
+        at[name] = len(data)
+        data += blocks[name]
+
+    return bytes(data), {
+        "mesh_offset": at["terrain"],
+        "mesh_size": len(blocks["terrain"]),
+        "marker_palette_offset": at["palette"],
+        "marker_palette_size": len(blocks["palette"]),
+        "markers_offset": at["markers"],
+        "markers_size": len(blocks["markers"]),
+        "map_actions_offset": at["actions"],
+        "map_action_buffer_size": len(blocks["actions"]),
+        "media_coverage_region_offset": at["lod"],
+        "media_coverage_region_size": 0,
+        "mesh_LOD_data_offset": at["lod"],
+        "mesh_LOD_data_size": len(blocks["lod"]),
+    }
+
+
+def _override(context, field, default):
+    """A synthesised value, honouring a decisions-file override."""
+    overrides = getattr(context, "mesh_defaults", None) if context else None
+    if overrides and field in overrides:
+        return overrides[field]
+    return default
 
 
 def _convert_flags(flags, use_vtfl):

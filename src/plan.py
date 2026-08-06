@@ -192,7 +192,7 @@ def build(in_path, decisions=None, candidates=None, name=None):
             agreed=decisions_module.DEFAULT_CONFIDENCE.get(field_name),
             overridden=field_name in overrides,
         )
-        for field_name, value in mesh_converter.SB_ONLY_DEFAULTS.items()
+        for field_name, value in mesh_converter.SYNTHESISED.items()
         if isinstance(value, (int, float, bool))
     ]
 

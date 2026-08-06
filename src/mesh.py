@@ -638,6 +638,112 @@ def convert_tfl_map_actions(action_buffer, action_count):
     return bytes(out), warnings
 
 
+# --- Terrain -----------------------------------------------------------------
+#
+# The one part of a mesh whose *size* changes between the games. Myth II packs
+# 32x32 cells into a submesh where TFL packs 16x16, across identical ground --
+# a submesh is 32 world units in both (NOTES.md section 15) -- so Myth II has
+# double the linear terrain resolution and four times the cells.
+#
+# The cell struct grows too, but conveniently rather than awkwardly: a TFL cell
+# is byte-for-byte the first 8 bytes of a Myth II cell.
+#
+#     height h | normal1 b | normal2 b | flags B | terrain_type B | first_obj H
+#     ------------------------------ TFL ends here (8 bytes) ------------------
+#     media_height h | model_index H
+#     ------------------------------ Myth II ends here (12 bytes) -------------
+#
+# So converting a cell is appending four bytes, never unpacking and repacking.
+# mythextract declares a single `MeshCellFmt` of exactly these eight fields
+# (scripts/mesh_tag.py:73-82), and decoding real TFL bytes against the first six
+# yields sensible values throughout -- flat start areas at constant height,
+# smoothly varying normals, 0xFFFF "no object" sentinels.
+
+TFL_CELLS_PER_SUBMESH_AXIS = 16
+SB_CELLS_PER_SUBMESH_AXIS = 32
+TFL_CELL_SIZE = 8
+SB_CELL_SIZE = 12
+
+# Myth II's "no model here" sentinel, seen in ~99% of cells in every native mesh.
+NO_MODEL_INDEX = 0xFFFF
+
+
+def cell_counts(submesh_width, submesh_height, game_version):
+    """``(columns, rows)`` of terrain cells for a mesh of this many submeshes."""
+    axis = (
+        TFL_CELLS_PER_SUBMESH_AXIS
+        if game_version == formats.TFL
+        else SB_CELLS_PER_SUBMESH_AXIS
+    )
+    return submesh_width * axis, submesh_height * axis
+
+
+def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
+    """Convert a TFL terrain block into a Myth II one.
+
+    Each TFL cell becomes the 2x2 block of Myth II cells covering the same
+    ground, carrying its values unchanged -- nearest-neighbour, because it is
+    the only option that invents nothing.
+
+    Interpolating heights instead would look smoother, but the two fields after
+    the height are surface normals, and interpolated heights would no longer
+    match them: the lighting would be computed for a surface that is not the one
+    being drawn. Recomputing normals is possible but is a second layer of
+    invention on top of the first. Real hand-made ports sidestep the question
+    entirely by re-importing the original displacement image at Myth II's
+    resolution, which is not available to a tool reading only the tag.
+
+    ``media_height`` is a Myth II-only per-cell field with no TFL source. It is
+    the height of the water *surface*, and is a single constant across nearly
+    every native mesh, so it is passed in as one value rather than derived.
+
+    Returns the new terrain bytes.
+    """
+    columns, rows = cell_counts(submesh_width, submesh_height, formats.TFL)
+    expected = columns * rows * TFL_CELL_SIZE
+    if len(terrain) < expected:
+        raise ValueError(
+            f"terrain block is {len(terrain)} bytes, need {expected} for a "
+            f"{submesh_width}x{submesh_height}-submesh TFL mesh "
+            f"({columns}x{rows} cells)"
+        )
+
+    # The four bytes Myth II adds to every cell. Identical for all of them, so
+    # built once.
+    suffix = struct.pack(">hH", media_height, NO_MODEL_INDEX)
+
+    out = bytearray()
+    for y in range(rows):
+        row_start = y * columns * TFL_CELL_SIZE
+        doubled = bytearray()
+        for x in range(columns):
+            start = row_start + x * TFL_CELL_SIZE
+            cell = terrain[start : start + TFL_CELL_SIZE] + suffix
+            doubled += cell  # left half of the 2x2 block
+            doubled += cell  # right half
+        out += doubled  # top row of the 2x2 blocks
+        out += doubled  # bottom row
+
+    return bytes(out)
+
+
+def build_lod_data(submesh_width, submesh_height):
+    """A Myth II mesh level-of-detail block, sized to the cell count.
+
+    Every one of the 87 Myth II meshes surveyed -- 47 native campaign meshes and
+    40 from a community TFL port -- carries this block at exactly half a byte
+    per cell, and none has it empty, so it cannot simply be omitted the way the
+    media coverage region can.
+
+    Its contents are rendering detail hints whose encoding is not understood
+    here; real blocks are roughly half zero bytes with 0xF0 and 0xFF common.
+    Zero-filling is the conservative choice: correctly sized, and uniform rather
+    than randomly wrong.
+    """
+    columns, rows = cell_counts(submesh_width, submesh_height, formats.SB)
+    return bytes((columns * rows) // 2)
+
+
 def remap_marker_palette(palette_buffer, entry_count, id_map):
     """Rewrite each marker-palette entry's tag reference through ``id_map``.
 
