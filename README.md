@@ -222,12 +222,20 @@ Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the 
 ```
 src/codec.py       minimal binary struct codec (lossless; preserves padding)
 src/formats.py     container and tag header definitions, ported with citations
+src/mesh.py        mesh headers, markers, marker palette, map actions
+src/fieldinfo.py   what mesh fields mean and what a sane value is (Fear manual)
 src/reader.py      parse a TFL .gor or Myth II container
 src/writer.py      pack one back -- the piece mythextract does not have
+src/plan.py        the model: what a conversion would do, computed without doing it
+src/decisions.py   the control: choices no measurement can settle
+src/views/         the views: text report and shareable HTML page
+src/convert/       per-tag-type conversion; tags/ holds the body converters
+src/studio/        the guided local browser app
 src/plugindiff.py  tag-by-tag comparison of two containers
 src/cli.py         command line entry point
 tests/             unittest suite; fixtures.py builds synthetic containers
-reference/         git-ignored clone of jwheare/mythextract (prior art, not ours)
+reference/         third-party material we study but do not redistribute --
+                   git-ignored except its README, which says how to get each item
 NOTES.md           research notes on the reference implementation and the format
 ```
 

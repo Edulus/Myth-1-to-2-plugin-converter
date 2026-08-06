@@ -25,7 +25,7 @@ they come from the same code path.
 
 from dataclasses import dataclass, field
 
-from . import codec, decisions as decisions_module, reader, writer
+from . import codec, decisions as decisions_module, fieldinfo, reader, writer
 from .convert import plugin as convert_plugin
 from .convert.tags import mesh as mesh_converter
 
@@ -61,6 +61,37 @@ class SynthesisedField:
         if self.agreed >= 40:
             return "unanimous"
         return "check"
+
+    # -- what this field actually means, from the Fear manual (src/fieldinfo.py).
+    # A measured default is only reviewable if the reader knows what it does and
+    # what the raw number represents.
+
+    @property
+    def info(self):
+        return fieldinfo.get(self.name)
+
+    @property
+    def label(self):
+        """The name Myth II's own tag editor gives this setting."""
+        return self.info.label if self.info else self.name
+
+    @property
+    def summary(self):
+        return self.info.summary if self.info else ""
+
+    @property
+    def note(self):
+        return self.info.note if self.info else ""
+
+    @property
+    def human_value(self):
+        """The stored number as the quantity a map-maker would recognise."""
+        return self.info.describe(self.value) if self.info else str(self.value)
+
+    @property
+    def range_warning(self):
+        """Set when the value falls outside the manual's stated typical range."""
+        return fieldinfo.check(self.name, self.value)
 
 
 @dataclass

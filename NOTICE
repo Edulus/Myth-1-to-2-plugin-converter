@@ -31,6 +31,21 @@ as a second, independent source to validate struct layouts and the TFL/Myth II
 parameter-type mapping already derived from mythextract, and the reasoning is
 recorded in NOTES.md section 14.
 
+The field descriptions in `src/fieldinfo.py` are short factual summaries, written
+for this project, of behaviour documented in:
+
+    Fear and Loathing documentation, v1.8.5
+    Fear, Myth II, and content copyright 1998 Bungie Software
+    Tyson (Ferrex) Green; distributed by Project Magma
+    http://projectmagma.net
+
+The manuals themselves are not reproduced or redistributed here. They were read
+to learn what each mesh setting does and what values are usual, and that
+knowledge is expressed in our own words with the manual credited at the point of
+use. NOTES.md section 15 records what was learned, including the measurement
+they made possible: that Myth II's terrain grid is genuinely double TFL's
+resolution rather than a different bookkeeping convention.
+
 
 Trademarks and game data
 ------------------------

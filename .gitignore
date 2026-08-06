@@ -1,5 +1,9 @@
-# Prior-art clone -- someone else's repository, never committed here
-reference/
+# Third-party material we study but do not own: the mythextract clone, the
+# official Fear/Loathing manuals, and Iron's mesh converter source. None of it
+# is ours to redistribute, and nothing in the project needs it to build or test.
+# reference/README.md is tracked and explains how to obtain each item.
+reference/*
+!reference/README.md
 
 # Build / run output
 /output/

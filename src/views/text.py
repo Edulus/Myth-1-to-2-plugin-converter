@@ -47,6 +47,14 @@ def render(plan, verbose=False):
                 f" {field.name:<26} = {field.value!r:<14} "
                 f"({field.agreed}/40 reference meshes agreed)"
             )
+            # What it is and what the number means -- a bare scaled integer is
+            # not something a reader can form a view about.
+            if field.summary:
+                lines.append(f"   {field.label}: {field.summary}")
+            if field.human_value != str(field.value):
+                lines.append(f"   = {field.human_value}")
+            if field.range_warning:
+                lines.append(f"   ! {field.range_warning}")
 
     lines += ["", "Tags by type", "-" * 76]
     for tag_type, counts in plan.by_tag_type().items():

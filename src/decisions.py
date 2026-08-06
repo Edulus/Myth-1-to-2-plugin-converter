@@ -32,9 +32,10 @@ which is most of the point. The writer is hand-rolled (there is no stdlib TOML
 """
 
 import datetime
+import textwrap
 import tomllib
 
-from . import codec, idmap as idmap_module
+from . import codec, fieldinfo, idmap as idmap_module
 
 # Confidence below this fraction gets flagged in the emitted file as a value
 # worth a human look rather than a safe default.
@@ -221,6 +222,11 @@ def _mesh_defaults_section(mesh_converter):
         "#",
         "# Uncomment and edit any you want to override. Entries marked CHECK were",
         "# not unanimous in the reference port and are worth a look.",
+        "#",
+        "# Each entry says what the setting does and, where the stored number is a",
+        "# scaled integer, what it actually represents -- 229 is 0.895 of full",
+        "# intensity, 2048 is 4 world units. Descriptions come from the official",
+        "# Fear manual; the label in brackets is what Fear's own editor calls it.",
         "",
         "[mesh_defaults]",
         "",
@@ -228,9 +234,25 @@ def _mesh_defaults_section(mesh_converter):
     for field, value in mesh_converter.SB_ONLY_DEFAULTS.items():
         if not isinstance(value, (int, float, bool)):
             continue  # byte fields are not usefully editable as text
-        note = _default_note(field)
-        lines.append(f"# {field} = {_scalar(value)}{note}")
-    lines.append("")
+
+        info = fieldinfo.get(field)
+        if info:
+            lines.append(f"# [{info.label}] {info.summary}")
+            human = info.describe(value)
+            if human != str(value):
+                lines.append(f"#   {value} means {human}")
+            if info.typical:
+                low, high = info.typical
+                lines.append(f"#   usual range: {low:g} to {high:g}")
+            if info.note:
+                for wrapped in textwrap.wrap(info.note, 72):
+                    lines.append(f"#   {wrapped}")
+            warning = fieldinfo.check(field, value)
+            if warning:
+                lines.append("#   NOTE: outside the usual range (see above)")
+
+        lines.append(f"# {field} = {_scalar(value)}{_default_note(field)}")
+        lines.append("")
     return lines
 
 

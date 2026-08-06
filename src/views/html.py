@@ -63,6 +63,14 @@ def _plan_data(plan):
                 "agreed": s.agreed,
                 "confidence": s.confidence,
                 "overridden": s.overridden,
+                # From the Fear manual -- what the setting is, and what the raw
+                # number means. Without these a user is asked to judge a bare
+                # integer they have no way to interpret.
+                "label": s.label,
+                "summary": s.summary,
+                "note": s.note,
+                "human": s.human_value,
+                "rangeWarning": s.range_warning,
             }
             for s in plan.synthesised
         ],

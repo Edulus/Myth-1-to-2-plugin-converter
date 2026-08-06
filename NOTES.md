@@ -931,3 +931,27 @@ That makes them the natural reference for the remaining tag-body converters:
 mythextract gives the byte layout, the community tool gives worked conversion
 logic, and these manuals give the semantics needed to know *which* fields
 actually matter and what a sane value looks like.
+
+### Folded back into the application
+
+`src/fieldinfo.py` carries this knowledge as data — one entry per synthesised
+mesh field, with the label Fear's own editor uses, a short summary in our words,
+the scale factor the value is stored in, and the typical range where the manual
+states one. Every view reads from it, so the CLI report, the decisions file and
+the studio all explain the same thing the same way.
+
+The concrete difference this makes: a user reviewing a conversion used to be
+shown `transition_point = 62259` and asked to judge it. They are now shown
+
+> **Transition Point** — the lighting zero point: the illumination level at which
+> the mesh is neither lightened nor darkened. Lower makes the whole map brighter,
+> higher makes it darker.
+> `62259` means **0.95 of 1.0**.
+
+`fieldinfo.check` additionally compares a value against the manual's stated
+range and says so when it falls outside — advice, not enforcement, since an
+unusual map may well want an unusual value. Run against our own measured
+defaults, exactly one trips it: `light_fraction` at 0.098 sits a hair under the
+manual's 0.10 floor, because that is what 38 of the reference port's 40 meshes
+actually ship. A real disagreement between documentation and practice, now
+visible rather than buried.
