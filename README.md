@@ -165,8 +165,9 @@ run that is meant to be the real gate.
 | `text` | **converts** | a literal `\` becomes `\|`; when followed by `i`/`b`/`p` it is indistinguishable from markup and no warning is possible | -- |
 | `stli` | **converts** | as `text` | -- |
 | `.256` `d256` | pass-through | body unconverted | -- |
-| `mons` | pass-through | **body unconverted** -- 512B in TFL vs 1024B in Myth II, so this is wrong, not merely lossy | -- |
-| `unit` `arti` | pass-through | `arti` is 128B vs 168B | -- |
+| `mons` | **converts** | `effect_modifiers` (per-monster damage-vulnerability profile) has no Myth II destination on `mons` -- it moved to `obje`, a cross-tag write out of scope for now; other TFL-only fields dropped (`visual_distance`, `object_scale_*`, `sound_pitch_*`, `maximum_vitality`, `melee_power`) | 17 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; `pathfinding_radius` has no honest single default (per-monster) and `more_hack_flags` is an unresolved tie -- see [NOTES.md](NOTES.md) section 16 |
+| `unit` | **converts** | none -- byte-identical layout in both games, only its two tag references may need remapping | -- |
+| `arti` | pass-through | 128B vs 168B | -- |
 | `mesh` | **header + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9` |
 | `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
@@ -178,13 +179,15 @@ unconverted. It is never silently presented as converted.
 **Entrypoints are synthesised**, one per mesh tag, so converted levels appear in Myth II's
 menu by name -- confirmed in-engine. Starting one still fails, for two separate reasons:
 
-1. The pass-through bodies above are still in TFL format.
+1. The pass-through bodies above (`arti`, `proj`, `prgr`, and the rest) are still in TFL
+   format.
 2. **A TFL plugin is not self-contained.** It references the stock TFL tag library the way
-   a Myth II plugin references the base game. Counting mesh header fields *and* marker
-   palette entries, the test plugin's meshes point at 383 tags (4,006 references) they do
-   not contain. Converting a plugin in isolation cannot fix that -- the stock tags have to
-   come from a TFL installation supplied as a second input, or be mapped onto Myth II
-   equivalents. See [NOTES.md](NOTES.md) sections 12-14.
+   a Myth II plugin references the base game. Counting mesh header fields, marker palette
+   entries, and now `mons` header/sound/attack references and `unit` references too, the
+   test plugin's tags point at 458 tags (4,148 references) they do not contain. Converting a
+   plugin in isolation cannot fix that -- the stock tags have to come from a TFL installation
+   supplied as a second input, or be mapped onto Myth II equivalents. See
+   [NOTES.md](NOTES.md) sections 12-14, 16.
 
 The container side, however, is confirmed working: a plugin built by `src/writer.py` with
 **both checksums zeroed** loads and plays in Myth II 1.8.5. See below.
@@ -223,6 +226,7 @@ Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the 
 src/codec.py       minimal binary struct codec (lossless; preserves padding)
 src/formats.py     container and tag header definitions, ported with citations
 src/mesh.py        mesh headers, markers, marker palette, map actions
+src/mons.py        mons/unit headers and attack definitions
 src/fieldinfo.py   what mesh fields mean and what a sane value is (Fear manual)
 src/reader.py      parse a TFL .gor or Myth II container
 src/writer.py      pack one back -- the piece mythextract does not have
@@ -242,8 +246,9 @@ NOTES.md           research notes on the reference implementation and the format
 ## Honest limitations
 
 This tool will get a map most of the way, not all of the way. `text`, `stli` and
-pass-through types are tractable. `mons`, `arti` and mesh map actions involve real format
-changes with fields that have no TFL source and must be defaulted. `mesh` is the hardest.
+pass-through types are tractable. `mons`, `unit` and mesh map actions now convert; `arti`
+involves the same kind of real format change with fields that have no TFL source and must
+be defaulted, and has not been started. `mesh` is the hardest.
 Expect manual finishing work, and see [NOTES.md](NOTES.md) section 6 for the known unknowns
 -- chiefly that nobody has worked out how the Myth II container checksums are computed,
 which Phase 1 sidesteps by preserving them but a plugin *builder* cannot.

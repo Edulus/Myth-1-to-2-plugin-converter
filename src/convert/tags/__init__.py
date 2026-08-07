@@ -6,11 +6,11 @@ registry is passed through unchanged, and the conversion reports it as such --
 pass-through is a documented outcome, not a silent one.
 """
 
-from . import mesh, text
+from . import mesh, mons, text, unit
 
 # Raw 4-byte tag type -> converter module.
 CONVERTERS = {}
-for module in (mesh, text):
+for module in (mesh, mons, text, unit):
     for tag_type in module.HANDLES:
         CONVERTERS[tag_type] = module
 

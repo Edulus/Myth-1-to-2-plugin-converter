@@ -955,3 +955,168 @@ defaults, exactly one trips it: `light_fraction` at 0.098 sits a hair under the
 manual's 0.10 floor, because that is what 38 of the reference port's 40 meshes
 actually ship. A real disagreement between documentation and practice, now
 visible rather than buried.
+
+---
+
+## 16. `mons`/`unit` conversion, and the world-unit-doubling question resolved
+
+`src/mons.py` (the format layer, mirroring `src/mesh.py`) and
+`src/convert/tags/mons.py` / `unit.py` (the body converters, mirroring
+`src/convert/tags/mesh.py`) convert TFL's `mons`/`unit` tags to Myth II's. Same
+approach as mesh: rebuild the header field by field, by name, not by position.
+
+### The layout, and one trap in porting it from mythextract
+
+`MonsTagFmtTFL` looks 512 bytes short of `MonsTagFmt` at a glance, but the two
+are not simply "SB added fields at the end" — TFL's format has its own internal
+padding that a naive field-by-field port drops silently. A first attempt at
+`TFLMonsHeader` came out 464 bytes, 48 short. The missing bytes were three gaps
+mythextract's `MonsTagFmtTFL` has and a hand-copy missed: a 32-byte gap right
+after `sequence_indexes` (TFL only stores 16 slots' worth of data there but
+reserves room as if for more), a 14-byte gap after `terrain_costs`, and a
+2-byte runtime gap before `movement_modifiers`. All three are silent unless you
+assert the struct size against the known 512, which is exactly why `src/mesh.py`
+and `src/mons.py` both do that assertion at import time rather than trusting
+the transcription.
+
+Two fields share a byte slot under different names between the games: TFL's
+`intelligence` and SB's `size` both decode via mythextract's `Size` enum
+(small/man/giant) and sit at the same offset — SHARED_FIELDS (computed by name
+intersection, same mechanism as mesh.py) misses this because the names differ,
+so it is mapped explicitly (`values["size"] = tfl.intelligence`).
+
+`sequence_indexes` (32→52 bytes) and `attacks` (128→256 bytes) share a name but
+not a size, so a naive same-name copy would silently zero-pad rather than
+convert — both are excluded from SHARED_FIELDS and rebuilt by dedicated
+converters (`convert_sequence_indexes`, `convert_attacks`).
+
+### Attacks: TFL's three fixed roles become Myth II's four-slot array
+
+TFL names three sequence roles as separate fields (`sequence_index`,
+`elevated_sequence_index`, `declined_sequence_index`); Myth II holds up to four
+`(flags, index, skip_fraction)` entries in one array, with `flags` saying which
+role a slot plays. mythextract does not decode this `flags` field at all
+(`AttackSequenceFmt` has no enum for it), so the bit meanings used here (1 =
+Normal, 2 = Elevated, 4 = Declined) are an *inference* from Fear's three
+attack-editing checkboxes, corroborated by a real converted attack in the
+reference port having flags = 7 (1|2|4, "serves every role") — not a confirmed
+fact. TFL's three roles map onto the first three slots by role; the fourth slot
+and any unset role use mythextract's own empty-slot convention (`flags=1,
+sequence_index=-1, skip_fraction=0`).
+
+**A real bug caught before it shipped:** the first `convert_attacks` ignored
+`attack_count` and ran all `MAX_ATTACKS` (4) slots through `convert_attack`
+regardless of how many were real. TFL zero-fills unused attack slots, and zero
+is not TFL's "no sequence" sentinel (-1 is) — so an unused slot's
+`sequence_index` decodes as 0, a real value, and would have been converted into
+a bogus "attack sequence 0, Normal" entry rather than being recognised as
+empty. Fixed by only converting the first `number_of_attacks` slots and writing
+a genuinely empty `SBAttackDef` (`EMPTY_ATTACK`) for the rest. Caught by writing
+a test around the exact zero-vs-sentinel distinction, not by manual review —
+worth remembering as a category of bug: TFL's "unused" representation is not
+always Myth II's "unused" representation, and the two must never be assumed to
+be the same encoding.
+
+### Measured defaults, from 60 real converted `mons` tags
+
+Same methodology as mesh (§12): every Myth II-only field's default comes from
+measuring `Magma - The Fallen Lords v1.9`'s 60 `mons` tags, not from guessing.
+All but four fields are unanimous (60/60):
+
+| Field | Default | Agreement | Note |
+|---|---:|---:|---|
+| `burning_death_projectile_group_tag` | unset (0xFFFFFFFF) | 60/60 | |
+| `burning_death_projectile_group_type` | -1 | 40/60 | gated by `HAS_BURNING_DEATH`, never set by TFL content, so inert either way |
+| `experience_kill_bonus` / `experience_bonus_radius` | 255 / 255 | 60/60 | 0xFF = "use `enemy_experience_kill_bonus` instead" |
+| `propelled_system_shock` / `damage_to_propulsion` | 65535 / 65535 | 60/60 | gated by `CAN_BE_PROPELLED`, never set by TFL content |
+| `pathfinding_radius` | 77 (plurality) | 28/60 | the unit's "space bubble" — genuinely per-monster, no single default is meaningful; see below |
+| `map_action_tag` | unset | 60/60 | |
+| `hack_flags` | 0 | 60/60 | |
+| `more_hack_flags` | 0 | tied 23/60 (50) vs 23/60 (100), 13/60 (0), 1/60 (90) | what this controls was not found documented anywhere; 0 chosen as the most conservative reading of a genuine tie |
+| `maximum_mana` / `mana_recharge_rate` / `berserk_system_shock` / `berserk_vitality` | 0 / 0 / 0 / 0 | 60/60 | TFL predates the mana/berserk subsystem entirely |
+| `maximum_artifacts_carried` | 0 | 60/60 | |
+| `initial_artifacts_projectile_group_tag` | unset | 43/60 | |
+| `extra_flags` | 0 | 60/60 | |
+
+`pathfinding_radius` is the mesh converter's `transition_point` situation
+again: not unanimous because it is not *supposed* to be uniform, so no honest
+single default exists. Flagged in the code as worth a decisions-file-style
+override once that mechanism is extended to `mons` (not done in this pass —
+see Deferred, below).
+
+`use_attack_frequency` is **forced to 1** rather than taking the measured
+value (37/60 off, 23/60 on). TFL applied `attack_frequency` unconditionally —
+it had no gating flag for it at all — so the real port's split reflects
+per-monster editorial tuning done *after* the port, not a technical default.
+Forcing it on preserves TFL's actual behaviour; copying the majority would have
+silently disabled a mechanic TFL always used for 37 of 60 monsters.
+
+### `effect_modifiers`: a real architecture change, deliberately deferred
+
+TFL's `mons.effect_modifiers` is a 7-channel per-monster damage-vulnerability
+profile (close/long-range physical, explosive, electric, magical, paralysis,
+stone). Myth II does not have an equivalent field on `mons` at all — it moved
+the concept to `obje.effect_modifiers` (a *different* tag, 9 channels, adding
+gas/confusion — `myth_projectile.ObjeEffectFmt`) plus a single damage type per
+projectile (`ProjDmgFmt`). There is nowhere on `mons` to put TFL's value.
+
+Wiring this up means a cross-tag write: `mons.object_tag` names an `obje` tag,
+and that tag's `effect_modifiers` would need to be synthesised from TFL's
+`mons.effect_modifiers` for every monster. That is out of scope for this pass —
+consistent with how embedded map-action projectile-tag remapping was deferred
+in the mesh converter — and is reported like any other dropped field
+(`dropped TFL-only mons field effect_modifiers=...`) rather than silently
+discarded, so the gap is visible in every conversion report.
+
+### The world-unit-doubling question (§15) — resolved against doubling, on a small sample
+
+§15 flagged, but deliberately did not act on, Fear's own account of a Bungie
+bug: "When Bungie made myth 2 they halved the size of a world unit... most
+values throughout the game, such as unit and projectile speeds, were doubled to
+take this into account." That raised the possibility that `mons` gameplay
+fields — speeds, ranges, distances — need doubling on conversion, not just
+relaying-out, and it was recorded as a lead for this converter to check
+empirically rather than a rule to apply blindly.
+
+It can now be checked directly: the test TFL plugin (a custom Mauriac-authored
+map) and `Magma - The Fallen Lords v1.9` (a converted port of the *stock* TFL
+campaign) both use unmodified stock TFL monster tag IDs, so three monsters —
+`balo`, `behe`, `waca` — exist in both, TFL-native and Myth-II-converted, under
+the same ID. Comparing them field by field:
+
+| Field | ratio (SB ÷ TFL), 3 monsters | Doubled? |
+|---|---|---|
+| `activation_distance`, `warning_distance`, `critical_distance`, `turning_speed` | exactly 1.0 for all three | No |
+| `base_movement_speed` | 1.07, 1.44, 1.06 | No — inconsistent, not a fixed factor |
+| `longest_range` | 1.25, 0.5, 0.33 | No — inconsistent, and mostly *below* 1.0 |
+
+A genuine unit-doubling bug would show up as a uniform ~2.0 ratio across every
+distance/speed field. What is measured instead is exact equality for four
+fields and scattered, sub-2 and even sub-1 ratios for the other two — the
+signature of hand balance-tuning by Project Magma's designers (nerfing a
+troll's range, adjusting pacing), not a coordinate-system correction applied
+mechanically to every value. **Conclusion: `mons` gameplay fields do not need
+doubling, and `SHARED_FIELDS`'s straight copy is correct.**
+
+Caveat proportional to the evidence: this is a 3-monster sample, because that
+is how many stock TFL tag IDs happen to appear in both files available. It
+settles the question well enough to build on — a systematic doubling bug would
+not hide from even 3 samples showing exact 1.0 ratios on 4 different fields —
+but it is not the 40-or-60-sample confidence the mesh and `mons`-default
+measurements above have, and is worth re-checking if a wider stock-TFL sample
+becomes available.
+
+### Deferred
+
+- **`effect_modifiers` → `obje`**, discussed above.
+- **Decisions-file wiring.** Mesh's synthesised fields are overridable through
+  `decisions.toml` and surfaced for review in the plan/CLI/studio (§12, `src/
+  decisions.py`, `src/plan.py`). `mons`'s synthesised fields (the table above)
+  are not yet wired into that mechanism — they are baked-in module constants,
+  same shape as mesh's `SB_ONLY_DEFAULTS` but not yet plumbed through
+  `ConversionContext`/`Decisions`/the views. `pathfinding_radius` is the field
+  that most needs this, since no single default is honest for it.
+- **`arti` (artifacts).** Grows 128→168 bytes and embeds an attack def
+  (`ArtifactFmt(game_version)`), same shape as `mons` but not started.
+- Attack-slot tag references inside `arti`'s `override_attack` are unaffected
+  by this pass; only `mons`'s own attack projectile tags are remapped.

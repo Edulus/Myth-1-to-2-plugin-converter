@@ -22,7 +22,15 @@ the game's menu -- see `entrypoints`.
 import struct
 from dataclasses import dataclass, field
 
-from .. import codec, formats, idmap as idmap_module, mesh as mesh_module, reader, writer
+from .. import (
+    codec,
+    formats,
+    idmap as idmap_module,
+    mesh as mesh_module,
+    mons as mons_module,
+    reader,
+    writer,
+)
 from . import entrypoints, headers, tags as tag_converters
 
 
@@ -89,13 +97,15 @@ class ConversionContext:
 
 
 def unresolved_references(mono, id_map=None):
-    """Tags the container's mesh headers *and marker palettes* point at but do
-    not contain.
+    """Tags the container's mesh headers, marker palettes, mons tags, and unit
+    tags point at but do not contain.
 
     Returns ``{(tag_type, tag_id): reference_count}``. Covers mesh header
     fields and marker-palette entries (scenery/unit/model/projectile/ambient
     sound/local-projectile-group/animation references -- see
-    `src.mesh.MARKER_TYPE_TO_TAG`). Still not the full picture: other tag
+    `src.mesh.MARKER_TYPE_TO_TAG`), plus every `mons` header's direct
+    references, its sound-tag list, its attack projectile tags, and a `unit`
+    tag's `mons`/`core` references. Still not the full picture: other tag
     types hold references too (mythextract ``tag2local.py`` is the full list),
     and tag references embedded in map-action parameter data are not walked
     yet -- so this undercounts, and says so, rather than pretending to be
@@ -146,6 +156,33 @@ def unresolved_references(mono, id_map=None):
             if codec.all_on(entry.marker_tag) or codec.all_off(entry.marker_tag):
                 continue
             note(tag_type, entry.marker_tag)
+
+    for tag in mono.by_type(b"mons"):
+        try:
+            header = mons_module.parse_header(tag.body, mono.game_version)
+        except ValueError:
+            continue
+
+        for tag_type, tag_id, _field in mons_module.referenced_tags(header):
+            note(tag_type, tag_id)
+
+        for sound_tag in mons_module.sound_tag_refs(header.sound_tags):
+            note(b"soun", sound_tag)
+
+        for projectile_tag in mons_module.attack_projectile_refs(
+            header.attacks, mono.game_version, header.number_of_attacks
+        ):
+            note(b"proj", projectile_tag)
+
+    for tag in mono.by_type(b"unit"):
+        try:
+            header = mons_module.UnitTag.unpack(tag.body)
+        except ValueError:
+            continue
+        for tag_type, tag_id in ((b"mons", header.mons), (b"core", header.core)):
+            if codec.all_on(tag_id) or codec.all_off(tag_id):
+                continue
+            note(tag_type, tag_id)
 
     return missing
 

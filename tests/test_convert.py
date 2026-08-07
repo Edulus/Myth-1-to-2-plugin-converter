@@ -51,10 +51,12 @@ class TestTextConversion(unittest.TestCase):
     def test_registry_covers_text_and_stli(self):
         from src.convert import tags
 
-        self.assertEqual([b"mesh", b"stli", b"text"], tags.supported_types())
+        self.assertEqual(
+            [b"mesh", b"mons", b"stli", b"text", b"unit"], tags.supported_types()
+        )
         self.assertIs(text_converter, tags.converter_for(b"text"))
         self.assertIs(text_converter, tags.converter_for(b"stli"))
-        self.assertIsNone(tags.converter_for(b"mons"))
+        self.assertIsNone(tags.converter_for(b"scri"))
 
 
 class TestHeaderConversion(unittest.TestCase):
@@ -170,9 +172,9 @@ class TestContainerConversion(unittest.TestCase):
         _, report = convert_plugin.convert_container(self.tfl)
 
         converted = {o.tag_type for o in report.converted()}
-        self.assertEqual({b"text", b"stli"}, converted)
+        self.assertEqual({b"text", b"stli", b"mons"}, converted)
         self.assertEqual(
-            {b"scri": 1, b"mons": 1, b"soun": 1}, report.unsupported_types()
+            {b"scri": 1, b"soun": 1}, report.unsupported_types()
         )
 
     def test_passed_through_bodies_are_byte_identical(self):
@@ -180,7 +182,7 @@ class TestContainerConversion(unittest.TestCase):
         come out exactly as it went in."""
         sb, _ = convert_plugin.convert_container(self.tfl)
         for original, converted in zip(self.tfl.tags, sb.tags):
-            if original.tag_type not in (b"text", b"stli", b"mesh"):
+            if original.tag_type not in (b"text", b"stli", b"mesh", b"mons"):
                 self.assertEqual(original.body, converted.body, original.tag_type)
 
     def test_formatting_is_actually_translated_end_to_end(self):
