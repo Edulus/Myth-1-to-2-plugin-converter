@@ -1300,8 +1300,37 @@ flags 0 → 0, collection 8 → 4, object/projectile 24 → 8, projectile groups
 44 → 24, sequence indexes 60 → 40; TFL's six words at 32..44 have no Myth II
 destination. 60.8% → 94.2%.
 
+### Run 4 onward: the level starts
+
+With `arti` converted (`src/convert/tags/arti.py`) and Magma's Myth II-native
+`meef` tags standing in for the stock ones (a test stand-in in the build
+script, not a conversion), every definition error cleared and the engine began
+rendering — then crashed with EXCEPTION_INT_DIVIDE_BY_ZERO in
+`_build_particle_system_surface_list` (particle_systems.c:352). Myth II's
+particle systems end in a splash box TFL does not have; a zero `box_width` is
+the divisor (`src/convert/tags/part.py`).
+
+With that fixed, **Tandem starts and plays** — the first converted TFL level to
+run in Myth II. The log is clean. Terrain, the river, the rain and the minimap
+render; units exist (dots on the minimap) and cast shadows, but neither units
+nor scenery are drawn.
+
+Marker positions were ruled out first: across 1,078 markers matched between
+the two stock maps both games carry, the SB/TFL position ratio has a median of
+exactly 1.000 in x and y.
+
+The cause is the `.256` collections (still passed through). Against the 198 in
+both the stock TFL tags and Magma: Myth II's data block starts with 32 bytes —
+`"This tag was saved by Amber 2.0"`, an editor stamp — and every section offset
+in the header is 32 later (empty sections have offset 0). That accounts for the
+header; inside the data, each bitmap's own offsets also move by 32, and TFL
+carries stale runtime pointers where Myth II has zeros. Converting `.256`
+means walking the bitmap records, not just the header.
+
 ### Open
 
+- **`.256`**: the bitmap-record walk described above. The last thing between
+  Tandem and visible units.
 - **`meef`**: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
   (the Fear manual lists amplitude, velocity, cutoff radius, dissipation,
   epicenter offset, camera shaking type, inverted, then shockwave collection,
