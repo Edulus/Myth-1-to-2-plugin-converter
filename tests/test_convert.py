@@ -52,7 +52,7 @@ class TestTextConversion(unittest.TestCase):
         from src.convert import tags
 
         self.assertEqual(
-            [b".256", b"arti", b"mesh", b"mons", b"part", b"proj", b"scen", b"stli", b"text", b"unit"], tags.supported_types()
+            [b".256", b"arti", b"mesh", b"mons", b"obje", b"part", b"proj", b"scen", b"stli", b"text", b"unit"], tags.supported_types()
         )
         self.assertIs(text_converter, tags.converter_for(b"text"))
         self.assertIs(text_converter, tags.converter_for(b"stli"))
@@ -150,6 +150,10 @@ class TestIdMap(unittest.TestCase):
         self.assertEqual([b"text", b"stli", b"stli"], types)
 
 
+# Every converted monster gains an object of its own (convert/plugin.py).
+MONSTERS = sum(1 for t in fixtures.SAMPLE_TAGS if t[1] == b"mons")
+
+
 class TestContainerConversion(unittest.TestCase):
     def setUp(self):
         self.tfl = reader.read_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS))
@@ -160,7 +164,7 @@ class TestContainerConversion(unittest.TestCase):
 
         result = reader.read_bytes(data, "converted")
         self.assertTrue(result.is_sb)
-        self.assertEqual(len(fixtures.SAMPLE_TAGS), len(result.tags))
+        self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(result.tags), "plus an object per monster")
         self.assertEqual(
             int(formats.ArchiveType.PLUGIN),
             result.header.type,
@@ -172,7 +176,7 @@ class TestContainerConversion(unittest.TestCase):
         _, report = convert_plugin.convert_container(self.tfl)
 
         converted = {o.tag_type for o in report.converted()}
-        self.assertEqual({b"text", b"stli", b"mons"}, converted)
+        self.assertEqual({b"text", b"stli", b"mons", b"obje"}, converted)
         self.assertEqual(
             {b"scri": 1, b"soun": 1}, report.unsupported_types()
         )
@@ -243,8 +247,8 @@ class TestConvertFile(unittest.TestCase):
             result = reader.read(out)
             self.assertTrue(result.is_sb)
             self.assertEqual("Converted", codec.decode_string(result.header.name))
-            self.assertEqual(len(fixtures.SAMPLE_TAGS), len(result.tags))
-            self.assertEqual(len(fixtures.SAMPLE_TAGS), len(report.outcomes))
+            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(result.tags))
+            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(report.outcomes))
 
     def test_warns_when_output_filename_is_too_long_for_myth_ii(self):
         """Myth II silently ignores plugins with filenames over 32 characters --

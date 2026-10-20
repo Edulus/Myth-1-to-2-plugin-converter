@@ -32,6 +32,7 @@ from .. import (
     writer,
 )
 from . import entrypoints, headers, tags as tag_converters
+from .tags import obje as obje_converter
 
 
 class ConversionError(ValueError):
@@ -248,6 +249,14 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
             )
         )
 
+    _give_monsters_objects(mono, converted_tags, report)
+
+    if len(converted_tags) > headers.INT16_MAX:
+        raise ConversionError(
+            f"{len(converted_tags)} tags: cannot assign a unique int16 tag "
+            f"identifier to each (max {headers.INT16_MAX})"
+        )
+
     # Entrypoints have to be built from the mesh tags -- TFL has no equivalent.
     # Done after tag conversion so IDs are already remapped and stli bodies
     # already carry Myth II formatting codes.
@@ -292,6 +301,98 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
         source=b"",  # built, not read: there is no source layout to preserve
     )
     return sb_mono, report
+
+
+# TFL fields the mons converter reports as dropped, which _give_monsters_objects
+# carries into each monster's own object instead.
+_CARRIED_TO_OBJECT = (
+    "object_scale_lower_bound",
+    "object_scale_delta",
+    "maximum_vitality",
+    "effect_modifiers",
+)
+
+
+def _give_monsters_objects(mono, converted_tags, report):
+    """Give every converted monster an object of its own.
+
+    TFL keeps a monster's scale, vitality and damage-type modifiers on the
+    monster and shares one physics-only object between them all; Myth II reads
+    those from the object (see `tags.obje`). Each monster gets an object built
+    from its TFL header, under the monster's own ID, and its ``object_tag`` is
+    pointed at it. Physics come from the object the monster named, when that is
+    in this container, and from the stock "basic object" otherwise.
+    """
+    taken = {t.tag_id for t in converted_tags if t.tag_type == b"obje"}
+    tfl_objects = {t.tag_id: t.body for t in mono.tags if t.tag_type == b"obje"}
+    object_tag_at = next(
+        start for _fmt, name, start, _end in mons_module.SBMonsHeader._layout if name == "object_tag"
+    )
+
+    for index, source in enumerate(mono.tags):
+        if source.tag_type != b"mons":
+            continue
+        converted = converted_tags[index]
+        try:
+            tfl = mons_module.TFLMonsHeader.unpack(source.body)
+        except (ValueError, struct.error):
+            continue
+        if len(converted.body) < object_tag_at + 4:
+            continue
+
+        object_id = _free_id(converted.tag_id, taken)
+        taken.add(object_id)
+        physics = (
+            obje_converter.physics_of(tfl_objects[tfl.object_tag])
+            if len(tfl_objects.get(tfl.object_tag, b"")) == obje_converter.TFL_SIZE
+            else obje_converter.BASIC_OBJECT_PHYSICS
+        )
+        body = obje_converter.for_monster(tfl, physics)
+        name = f"{codec.decode_string(converted.header.name)} object"[:31]
+        header = converted.header.replace(
+            tag_type=b"obje",
+            tag_id=object_id,
+            name=codec.encode_string(name, 32),
+            identifier=len(converted_tags) + 1,
+            tag_data_size=len(body),
+        )
+        converted_tags.append(reader.Tag(header=header, body=body))
+
+        mons_body = bytearray(converted.body)
+        mons_body[object_tag_at : object_tag_at + 4] = object_id
+        converted_tags[index] = reader.Tag(header=converted.header, body=bytes(mons_body))
+
+        outcome = report.outcomes[index]
+        outcome.warnings = [
+            w for w in outcome.warnings
+            if not any(f"field {field}=" in w for field in _CARRIED_TO_OBJECT)
+        ]
+        report.outcomes.append(
+            TagOutcome(
+                tag_type=b"obje",
+                tfl_id=object_id,
+                sb_id=object_id,
+                name=name,
+                status="converted",
+                size_before=0,
+                size_after=len(body),
+                warnings=[
+                    f"built for mons.{codec.decode_string(converted.tag_id)} from its "
+                    f"TFL scale, vitality and effect modifiers"
+                ],
+            )
+        )
+
+
+def _free_id(wanted, taken):
+    """``wanted``, or a variant of it no tag of the type already uses."""
+    if wanted not in taken:
+        return wanted
+    for ch in b"0123456789#$%&@!":
+        candidate = wanted[:3] + bytes([ch])
+        if candidate not in taken:
+            return candidate
+    raise ConversionError(f"no free obje id near {codec.decode_string(wanted)}")
 
 
 # Myth II silently ignores a plugin whose filename is longer than this. Verified
