@@ -1244,3 +1244,69 @@ identical. Both are worth the same treatment next.
   `model_index` question above.
 - The meaning of the geometry material tail and the added surface bits, if
   converted buildings render or light wrongly without them.
+
+## 18. In-engine experiment 3 — converting the stock TFL tags, layer by layer
+
+Myth II 1.8.5 build 471b, *Sir Mauriac's Tale* level **Tandem** (zm04: 77
+model markers, single-player), driven one change at a time against
+`myth_log.txt`.
+
+### Supplying the stock tags: Magma is not enough, the TFL originals are
+
+The §13 tagset (Magma's port with its entrypoints stripped) was rebuilt. Two
+things learned on the way:
+
+- **Myth II identifies a plugin by the name inside it, not its filename.** The
+  rebuilt tagset still carried Magma's internal name and was silently hidden
+  as a duplicate of the Magma campaign. Renaming the header's `name` fixed it.
+- **Selecting a campaign clears the tagset choice** until it is re-picked in
+  the Tagsets dialog; the log line `Starting mesh ... with N plugins` is the
+  check that it took.
+
+With it loaded, Tandem still failed on `medi.mawa`: Magma has no `mawa` (it
+renamed or dropped many stock IDs). Mapping it in a decisions file exposed a
+converter bug — the mapping reached the report but not the mesh header — fixed
+in `src/convert/tags/mesh.py`. The next failure was `amso.am05`, and a full
+listing showed **76 references** Tandem needs that Magma does not carry under
+their stock IDs.
+
+Converting the stock TFL tags themselves (`TAGS.GOR` + `ARTSOUND.GOR`, from
+KEEP; 2,672 tags) into a tagset resolved all 76 at once. That is route 1 of
+§12, and it also puts the converter to work on the whole stock library.
+
+### Each layer, in the order the engine reported it
+
+| Run | First failure | Cause | Fix |
+|---|---|---|---|
+| 1 | `couldn't read header for projectile definition '    '`, cascading to splashes, the marsh media, the mesh | `proj` passed through in TFL layout | `src/convert/tags/proj.py` |
+| 2 | `object definition 'fasc'`, `collection reference '    '` on every bush, tree, barrel | `scen` passed through | `src/convert/tags/scen.py` |
+| 2 | `couldn't read unit definition for 'mits'` | the `unit` converter wrote 8 bytes of a 128-byte body | keep the 120 undeclared bytes |
+| 3 | `collection reference '    '` in mesh effect `sace`; `arti` bow of stoning | `meef`, `arti` passed through | open |
+
+Every fix was measured against Magma's ports of the same stock IDs before the
+next run.
+
+**`proj`** (104 IDs in common, 256 bytes in both). TFL has 4 extra bytes at
+76..80; everything after sits 4 bytes later, anchored by the references
+(promoted projectile 96 → 92, artifact 124 → 120, local projectile group
+140 → 136). TFL flag bit 1 marks thrown debris — set on body parts, bones,
+apples, barrel boards; never on swings, lightning or splashes — and Myth II
+reads it as `IS_GUIDED`, so it is cleared. TFL zero-fills unused references,
+Myth II writes 0xFFFFFFFF, except `script_tag` (zero in all 273 of Magma's).
+81.4% → 92.8% byte agreement; the rest is Magma's editing.
+
+**`scen`** (61 IDs in common, 128 bytes in both). Not a single shift — a map:
+flags 0 → 0, collection 8 → 4, object/projectile 24 → 8, projectile groups
+44 → 24, sequence indexes 60 → 40; TFL's six words at 32..44 have no Myth II
+destination. 60.8% → 94.2%.
+
+### Open
+
+- **`meef`**: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
+  (the Fear manual lists amplitude, velocity, cutoff radius, dissipation,
+  epicenter offset, camera shaking type, inverted, then shockwave collection,
+  sequence, radial points, thickness, height offset). Only 3 IDs in common, all
+  retuned by Magma — too few to map by measurement alone. 4 stock tags.
+- **`arti`**: 128 → 168 bytes, embeds an attack definition (§16 Deferred).
+- Still unconverted in the tagset after this round: 1,698 of 2,672 tags,
+  mostly `.256` and `soun` (art and sound, untested), `core`, `prgr`, `amso`.
