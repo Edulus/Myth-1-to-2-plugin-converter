@@ -181,6 +181,14 @@ def convert(body, context=None):
     values["flags"], flag_warnings = _convert_flags(tfl.flags, use_vtfl)
     warnings.extend(flag_warnings)
 
+    # The header's own tag references (media, lighting, string lists...) follow
+    # the ID map too -- otherwise a decisions-file mapping fixes the report but
+    # not the file, and the engine still asks for the TFL id.
+    if id_map is not None:
+        for tag_type, tag_id, field in mesh_module.referenced_tags(tfl, formats.TFL):
+            if field in values:
+                values[field] = id_map.map_id(tag_type, tag_id)
+
     for field, width in (
         ("cutscene_file_pregame", 64),
         ("cutscene_file_success", 64),

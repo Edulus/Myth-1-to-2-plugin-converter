@@ -620,6 +620,29 @@ class TestMeshBodyConversion(unittest.TestCase):
         remapped = mesh.MarkerPaletteEntry.unpack(converted, mesh.MESH_HEADER_SIZE)
         self.assertEqual(b"newi", remapped.marker_tag)
 
+    def test_header_tag_references_are_remapped(self):
+        """A decisions-file mapping must reach the mesh header itself, not just
+        the unresolved-references report. Found in-engine: `medi.mawa` mapped
+        to `ma2w` still failed with "couldn't read header for media definition
+        'mawa'", because the header kept the TFL id."""
+        import struct
+
+        from src.idmap import IdMap
+        from src.convert.tags import mesh as mesh_converter
+        from src.convert import plugin as convert_plugin
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        body = bytearray(fixtures.mesh_body(trailing=b""))
+        struct.pack_into(">4s", body, offsets["media_tag"], b"mawa")
+
+        id_map = IdMap()
+        id_map.add(b"medi", b"mawa", b"ma2w")
+        context = convert_plugin.ConversionContext(id_map=id_map)
+
+        converted, _ = mesh_converter.convert(bytes(body), context)
+        header = mesh.parse_header(converted, formats.SB)
+        self.assertEqual(b"ma2w", header.media_tag)
+
     def test_malformed_trailing_data_is_reported_not_crashed(self):
         """Counts that do not match the available bytes must not raise -- a
         converter that crashes on one bad mesh takes the whole plugin with it."""
