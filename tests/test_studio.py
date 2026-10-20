@@ -89,6 +89,38 @@ class TestAccessGuards(StudioTestCase):
         )
         self.assertEqual(403, status)
 
+    def test_the_studio_page_itself_can_post(self):
+        """Browsers attach Origin to every POST, same-origin included (Fetch
+        spec), so the studio's own page arrives carrying its own origin. That
+        must be let through, or no action in the app works."""
+        own = f"http://127.0.0.1:{self.port}"
+        status, body = self.call(
+            "/api/open-plugin", {"path": str(self.plugin)}, headers={"Origin": own}
+        )
+        self.assertEqual(200, status, body)
+
+    def test_a_cross_site_post_is_refused_even_with_the_token(self):
+        status, _ = self.call(
+            "/api/open-plugin",
+            {"path": str(self.plugin)},
+            headers={"Origin": "https://example.invalid"},
+        )
+        self.assertEqual(403, status)
+
+    def test_another_port_on_loopback_is_a_different_origin(self):
+        status, _ = self.call(
+            "/api/state", headers={"Origin": f"http://127.0.0.1:{self.port + 1}"}
+        )
+        self.assertEqual(403, status)
+
+    def test_a_rebound_hostname_is_refused(self):
+        """DNS rebinding: a hostile name resolving to 127.0.0.1 reaches the
+        server with its own name in Host. Only loopback names are ours."""
+        status, _ = self.call(
+            "/api/state", headers={"Host": f"evil.example:{self.port}"}
+        )
+        self.assertEqual(403, status)
+
     def test_the_token_is_not_guessable(self):
         self.assertGreaterEqual(len(self.studio.token), 24)
 

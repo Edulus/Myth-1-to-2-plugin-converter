@@ -7,9 +7,10 @@ Starts a server on 127.0.0.1 and opens a browser. Unlike the static page that
 install, run the conversion, and install the result into your plugins folder.
 
 **Local only, and deliberately so.** This tool reads and writes real files on
-your machine, so the server binds to the loopback address, refuses requests
-carrying an ``Origin`` header (a browser only sends one for cross-site requests),
-and requires a token minted at startup and given to the page in its URL. Without
+your machine, so the server binds to the loopback address, refuses any ``Host``
+but its own loopback name (DNS rebinding) and any ``Origin`` but its own (a page
+on another site), and requires a token minted at startup and given to the page
+in its URL. Without
 the token, a page you happen to have open on another site could otherwise script
 this server into writing files. None of this makes it safe to expose publicly and
 it is not meant to be.
@@ -218,10 +219,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     # -- guards -------------------------------------------------------------
 
+    def _own_hosts(self):
+        port = self.server.server_address[1]
+        return {f"127.0.0.1:{port}", f"localhost:{port}"}
+
     def _authorised(self):
-        # A browser attaches Origin to cross-site requests; same-origin
-        # navigation and same-origin fetch from our own page do not need it.
-        if self.headers.get("Origin"):
+        # DNS rebinding: a hostile name that resolves to 127.0.0.1 arrives with
+        # that name in Host. Only loopback names on our own port are us.
+        if self.headers.get("Host", "") not in self._own_hosts():
+            return False
+        # Browsers attach Origin to every POST, same-origin ones included
+        # (Fetch spec), and to cross-site requests generally. Our own page's
+        # origin is allowed; any other is a page elsewhere trying to drive us.
+        origin = self.headers.get("Origin")
+        if origin is not None and origin not in {
+            f"http://{host}" for host in self._own_hosts()
+        }:
             return False
         query = urllib.parse.urlparse(self.path).query
         token = urllib.parse.parse_qs(query).get("token", [""])[0]
