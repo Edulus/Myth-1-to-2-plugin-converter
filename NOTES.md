@@ -1144,7 +1144,7 @@ models come from the stock TFL tag library, like most of its other dependencies
 (§12). Neither does the other TFL `.gor` to hand (`gofc2TFL.gor`: `.256`,
 `mesh`, `soun`, `stli` only), and the Myth II disc image is Soulblighter alone.
 **Comparing TFL and Myth II model tags needs the stock TFL tags**, from a TFL
-install or disc. Nothing in this section is measured against them.
+install or disc — measured below, once KEEP supplied them.
 
 Iron's 2011 mesh converter readme (`reference/mesh-converter/ReadMe.txt`) is the
 only first-hand account: "For everything other than models you can use
@@ -1191,18 +1191,56 @@ if not, converted buildings may lose collision, pathing or rendering. **One
 in-engine test settles it**: load a converted level with buildings and see
 whether units walk through them.
 
-### Open: model footprints may be in TFL cells
+### Measured against the stock TFL tags
 
-`ModelFmt` carries its own footprint — `mesh_cell_count` entries of
-`ModelMeshCellFmt` (x, y, flags) — in terrain-cell units. Myth II's cells are
-half the size of TFL's (§15), so a TFL model's footprint, read unchanged,
-would cover a quarter of the ground in Myth II. Whether Magma's ported `mode`
-tags were rescaled can only be checked against the TFL originals.
+KEEP supplied the stock TFL `TAGS` folder (kept local, never committed).
+`TAGS.GOR` holds 91 `mode` and 91 `geom` tags; Magma holds the same 91 `mode`
+IDs and 95 `geom` (91 in common). No `anim` tags exist in either. Compared ID by
+ID, as §16 did for `mons`:
 
-### Needed to go further
+**`mode` — one change: the footprint is in terrain cells, and cells halved.**
 
-1. The stock TFL tags (a TFL install or disc) — to compare `mode`/`geom`/`anim`
-   byte layouts and footprints against Magma's ports of the same IDs, as §16 did
-   for `mons`.
-2. One in-engine test of a converted level with buildings — for the
-   `model_index` question above.
+- The 64-byte header layout is identical; only `mesh_cell_count`,
+  `mesh_cell_size` and `data_size` differ (85 of 91 — the other 6 match
+  throughout).
+- Geometry-vertex data is identical in 91 of 91, permutations in 90 of 91. No
+  coordinate rescaling.
+- The footprint (`ModelMeshCellFmt`: x, y, flags, 8 bytes each) is exactly 4x
+  the cells: in **81 of 91**, Myth II's footprint is TFL's with each cell
+  (x, y, f) split into the 2x2 block (2x..2x+1, 2y..2y+1, f). The other 10 have
+  different shapes and flag values (`ambu` goes from flag 7 to 8) —
+  hand-editing by Magma, not a different rule.
+
+So converting a `mode` is: split each footprint cell 2x2, and grow
+`mesh_cell_count`, `mesh_cell_size` and `data_size` to match.
+
+**`geom` — a longer header, a derived bounding box, two judgment calls.**
+
+- TFL's header is **96 bytes** (bytes 88..96 zero in all 91), Myth II's **128**
+  (`data_offset` 96 → 128). Every count, offset and section size is identical.
+- The 12 added bytes are a bounding box (`bounds_min/max_x/y/z`), equal to the
+  min/max of the vertices in **90 of 91** (`enst`'s is garbled in Magma's copy).
+  Derivable, not invented.
+- `center_z` is zeroed in 90 of 91.
+- Vertices and dependencies are identical. Two things are not:
+  - **Materials (41 tags):** bytes 58..63 of each 64-byte material record —
+    padding to mythextract, junk in TFL — hold three int16s in Myth II:
+    (0,0,0) in 85 records, otherwise (1, 0, k) with k = 0..4+. Meaning unknown.
+  - **Surfaces (39 tags):** byte 1 of a 64-byte surface record gains bits —
+    0x10 (1,487 surfaces), 0x20 and 0x02 — none ever cleared. Meaning unknown.
+
+  The other 43 geometries are byte-identical in data, so zeroed material tails
+  and TFL's surface flags are a shape Myth II is known to accept. Whether the
+  extra values are tool-computed (and matter for rendering or lighting) or
+  Magma's own tuning is open.
+
+**Also measured:** `core` is byte-identical in 99 of 152 common IDs and the same
+size in all 152; `scen` is the same size in all 61 common IDs but never
+identical. Both are worth the same treatment next.
+
+### Still needed
+
+- One in-engine test of a converted level with buildings — for the
+  `model_index` question above.
+- The meaning of the geometry material tail and the added surface bits, if
+  converted buildings render or light wrongly without them.
