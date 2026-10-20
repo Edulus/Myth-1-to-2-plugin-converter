@@ -52,7 +52,7 @@ class TestTextConversion(unittest.TestCase):
         from src.convert import tags
 
         self.assertEqual(
-            [b"mesh", b"mons", b"proj", b"stli", b"text", b"unit"], tags.supported_types()
+            [b"mesh", b"mons", b"proj", b"scen", b"stli", b"text", b"unit"], tags.supported_types()
         )
         self.assertIs(text_converter, tags.converter_for(b"text"))
         self.assertIs(text_converter, tags.converter_for(b"stli"))
