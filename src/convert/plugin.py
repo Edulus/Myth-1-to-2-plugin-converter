@@ -7,8 +7,8 @@ a Myth II container.
 What this does **not** do yet is as important as what it does, and the result
 reports both:
 
-* **Bodies of unsupported tag types pass through unchanged.** A `mons` body is
-  512 bytes in TFL and 1024 in Myth II (NOTES.md section 4); passing one through
+* **Bodies of unsupported tag types pass through unchanged.** An `arti` body is
+  128 bytes in TFL and 168 in Myth II (NOTES.md section 4); passing one through
   produces a correctly-headed tag with wrong contents. Every such tag is listed
   in the report.
 * **Container checksums are written as zero.** The algorithm is unknown, and
@@ -267,8 +267,8 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
     if report.unresolved:
         total = sum(report.unresolved.values())
         report.warnings.append(
-            f"{len(report.unresolved)} tags referenced by mesh headers are not in "
-            f"this plugin ({total} references). A TFL plugin is not self-contained; "
+            f"{len(report.unresolved)} referenced tags are not in this plugin "
+            f"({total} references). A TFL plugin is not self-contained; "
             f"supply them from a converted TFL tagset, or map them with a decisions "
             f"file (--emit-decisions)"
         )
@@ -390,7 +390,7 @@ def format_report(report, in_name="", out_name=""):
         )[:20]:
             lines.append(
                 f" {codec.decode_string(tag_type)}.{codec.decode_string(tag_id):<6} "
-                f"referenced by {count} mesh(es)"
+                f"referenced {count} time(s)"
             )
         if len(report.unresolved) > 20:
             lines.append(f" ... and {len(report.unresolved) - 20} more")

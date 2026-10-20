@@ -567,7 +567,7 @@ function renderToml() {
     const key = u.type + "." + u.id;
     const chosen = (state.choices[key] || "").trim();
     const cand = u.candidates.find(c => c.id === chosen);
-    lines.push(`# ${key} &mdash; referenced by ${u.refs} mesh(es)${cand ? " &rarr; " + cand.name : ""}`);
+    lines.push(`# ${key} &mdash; referenced ${u.refs} time(s)${cand ? " &rarr; " + cand.name : ""}`);
     lines.push("[[tag]]");
     lines.push("type = " + tomlString(u.type));
     lines.push("id = " + tomlString(u.id));

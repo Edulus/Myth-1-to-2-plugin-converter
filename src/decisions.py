@@ -187,7 +187,7 @@ def _unresolved_section(unresolved_refs, candidates):
     ):
         type_text = codec.decode_string(tag_type)
         id_text = codec.decode_string(tag_id)
-        lines.append(f"# {type_text}.{id_text} -- referenced by {count} mesh(es)")
+        lines.append(f"# {type_text}.{id_text} -- referenced {count} time(s)")
 
         options = candidates.get(tag_type) or []
         if options:

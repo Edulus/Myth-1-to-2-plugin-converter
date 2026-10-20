@@ -29,7 +29,7 @@ def render(plan, verbose=False):
         for ref in undecided[: (None if verbose else 15)]:
             best = f"  suggest: {ref.candidates[0][0]}" if ref.candidates else ""
             lines.append(
-                f" {ref.label:<12} referenced by {ref.references:>3} mesh(es)"
+                f" {ref.label:<12} referenced {ref.references:>3} time(s)"
                 f"{best}"
             )
         if not verbose and len(undecided) > 15:

@@ -139,7 +139,7 @@ between people converting different plugins.
 (readmes, resource forks, `plugin cache`), so you can point it straight at a plugins folder.
 
 `info` and `roundtrip` accept both Myth II containers and TFL `.gor` files. `diff` compares
-across game versions too. `convert` arrives in Phase 2.
+across game versions too. `convert` and `plan` read TFL `.gor` files only.
 
 ## Tests
 
@@ -168,7 +168,7 @@ run that is meant to be the real gate.
 | `mons` | **converts** | `effect_modifiers` (per-monster damage-vulnerability profile) has no Myth II destination on `mons` -- it moved to `obje`, a cross-tag write out of scope for now; other TFL-only fields dropped (`visual_distance`, `object_scale_*`, `sound_pitch_*`, `maximum_vitality`, `melee_power`) | 17 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; `pathfinding_radius` has no honest single default (per-monster) and `more_hack_flags` is an unresolved tie -- see [NOTES.md](NOTES.md) section 16 |
 | `unit` | **converts** | none -- byte-identical layout in both games, only its two tag references may need remapping | -- |
 | `arti` | pass-through | 128B vs 168B | -- |
-| `mesh` | **header + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9` |
+| `mesh` | **header + terrain + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are); terrain is upsampled nearest-neighbour (each TFL cell becomes a 2x2 block -- duplicated, never interpolated, so heights stay consistent with their normals); the media coverage region is dropped (empty is valid in 14 of 87 native meshes) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; per-cell `model_index` (none) and `media_height` (the "Water level" decision); `mesh_LOD_data` **zero-filled** at the new size -- its encoding is not understood |
 | `proj` `prgr` `lpgr` `core` `soun` `amso` `phys` `scen` `part` `medi` | pass-through | unverified whether these differ at all | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
 | *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
@@ -246,12 +246,16 @@ NOTES.md           research notes on the reference implementation and the format
 ## Honest limitations
 
 This tool will get a map most of the way, not all of the way. `text`, `stli` and
-pass-through types are tractable. `mons`, `unit` and mesh map actions now convert; `arti`
-involves the same kind of real format change with fields that have no TFL source and must
-be defaulted, and has not been started. `mesh` is the hardest.
-Expect manual finishing work, and see [NOTES.md](NOTES.md) section 6 for the known unknowns
--- chiefly that nobody has worked out how the Myth II container checksums are computed,
-which Phase 1 sidesteps by preserving them but a plugin *builder* cannot.
+pass-through types are tractable. `mons`, `unit`, and every structural block of `mesh`
+(header, terrain, markers, map actions) now convert; `arti` involves the same kind of real
+format change with fields that have no TFL source and must be defaulted, and has not been
+started. `mesh` is the hardest, and its terrain is the least certain part: the LOD data is
+zero-filled because its encoding is not understood, and nothing since the terrain converter
+landed has been tried in-engine.
+Expect manual finishing work, and see [NOTES.md](NOTES.md) section 6 for the known unknowns.
+The container checksums, once the biggest of those, turned out not to matter: nobody knows
+the algorithm, but Myth II 1.8.5 validates neither field, so writing zeros works (see
+*Verified in-engine* above).
 
 ## Game data
 

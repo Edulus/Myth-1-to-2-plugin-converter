@@ -120,7 +120,7 @@ class TestStubGeneration(unittest.TestCase):
         self.assertLess(
             stub.index("deml"), stub.index("mawa"), "most-referenced tag comes first"
         )
-        self.assertIn("referenced by 59 mesh(es)", stub)
+        self.assertIn("referenced 59 time(s)", stub)
 
     def test_candidates_are_listed_as_comments(self):
         candidates = {b"meli": [("gras", "grassland", 4), ("carn", "carnage", 7)]}

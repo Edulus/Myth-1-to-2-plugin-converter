@@ -3,9 +3,9 @@
     python -m src info <container>          list tags and container header
     python -m src roundtrip <container>...  verify read/write is byte-exact
     python -m src diff <a> <b>              compare two containers tag by tag
-
-`convert` arrives in Phase 2. Until the round-trip gate passes against real game
-data there is nothing here worth converting with.
+    python -m src plan --in <gor>           what a conversion would do
+    python -m src convert --in <gor> --out <plugin>
+    python -m src studio                    the guided local browser app
 """
 
 import argparse
