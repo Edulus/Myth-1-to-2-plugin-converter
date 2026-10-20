@@ -4,7 +4,8 @@ mythextract declares a single ``UnitTagFmt`` (`src/mons.py` ``UnitTag``) with
 no TFL/SB split -- 8 bytes, a `mons` reference and a `core` reference, byte-
 identical in both games. There is no layout to convert; the only thing that
 can be wrong is the two tag IDs it carries, if the community port renamed the
-`mons` or `core` tag they point at.
+`mons` or `core` tag they point at. Real unit bodies are 128 bytes in both games
+(93 stock TFL, 98 in Magma); the undeclared 120 after the struct are kept.
 """
 
 from ... import codec, mons as mons_module
@@ -36,5 +37,7 @@ def convert(body, context=None):
                 continue
             values[field] = id_map.map_id(tag_type, value)
 
+    # Real unit bodies are 128 bytes in both games; only the first 8 are
+    # declared. The rest is carried through, or Myth II reads past the end.
     converted = mons_module.UnitTag.build(**values).encode()
-    return converted, warnings
+    return converted + body[mons_module.UnitTag.size :], warnings

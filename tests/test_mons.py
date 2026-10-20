@@ -306,6 +306,20 @@ class TestUnitBodyConversion(unittest.TestCase):
         self.assertEqual(b"mon2", after.mons)
         self.assertEqual(b"core", after.core, "unmapped id passes through unchanged")
 
+    def test_bytes_after_the_references_are_kept(self):
+        """Real unit tags are 128 bytes in both games, not 8. Truncating them
+        made Myth II fail with "couldn't read unit definition" (in-engine,
+        'mits - Minos the Shade')."""
+        body = mons.UnitTag.build(mons=b"mon1", core=b"core").encode() + bytes(range(120))
+        id_map = idmap.IdMap()
+        id_map.add(b"mons", b"mon1", b"mon2")
+        context = convert_plugin.ConversionContext(id_map=id_map)
+
+        converted, _ = unit_converter.convert(body, context)
+        self.assertEqual(128, len(converted))
+        self.assertEqual(b"mon2", converted[:4])
+        self.assertEqual(body[8:], converted[8:])
+
     def test_short_body_is_left_alone_and_reported(self):
         converted, warnings = unit_converter.convert(b"tiny")
         self.assertEqual(b"tiny", converted)
