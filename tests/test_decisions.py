@@ -13,9 +13,18 @@ from src.convert import plugin as convert_plugin  # noqa: E402
 from . import fixtures  # noqa: E402
 
 
+# Everything `write` creates lands here and goes when the module finishes, so a
+# run leaves nothing behind in the system temp directory.
+_TMP = tempfile.TemporaryDirectory()
+
+
+def tearDownModule():
+    _TMP.cleanup()
+
+
 def write(text):
     handle = tempfile.NamedTemporaryFile(
-        "w", suffix=".toml", delete=False, encoding="utf-8"
+        "w", suffix=".toml", dir=_TMP.name, delete=False, encoding="utf-8"
     )
     handle.write(text)
     handle.close()

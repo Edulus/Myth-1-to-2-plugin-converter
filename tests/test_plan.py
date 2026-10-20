@@ -20,9 +20,29 @@ from src.views import html as html_view, text as text_view  # noqa: E402
 from . import fixtures  # noqa: E402
 
 
+# Everything the helpers write lands here and goes when the module finishes, so
+# a run leaves nothing behind in the system temp directory.
+_TMP = tempfile.TemporaryDirectory()
+
+
+def tearDownModule():
+    _TMP.cleanup()
+
+
 def write_container(tags):
-    handle = tempfile.NamedTemporaryFile("wb", suffix=".gor", delete=False)
+    handle = tempfile.NamedTemporaryFile(
+        "wb", suffix=".gor", dir=_TMP.name, delete=False
+    )
     handle.write(fixtures.build_tfl_mono(tags))
+    handle.close()
+    return pathlib.Path(handle.name)
+
+
+def write_toml(text):
+    handle = tempfile.NamedTemporaryFile(
+        "w", suffix=".toml", dir=_TMP.name, delete=False, encoding="utf-8"
+    )
+    handle.write(text)
     handle.close()
     return pathlib.Path(handle.name)
 
@@ -63,17 +83,13 @@ class TestPlanModel(unittest.TestCase):
         self.assertTrue(self.plan.needs_review())
 
     def test_decisions_change_the_plan(self):
-        handle = tempfile.NamedTemporaryFile(
-            "w", suffix=".toml", delete=False, encoding="utf-8"
-        )
-        handle.write(
+        path = write_toml(
             "[options]\nuse_vtfl = true\n\n"
             "[mesh_defaults]\ntransition_point = 60000\nreverb_environment = 0\n"
             "dark_fraction = 229\nlight_fraction = 25\n"
         )
-        handle.close()
 
-        decided = plan_module.build(self.path, decisions=decisions.load(handle.name))
+        decided = plan_module.build(self.path, decisions=decisions.load(path))
         fields = {f.name: f for f in decided.synthesised}
 
         self.assertTrue(fields["transition_point"].overridden)
@@ -98,13 +114,9 @@ class TestPlanModel(unittest.TestCase):
         tags.append((b"sub", b"stli", b"9999", b"Substitute\0"))
         path = write_container(tags)
 
-        handle = tempfile.NamedTemporaryFile(
-            "w", suffix=".toml", delete=False, encoding="utf-8"
-        )
-        handle.write('[[tag]]\ntype = "stli"\nid = "30cc"\nmap_to = "9999"\n')
-        handle.close()
+        chosen = write_toml('[[tag]]\ntype = "stli"\nid = "30cc"\nmap_to = "9999"\n')
 
-        plan = plan_module.build(path, decisions=decisions.load(handle.name))
+        plan = plan_module.build(path, decisions=decisions.load(chosen))
         self.assertEqual([], plan.unresolved, "the reference now resolves")
 
     def test_execute_writes_what_the_plan_described(self):
