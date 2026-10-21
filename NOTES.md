@@ -1352,12 +1352,33 @@ hold the TFL vitality exactly and the 7 modifiers as the first 7 of 9.
 **With that, Tandem plays with its units and scenery drawn** — warriors,
 archers, villagers, barrels, trees — on converted terrain in converted rain.
 
+### Built by the commands alone
+
+With `meef` converted (`src/convert/tags/meef.py`) and the stock tags turned
+into a tagset by `python -m src tagset` rather than a script, Tandem starts with
+units visible on **nothing but the converter's own output** — no Magma tags.
+The one remaining stand-in is a decisions-file line mapping the level's
+lighting to Myth II's `gras`.
+
+Two runs on the way are worth keeping:
+
+- The first converted `meef` crashed the engine in `__output` (output.c, the C
+  runtime's printf) — formatting an error message, not doing physics.
+  Swapping Magma's mesh effects back in stopped it; bisecting gave a clean log
+  line: `sequence #16 not in [#0,#14) for "internal monster effects"`.
+- **Stock TFL tags in a tagset replace Myth II's base tags of the same ID.**
+  Myth II's own mesh effects name sequence 16 of `inme`; the tagset's TFL
+  `inme` has 14. Anything converted must be valid against the TFL tags it
+  will actually meet, not Myth II's — and Myth II content that expects its own
+  `inme` (or any other shared ID) may break while a converted stock tagset is
+  active.
+
 ### Open
 
 - **`meli`** (mesh lighting): 128 bytes of IEEE floats in TFL, 64 bytes of
   16.16 fixed point in Myth II, field order per the Fear manual. Tandem
   currently uses Myth II's `gras` through a decisions-file mapping.
-- **`meef`**: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
+- ~~`meef`~~ converted (above). Was: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
   (the Fear manual lists amplitude, velocity, cutoff radius, dissipation,
   epicenter offset, camera shaking type, inverted, then shockwave collection,
   sequence, radial points, thickness, height offset). Only 3 IDs in common, all
