@@ -247,6 +247,8 @@ class TestConvertFile(unittest.TestCase):
             result = reader.read(out)
             self.assertTrue(result.is_sb)
             self.assertEqual("Converted", codec.decode_string(result.header.name))
+            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(result.tags))
+            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(report.outcomes))
 
     def test_the_internal_name_defaults_to_the_output_filename(self):
         """Myth II identifies plugins by this name; defaulting to the source's
@@ -260,8 +262,6 @@ class TestConvertFile(unittest.TestCase):
             src.write_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS))
             convert_plugin.convert_file(src, out)
             self.assertEqual("ZZ Mauriac", codec.decode_string(reader.read(out).header.name))
-            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(result.tags))
-            self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(report.outcomes))
 
     def test_warns_when_output_filename_is_too_long_for_myth_ii(self):
         """Myth II silently ignores plugins with filenames over 32 characters --

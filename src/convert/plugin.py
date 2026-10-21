@@ -411,7 +411,7 @@ def convert_file(in_path, out_path, id_map=None, name=None, description=b"", con
     one source hide each other in-engine.
     """
     mono = reader.read(in_path)
-    name = name or getattr(out_path, "name", None) or None
+    name = name or _name_from(out_path)
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description, context=context
     )
@@ -460,7 +460,7 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
         filename=str(in_paths[0]),
         source=b"",
     )
-    name = name or getattr(out_path, "name", str(out_path))
+    name = name or _name_from(out_path)
     sb_mono, report = convert_container(combined, id_map=id_map, name=name, context=context)
 
     # Entrypoints would make it a campaign, which cannot load alongside one.
@@ -468,6 +468,15 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
     sb_mono.header = sb_mono.header.replace(entry_tag_count=0)
     report.entrypoints = []
     return report, _write_plugin(sb_mono, out_path, report), duplicates
+
+
+def _name_from(out_path):
+    """A header name from the output filename, cut to the 32-byte field. A
+    longer filename gets its own warning in `_write_plugin`: Myth II will not
+    list such a plugin at all."""
+    filename = getattr(out_path, "name", None) or str(out_path)
+    data = filename.encode("mac-roman", errors="replace")[:MAX_PLUGIN_FILENAME]
+    return data.decode("mac-roman")
 
 
 def _write_plugin(sb_mono, out_path, report):
