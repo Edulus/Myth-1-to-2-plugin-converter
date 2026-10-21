@@ -1327,10 +1327,36 @@ header; inside the data, each bitmap's own offsets also move by 32, and TFL
 carries stale runtime pointers where Myth II has zeros. Converting `.256`
 means walking the bitmap records, not just the header.
 
+That conversion is now done (`src/convert/tags/collection.py`: 48 of the 79
+collections Magma left unedited reproduce byte-for-byte) — but it did **not**
+make units appear, and neither did swapping in Magma's own Myth II sprites, or
+mapping the level's lighting to Myth II's `gras`. Those A/B tests cleared the
+sprite chain and pointed at what units and scenery share outside it: the
+`obje` tag.
+
+### The cause: object scale
+
+A TFL `obje` is 16 bytes of physics — gravity, elasticity, terminal velocity —
+and all 46 stock monsters share one, `baob`. Myth II's is 64 bytes
+(mythextract `ObjeTagFmt`) and also carries vitality, **scale** and the
+damage-type modifiers, which TFL kept on the monster. Read as Myth II's, a TFL
+object has scale 0 at byte 12: every unit and tree was drawn at size zero,
+while shadows, sounds and minimap dots — which do not use it — were fine.
+
+`src/convert/tags/obje.py` converts objects with neutral 1.0 values, and
+`convert_container` gives each monster an object of its own from its TFL
+`maximum_vitality`, scale and `effect_modifiers` (the cross-tag write §16
+deferred). Against the 24 monsters Magma shares, Magma's per-monster objects
+hold the TFL vitality exactly and the 7 modifiers as the first 7 of 9.
+
+**With that, Tandem plays with its units and scenery drawn** — warriors,
+archers, villagers, barrels, trees — on converted terrain in converted rain.
+
 ### Open
 
-- **`.256`**: the bitmap-record walk described above. The last thing between
-  Tandem and visible units.
+- **`meli`** (mesh lighting): 128 bytes of IEEE floats in TFL, 64 bytes of
+  16.16 fixed point in Myth II, field order per the Fear manual. Tandem
+  currently uses Myth II's `gras` through a decisions-file mapping.
 - **`meef`**: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
   (the Fear manual lists amplitude, velocity, cutoff radius, dissipation,
   epicenter offset, camera shaking type, inverted, then shockwave collection,
