@@ -266,6 +266,13 @@ def cmd_convert(args):
     except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except PermissionError as exc:
+        print(
+            f"error: cannot write {exc.filename} -- if Myth II is running it holds "
+            f"its plugins open; quit it and try again",
+            file=sys.stderr,
+        )
+        return 2
 
     for line in convert_plugin.format_report(report, str(args.inp), str(args.out)):
         print(line)
@@ -307,6 +314,13 @@ def cmd_tagset(args):
         )
     except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except PermissionError as exc:
+        print(
+            f"error: cannot write {exc.filename} -- if Myth II is running it holds "
+            f"its plugins open; quit it and try again",
+            file=sys.stderr,
+        )
         return 2
 
     sources = ", ".join(str(p) for p in args.inp)
