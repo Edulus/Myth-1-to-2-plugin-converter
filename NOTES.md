@@ -1383,8 +1383,28 @@ to the same lighting. With the `gras` mapping removed, Tandem plays on its own
 converted lighting and looks right. The only decisions-file entry left for it
 is `medi.mawa` → `ma2w` from the first run.
 
+### A second level, and the end-game crash
+
+*In the Name of Glory* (zm18: snow lighting, Bagrada snow, 146 map actions)
+loaded with no missing references — and crashed in `__output` (printf), as
+had Tandem after ten minutes' play. Both at the **end-game screen**. Myth II
+fills that screen's statistics into string templates printf-style; the
+converted tagset's `stli.in03` ("internal solo postgame") replaced Myth II's,
+with 13 placeholders to Myth II's 14, so a `%s` received a number.
+
+876 of the converted stock tags replace Myth II base tags of the same ID. For
+content that is the point; for what Myth II's *code* drives it is not.
+`convert_tagset` now leaves 141 engine-facing tags to Myth II's own versions:
+dialogs, templates, fonts, the interface, observer constants, the internal
+sound list, and the "internal ..." string tables. Internal art stays — TFL
+projectiles index it by sequence. *In the Name of Glory* now plays through to
+its end-game screen with a clean log, save one harmless warning: its pregame
+picture asks for sequence 3 of *Mauriac*'s two-sequence `zp08`.
+
 ### Open
 
+- **Pregame picture sequence**: `sequence #3 not in [#0,#2) for "zp08"` at
+  the pregame screen.
 - **`meli` per-map tone**: TFL's float 9 is a candidate for maximum total
   intensity (0.85 for moon light, as in Magma's moon); the other TFL floats are
   unmapped.
