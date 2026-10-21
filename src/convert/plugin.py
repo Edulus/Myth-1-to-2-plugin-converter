@@ -411,7 +411,63 @@ def convert_file(in_path, out_path, id_map=None, name=None, description=b"", con
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description, context=context
     )
+    return report, _write_plugin(sb_mono, out_path, report)
 
+
+def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
+    """Convert one or more TFL tag archives into a single Myth II tagset.
+
+    A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on
+    the base game; converting those stock tags -- an install's ``TAGS.GOR``
+    and ``ARTSOUND.GOR`` -- into a tagset is what lets a converted plugin load
+    (NOTES.md section 18). Where several archives carry the same tag, the first
+    one given wins, so list them most-authoritative first.
+
+    The result has no entrypoints -- Myth II only offers entrypoint-free plugins
+    as tagsets -- and carries ``name`` in its header, which is what Myth II
+    identifies a plugin by: two plugins with one internal name hide each other.
+    ``name`` defaults to the output file's name.
+
+    Returns ``(report, bytes_written, duplicates)``, where ``duplicates`` counts,
+    per later archive, the tags skipped because an earlier one had them.
+    """
+    if not in_paths:
+        raise ConversionError("no input archives given")
+    monos = [reader.read(path) for path in in_paths]
+    for path, mono in zip(in_paths, monos):
+        if not mono.is_tfl:
+            raise ConversionError(f"{path} is not a TFL archive")
+
+    seen, merged, duplicates = set(), [], {}
+    for path, mono in zip(in_paths, monos):
+        for tag in mono.tags:
+            key = (tag.tag_type, tag.tag_id)
+            if key in seen:
+                duplicates[str(path)] = duplicates.get(str(path), 0) + 1
+                continue
+            seen.add(key)
+            merged.append(tag)
+
+    combined = reader.Monolith(
+        game_version=monos[0].game_version,
+        header=monos[0].header,
+        tags=merged,
+        entrypoints=[],
+        filename=str(in_paths[0]),
+        source=b"",
+    )
+    name = name or getattr(out_path, "name", str(out_path))
+    sb_mono, report = convert_container(combined, id_map=id_map, name=name, context=context)
+
+    # Entrypoints would make it a campaign, which cannot load alongside one.
+    sb_mono.entrypoints = []
+    sb_mono.header = sb_mono.header.replace(entry_tag_count=0)
+    report.entrypoints = []
+    return report, _write_plugin(sb_mono, out_path, report), duplicates
+
+
+def _write_plugin(sb_mono, out_path, report):
+    """Pack, check it reads back, and write. Returns the bytes written."""
     filename = getattr(out_path, "name", str(out_path))
     if len(filename) > MAX_PLUGIN_FILENAME:
         report.warnings.append(
@@ -438,7 +494,7 @@ def convert_file(in_path, out_path, id_map=None, name=None, description=b"", con
 
     with open(out_path, "wb") as out:
         out.write(data)
-    return report, len(data)
+    return len(data)
 
 
 def format_report(report, in_name="", out_name=""):

@@ -5,6 +5,7 @@
     python -m src diff <a> <b>              compare two containers tag by tag
     python -m src plan --in <gor>           what a conversion would do
     python -m src convert --in <gor> --out <plugin>
+    python -m src tagset --in TAGS.GOR --in ARTSOUND.GOR --out <plugin>
     python -m src studio                    the guided local browser app
 """
 
@@ -293,6 +294,32 @@ def cmd_convert(args):
     return 0
 
 
+def cmd_tagset(args):
+    if args.out.exists() and not args.force:
+        print(
+            f"error: {args.out} already exists (use --force to overwrite)",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        report, written, duplicates = convert_plugin.convert_tagset(
+            args.inp, args.out, name=args.name
+        )
+    except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    sources = ", ".join(str(p) for p in args.inp)
+    for line in convert_plugin.format_report(report, sources, str(args.out)):
+        print(line)
+    for path, count in duplicates.items():
+        print(f"Skipped {count} tags in {path} already supplied by an earlier --in.")
+    print()
+    print(f"Wrote {written:,} bytes: a tagset (no entrypoints). In Myth II, pick it")
+    print("under New Game > Tagsets after choosing the campaign it supports.")
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="myth-plugin-converter",
@@ -342,6 +369,21 @@ def build_parser():
         help="a Myth II install, scanned to suggest substitutes in --emit-decisions",
     )
     con.set_defaults(func=cmd_convert)
+
+    tag = sub.add_parser(
+        "tagset",
+        help="convert TFL tag archives (e.g. TAGS.GOR, ARTSOUND.GOR) into one Myth II tagset",
+    )
+    tag.add_argument(
+        "--in", dest="inp", required=True, type=pathlib.Path, action="append",
+        help="a TFL archive; repeat for several, most authoritative first",
+    )
+    tag.add_argument("--out", required=True, type=pathlib.Path)
+    tag.add_argument(
+        "--name", help="name written into the header (default: the output filename)"
+    )
+    tag.add_argument("--force", action="store_true", help="overwrite an existing output")
+    tag.set_defaults(func=cmd_tagset)
 
     pln = sub.add_parser(
         "plan", help="show what a conversion would do, without writing anything"

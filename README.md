@@ -88,6 +88,24 @@ python -m src plan --in <gor>                     # what a conversion would do
 python -m src convert --in <gor> --out <plugin>   # do it
 ```
 
+### Supplying the stock TFL tags
+
+A TFL plugin is not self-contained: it uses the stock TFL tags the way a Myth II
+plugin uses the base game. Convert them once, from your own TFL install's `tags`
+folder, into a Myth II tagset:
+
+```sh
+python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR"     --out "/path/to/Myth II/plugins/ZZ TFL stock"
+```
+
+Where archives share a tag the first `--in` wins. The result has no entrypoints
+-- Myth II only offers entrypoint-free plugins as tagsets -- and carries its own
+internal name (Myth II identifies plugins by it, and two with the same name hide
+one another). In Myth II: New Game, choose the converted campaign, then
+**Tagsets**, and activate it. Choosing a campaign clears the tagset selection, so
+check the log line `Starting mesh ... with 2 plugins` if a level reports missing
+tags.
+
 ### Plan, then convert
 
 `plan` builds the conversion in memory and reports it without writing anything -- so you
