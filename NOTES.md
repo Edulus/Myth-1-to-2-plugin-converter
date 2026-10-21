@@ -1373,11 +1373,21 @@ Two runs on the way are worth keeping:
   `inme` (or any other shared ID) may break while a converted stock tagset is
   active.
 
+### Lighting, and no stand-ins left
+
+`meli` is 128 bytes of IEEE floats in TFL and 64 of 16.16 fixed point in Myth II
+(`src/convert/tags/meli.py`). The light direction (TFL floats 16..18) and the
+maximum shadow distance map cleanly; the intensities do not, and Bungie's
+base-game values are used, so every stock TFL lighting tag currently converts
+to the same lighting. With the `gras` mapping removed, Tandem plays on its own
+converted lighting and looks right. The only decisions-file entry left for it
+is `medi.mawa` → `ma2w` from the first run.
+
 ### Open
 
-- **`meli`** (mesh lighting): 128 bytes of IEEE floats in TFL, 64 bytes of
-  16.16 fixed point in Myth II, field order per the Fear manual. Tandem
-  currently uses Myth II's `gras` through a decisions-file mapping.
+- **`meli` per-map tone**: TFL's float 9 is a candidate for maximum total
+  intensity (0.85 for moon light, as in Magma's moon); the other TFL floats are
+  unmapped.
 - ~~`meef`~~ converted (above). Was: 32 bytes in TFL, 36 in Myth II, which adds a shockwave block
   (the Fear manual lists amplitude, velocity, cutoff radius, dissipation,
   epicenter offset, camera shaking type, inverted, then shockwave collection,
