@@ -247,6 +247,19 @@ class TestConvertFile(unittest.TestCase):
             result = reader.read(out)
             self.assertTrue(result.is_sb)
             self.assertEqual("Converted", codec.decode_string(result.header.name))
+
+    def test_the_internal_name_defaults_to_the_output_filename(self):
+        """Myth II identifies plugins by this name; defaulting to the source's
+        let two plugins converted from one .gor hide each other in-engine."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = pathlib.Path(tmp)
+            src = tmp / "cbc.TFL.mauriac.gor"
+            out = tmp / "ZZ Mauriac"
+            src.write_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS))
+            convert_plugin.convert_file(src, out)
+            self.assertEqual("ZZ Mauriac", codec.decode_string(reader.read(out).header.name))
             self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(result.tags))
             self.assertEqual(len(fixtures.SAMPLE_TAGS) + MONSTERS, len(report.outcomes))
 

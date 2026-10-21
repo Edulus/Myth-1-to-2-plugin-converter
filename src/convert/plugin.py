@@ -405,9 +405,13 @@ MAX_PLUGIN_FILENAME = 32
 def convert_file(in_path, out_path, id_map=None, name=None, description=b"", context=None):
     """Convert a TFL container file into a Myth II plugin file.
 
-    Returns ``(report, bytes_written)``.
+    Returns ``(report, bytes_written)``. ``name`` -- the name Myth II identifies
+    the plugin by -- defaults to the output file's name, as `convert_tagset`'s
+    does: defaulting to the *source* file's name let two plugins converted from
+    one source hide each other in-engine.
     """
     mono = reader.read(in_path)
+    name = name or getattr(out_path, "name", None) or None
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description, context=context
     )
