@@ -63,6 +63,21 @@ class TestTagset(unittest.TestCase):
         self.assertNotEqual(b"a different body", bodies[0])
         self.assertEqual({str(self.second): 1}, duplicates)
 
+    def test_engine_facing_tags_are_left_for_myth_ii(self):
+        """A tagset's tags replace Myth II's base tags of the same ID. TFL's
+        'internal solo postgame' strings crashed every level's end screen."""
+        self.second.write_bytes(fixtures.build_tfl_mono([
+            (b"internal solo postgame", b"stli", b"in03", b"%d killed\0"),
+            (b"screen low-resolution", b"font", b"co#1", b"\0" * 16),
+            (b"08 subtitles", b"stli", b"08su", b"a line\0"),
+        ]))
+        report, _written, _dups = self.convert()
+        ids = {(t.tag_type, t.tag_id) for t in reader.read(self.out).tags}
+        self.assertNotIn((b"stli", b"in03"), ids)
+        self.assertNotIn((b"font", b"co#1"), ids)
+        self.assertIn((b"stli", b"08su"), ids, "level text is content, and stays")
+        self.assertTrue([w for w in report.warnings if "left out 2 engine-facing" in w])
+
     def test_a_myth_ii_archive_is_refused(self):
         sb = self.dir / "myth2"
         sb.write_bytes(fixtures.build_sb_mono([(b"x", b"text", b"xxxx", b"hi")]))

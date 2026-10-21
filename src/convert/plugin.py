@@ -442,7 +442,7 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
         if not mono.is_tfl:
             raise ConversionError(f"{path} is not a TFL archive")
 
-    seen, merged, duplicates = set(), [], {}
+    seen, merged, duplicates, left_out = set(), [], {}, []
     for path, mono in zip(in_paths, monos):
         for tag in mono.tags:
             key = (tag.tag_type, tag.tag_id)
@@ -450,6 +450,9 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
                 duplicates[str(path)] = duplicates.get(str(path), 0) + 1
                 continue
             seen.add(key)
+            if is_engine_facing(tag):
+                left_out.append(tag)
+                continue
             merged.append(tag)
 
     combined = reader.Monolith(
@@ -467,7 +470,39 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
     sb_mono.entrypoints = []
     sb_mono.header = sb_mono.header.replace(entry_tag_count=0)
     report.entrypoints = []
+    if left_out:
+        kinds = {}
+        for tag in left_out:
+            kinds[tag.tag_type] = kinds.get(tag.tag_type, 0) + 1
+        listed = ", ".join(f"{codec.decode_string(t)}x{n}" for t, n in sorted(kinds.items()))
+        report.warnings.append(
+            f"left out {len(left_out)} engine-facing tags so Myth II's own apply "
+            f"({listed}) -- TFL versions of these break Myth II's code"
+        )
     return report, _write_plugin(sb_mono, out_path, report), duplicates
+
+
+# Tags Myth II's *code* drives -- dialogs, templates, fonts, the interface,
+# observer constants, the internal sound list. A tagset's tags replace Myth II's
+# base tags of the same ID, and TFL's versions of these do not fit Myth II's
+# code (NOTES.md section 18).
+ENGINE_FACING_TYPES = frozenset({b"bina", b"font", b"inte", b"obpc", b"soli", b"temp"})
+
+
+def is_engine_facing(tag):
+    """Whether a stock TFL tag must be left for Myth II's own version.
+
+    Besides `ENGINE_FACING_TYPES`, the "internal ..." string tables: Myth II's
+    code formats them, printf-style, with its own arguments. TFL's
+    ``stli.in03`` ("internal solo postgame") has 13 placeholders to Myth II's
+    14; in-engine, every level crashed in ``__output`` at the end-game screen.
+    Internal *art* (``.256``, ``core``) is not left out: TFL projectiles and
+    effects index it by sequence, and expect TFL's.
+    """
+    if tag.tag_type in ENGINE_FACING_TYPES:
+        return True
+    name = (tag.name or "").strip().lower()
+    return tag.tag_type in (b"stli", b"text") and name.startswith("internal")
 
 
 def _name_from(out_path):
