@@ -37,7 +37,14 @@ class TestMeshEffect(unittest.TestCase):
         self.assertEqual(410, amp)
         self.assertEqual((0x0800, 256, 0x0066, 0, -1), (vel, cut, diss, epi, shake))
         self.assertEqual(b"inme", coll)
-        self.assertEqual((16, 32, 512, 512), shock)
+        self.assertEqual((0, 32, 512, 512), shock)
+        self.assertFalse(flags & 0b10, "no shockwave: TFL has none")
+
+    def test_the_shockwave_sequence_exists_in_the_stock_tfl_collection(self):
+        """The stock TFL inme has 14 sequences and replaces Myth II's when the
+        converted tagset loads; sequence 16 failed in-engine."""
+        shock = unpack(meef.convert(tfl_meef(flags=1))[0])[8]
+        self.assertLess(shock[0], 14)
 
     def test_the_collection_reference_is_never_tfl_bytes(self):
         """The in-engine failure: TFL bytes read as the shockwave collection."""

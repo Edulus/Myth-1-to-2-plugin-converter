@@ -23,8 +23,14 @@ TFL's wight explosion (``wiex``).
   0x0800, also the median of the 13. TFL's word at 16 (16, 1, 8, 4 across the
   four) and its constant 0x1998 at 10 are not carried.
 * **Dissipation** 0x0066 (9/13), **epicenter offset** 0 (10/13), **camera
-  shaking** none (-1, 9/13), and the shockwave block -- collection ``inme``,
-  sequence 16, 32 radial points, thickness and height 512 -- as on 12 of 13.
+  shaking** none (-1, 9/13).
+* **No shockwave.** TFL has none, and Myth II draws one only when flag bit 1
+  is set (only the warlock's effects set it); TFL's flags never use that bit.
+  The engine still validates the block, though, so it must be valid in the
+  *stock TFL* collection: Myth II's own effects name sequence 16 of ``inme``,
+  but the stock TFL ``inme`` ("internal monster effects") replaces Myth II's
+  when the converted tagset loads, and has only 14 sequences -- in-engine,
+  "sequence #16 not in [#0,#14)". Sequence 0 exists in any collection.
 """
 
 import struct
@@ -39,7 +45,7 @@ DISSIPATION = 0x0066
 EPICENTER_OFFSET = 0
 NO_CAMERA_SHAKE = -1
 SHOCKWAVE_COLLECTION = b"inme"
-SHOCKWAVE = (16, 32, 512, 512)  # sequence, radial points, thickness, height offset
+SHOCKWAVE = (0, 32, 512, 512)  # sequence, radial points, thickness, height offset
 
 
 def convert(body, context=None):
