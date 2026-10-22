@@ -1,12 +1,8 @@
 # For KEEP
 
-Progress updates and questions now live on a small website where you can
-comment on and reply to each one separately:
+Progress updates and questions for KEEP are shared with him directly, on a
+small site where he can reply to each one without an account.
 
-**https://edulus.github.io/Myth-1-to-2-plugin-converter/**
-
-To comment, open any update or question and sign in with a free GitHub account
-in the comment box at the bottom of the page. Everything you write is also kept
-in this repository's [Discussions](https://github.com/Edulus/Myth-1-to-2-plugin-converter/discussions).
-
-(The site is built from `scripts/keep_site.py` into `docs/`.)
+The site is built from `scripts/keep_site.py` into `docs/`; its comment box is
+`comments-worker/`, which stores each page's thread as a GitHub Discussion in
+this repository.

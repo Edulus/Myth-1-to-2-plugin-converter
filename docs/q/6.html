@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Q6 &middot; Myth TFL to Myth II</title>
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="../style.css?v=ff8ca12c">
+<link rel="stylesheet" href="../style.css?v=6ab81f60">
 </head>
 <body>
 <header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
@@ -21,32 +22,74 @@
 <p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
 <div class="nav"><a href="5.html">&larr; Q5</a><a href="../index.html">All updates and questions &rarr;</a></div>
 
-<section class="reply" id="answer">
+<section class="reply" id="answer" data-term="Q6: What does done look like?" data-api="https://keep-comments.edyersh.workers.dev">
 <h2>&#9998; Your answer</h2>
-<ol>
-<li>Click <strong>Sign in with GitHub</strong> in the box below (only the first time).</li>
-<li>Type in the box &mdash; as long or short as you like.</li>
-<li>Press <strong>Comment</strong>. To answer someone, press <strong>Reply</strong> under their comment.</li>
-</ol>
-<script src="https://giscus.app/client.js" data-repo="Edulus/Myth-1-to-2-plugin-converter" data-repo-id="R_kgDOTmqt9g" data-category="Announcements" data-category-id="DIC_kwDOTmqt9s4DJWN2" data-mapping="specific" data-strict="1" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="noborder_light" data-lang="en" data-loading="lazy" data-term="Q6: What does done look like?" crossorigin="anonymous" async></script>
+<p class="meta">No sign-up, no account &mdash; just type and press <strong>Send</strong>.</p>
+<form class="say" novalidate>
+<p class="replying" hidden></p>
+<label>Your name<input name="name" autocomplete="nickname" maxlength="40" required></label>
+<label>Your message<textarea name="message" rows="6" maxlength="4000" required placeholder="Type here..."></textarea></label>
+<label><span class="q">A quick Myth question, so we know you're not a robot:</span><input name="answer" autocomplete="off" required></label>
+<label class="trap" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
+<p><button class="btn send" type="submit">Send &rarr;</button> <span class="status" role="status"></span></p>
+</form>
+<h2 class="convo">The conversation so far</h2>
+<div class="thread"><p class="meta">Loading&hellip;</p></div>
 </section>
 </main>
 <footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>
 <script>
 (function(){
   var root=document.documentElement, btn=document.querySelector(".theme");
-  function giscusTheme(){return root.dataset.theme==="dark"?"noborder_dark":"noborder_light";}
   function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
-  function tellGiscus(){var f=document.querySelector("iframe.giscus-frame");
-    if(f)f.contentWindow.postMessage({giscus:{setConfig:{theme:giscusTheme()}}},"https://giscus.app");}
-  var s=document.querySelector("script[src*='giscus.app']"); if(s)s.setAttribute("data-theme",giscusTheme());
-  window.addEventListener("message",function(e){if(e.origin==="https://giscus.app")tellGiscus();});
   btn.addEventListener("click",function(){
     if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
     try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
-    paint();tellGiscus();
+    paint();
   });
   paint();
+})();
+</script>
+<script>
+(function(){
+  var box=document.getElementById("answer"); if(!box) return;
+  var api=box.dataset.api, term=box.dataset.term, form=box.querySelector("form");
+  var list=box.querySelector(".thread"), status=form.querySelector(".status");
+  var replying=form.querySelector(".replying"), replyTo=null, send=form.querySelector(".send");
+  try{var saved=localStorage.getItem("name"); if(saved) form.name.value=saved;}catch(e){}
+  function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+  function when(at){try{return new Date(at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}catch(e){return "";}}
+  function reply(c){replyTo=c.id; replying.hidden=false; replying.textContent="";
+    replying.append("Replying to "+c.name+" ");
+    var x=el("button","link","(cancel)"); x.type="button";
+    x.onclick=function(){replyTo=null; replying.hidden=true;}; replying.append(x);
+    form.message.focus(); form.scrollIntoView({behavior:"smooth",block:"start"});}
+  function item(c,top){var a=el("article","comment"+(top?"":" sub"));
+    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" · "+when(c.at)); a.append(h);
+    a.append(el("p","text",c.text));
+    if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
+    return a;}
+  function render(cs){list.textContent="";
+    if(!cs.length){list.append(el("p","meta","Nothing here yet — yours will be the first."));return;}
+    cs.forEach(function(c){var a=item(c,true); (c.replies||[]).forEach(function(r){a.append(item(r,false));}); list.append(a);});}
+  fetch(api+"/config").then(function(r){return r.json();}).then(function(d){
+    if(d.question) form.querySelector(".q").textContent=d.question;}).catch(function(){});
+  fetch(api+"/comments?term="+encodeURIComponent(term)).then(function(r){return r.json();})
+    .then(function(d){render(d.comments||[]);})
+    .catch(function(){list.textContent=""; list.append(el("p","meta","The conversation couldn't be loaded just now — try reloading the page."));});
+  form.addEventListener("submit",function(ev){ev.preventDefault();
+    status.textContent="Sending…"; send.disabled=true;
+    try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
+    fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({term:term,name:form.name.value,message:form.message.value,
+        answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through — please try again.";return;}
+      render(x.d.comments||[]); form.message.value=""; replyTo=null; replying.hidden=true;
+      status.textContent="Sent — thank you!";})
+    .catch(function(){status.textContent="That didn't go through — please try again.";})
+    .then(function(){send.disabled=false;});
+  });
 })();
 </script>
 </body>

@@ -52,4 +52,19 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .nav{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2rem;font-size:.95rem}
 .theme{position:absolute;top:.8rem;right:.9rem;z-index:2;font:1rem/1 Georgia,serif;color:#f3ede2;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:.4rem .75rem;cursor:pointer}
 .theme:hover,.theme:focus-visible{background:rgba(0,0,0,.7);outline:none}
+.say label{display:block;margin:.7rem 0;font-size:.95rem;color:var(--muted)}
+.say input,.say textarea{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;font:inherit;font-size:1rem;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:5px}
+.say input:focus,.say textarea:focus{outline:2px solid var(--blood-hi);outline-offset:1px;border-color:var(--blood)}
+.say .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.send{font-size:.85rem;padding:.6rem 1.1rem;cursor:pointer}
+.send:disabled{opacity:.6;cursor:wait}
+.status{margin-left:.6rem;color:var(--muted);font-size:.95rem}
+.replying{background:var(--tint);border-left:3px solid var(--blood);padding:.4rem .7rem;margin:.4rem 0}
+.link{background:none;border:none;padding:0;font:inherit;font-size:.92rem;color:var(--blood-hi);cursor:pointer;text-decoration:underline}
+.convo{margin-top:2rem}
+.comment{border-top:1px solid var(--line);padding:.8rem 0}
+.comment .who{margin:0;color:var(--muted);font-size:.9rem}
+.comment .who strong{color:var(--fg)}
+.comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
+.comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}

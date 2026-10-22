@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Progress for KEEP &middot; Myth TFL to Myth II</title>
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="style.css?v=ff8ca12c">
+<link rel="stylesheet" href="style.css?v=6ab81f60">
 </head>
 <body>
 <header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
@@ -27,8 +28,8 @@
 <ol class="steps">
 <li class="step"><b>1 &middot; Click</b>any card below</li>
 <li class="step"><b>2 &middot; Read</b>the update or question</li>
-<li class="step"><b>3 &middot; Sign in</b>with GitHub, once</li>
-<li class="step"><b>4 &middot; Type</b>your answer and press Comment</li>
+<li class="step"><b>3 &middot; Type</b>your name and your answer</li>
+<li class="step"><b>4 &middot; Send</b>&mdash; no account needed</li>
 </ol>
 <h2>Updates</h2>
 <ul class="cards">
@@ -43,26 +44,22 @@
 <li class="card"><a href="q/5.html"><span class="body"><span class="title"><span class="tag">Q5</span>Would you play-test?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 <li class="card"><a href="q/6.html"><span class="body"><span class="title"><span class="tag">Q6</span>What does &ldquo;done&rdquo; look like for you?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 </ul>
-<p class="meta" style="margin-top:2rem">Everything written here is also kept in the repository's <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/discussions">Discussions</a>. Source code and technical notes: <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">Edulus/Myth-1-to-2-plugin-converter</a>.</p>
+<p class="meta" style="margin-top:2rem">Source code and technical notes: <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">Edulus/Myth-1-to-2-plugin-converter</a>.</p>
 
 </main>
 <footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>
 <script>
 (function(){
   var root=document.documentElement, btn=document.querySelector(".theme");
-  function giscusTheme(){return root.dataset.theme==="dark"?"noborder_dark":"noborder_light";}
   function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
-  function tellGiscus(){var f=document.querySelector("iframe.giscus-frame");
-    if(f)f.contentWindow.postMessage({giscus:{setConfig:{theme:giscusTheme()}}},"https://giscus.app");}
-  var s=document.querySelector("script[src*='giscus.app']"); if(s)s.setAttribute("data-theme",giscusTheme());
-  window.addEventListener("message",function(e){if(e.origin==="https://giscus.app")tellGiscus();});
   btn.addEventListener("click",function(){
     if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
     try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
-    paint();tellGiscus();
+    paint();
   });
   paint();
 })();
 </script>
+
 </body>
 </html>

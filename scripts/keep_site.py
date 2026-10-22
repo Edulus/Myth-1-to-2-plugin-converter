@@ -2,8 +2,10 @@
 
     python scripts/keep_site.py
 
-Each update and each question gets a page of its own with a comment thread
-(giscus, stored as GitHub Discussions in the repo's Announcements category), so
+Each update and each question gets a page of its own with a comment box that
+needs no account -- KEEP types a name, a message and a one-word Myth answer.
+The box talks to comments-worker/ (a Cloudflare Worker), which stores each
+page's thread as a GitHub Discussion in the repo's Announcements category, so
 KEEP can answer and reply section by section. To add to the site, add an entry
 to UPDATES or QUESTIONS below -- newest update first -- and rerun.
 
@@ -19,20 +21,8 @@ OUT = ROOT / "docs"
 REPO = "Edulus/Myth-1-to-2-plugin-converter"
 REPO_URL = f"https://github.com/{REPO}"
 
-GISCUS = {
-    "data-repo": REPO,
-    "data-repo-id": "R_kgDOTmqt9g",
-    "data-category": "Announcements",
-    "data-category-id": "DIC_kwDOTmqt9s4DJWN2",
-    "data-mapping": "specific",
-    "data-strict": "1",
-    "data-reactions-enabled": "1",
-    "data-emit-metadata": "0",
-    "data-input-position": "top",
-    "data-theme": "noborder_light",
-    "data-lang": "en",
-    "data-loading": "lazy",
-}
+# The deployed comments-worker (see comments-worker/).
+COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 
 UPDATES = [
     {
@@ -183,6 +173,21 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .nav{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2rem;font-size:.95rem}
 .theme{position:absolute;top:.8rem;right:.9rem;z-index:2;font:1rem/1 Georgia,serif;color:#f3ede2;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:.4rem .75rem;cursor:pointer}
 .theme:hover,.theme:focus-visible{background:rgba(0,0,0,.7);outline:none}
+.say label{display:block;margin:.7rem 0;font-size:.95rem;color:var(--muted)}
+.say input,.say textarea{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;font:inherit;font-size:1rem;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:5px}
+.say input:focus,.say textarea:focus{outline:2px solid var(--blood-hi);outline-offset:1px;border-color:var(--blood)}
+.say .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.send{font-size:.85rem;padding:.6rem 1.1rem;cursor:pointer}
+.send:disabled{opacity:.6;cursor:wait}
+.status{margin-left:.6rem;color:var(--muted);font-size:.95rem}
+.replying{background:var(--tint);border-left:3px solid var(--blood);padding:.4rem .7rem;margin:.4rem 0}
+.link{background:none;border:none;padding:0;font:inherit;font-size:.92rem;color:var(--blood-hi);cursor:pointer;text-decoration:underline}
+.convo{margin-top:2rem}
+.comment{border-top:1px solid var(--line);padding:.8rem 0}
+.comment .who{margin:0;color:var(--muted);font-size:.9rem}
+.comment .who strong{color:var(--fg)}
+.comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
+.comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 """
 
@@ -190,31 +195,74 @@ footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--mut
 THEME_JS = """
 (function(){
   var root=document.documentElement, btn=document.querySelector(".theme");
-  function giscusTheme(){return root.dataset.theme==="dark"?"noborder_dark":"noborder_light";}
   function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
-  function tellGiscus(){var f=document.querySelector("iframe.giscus-frame");
-    if(f)f.contentWindow.postMessage({giscus:{setConfig:{theme:giscusTheme()}}},"https://giscus.app");}
-  var s=document.querySelector("script[src*='giscus.app']"); if(s)s.setAttribute("data-theme",giscusTheme());
-  window.addEventListener("message",function(e){if(e.origin==="https://giscus.app")tellGiscus();});
   btn.addEventListener("click",function(){
     if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
     try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
-    paint();tellGiscus();
+    paint();
   });
   paint();
 })();
 """
 
 GIVE_ANSWER = """
-<section class="reply" id="answer">
+<section class="reply" id="answer" data-term="{term}" data-api="{api}">
 <h2>&#9998; Your answer</h2>
-<ol>
-<li>Click <strong>Sign in with GitHub</strong> in the box below (only the first time).</li>
-<li>Type in the box &mdash; as long or short as you like.</li>
-<li>Press <strong>Comment</strong>. To answer someone, press <strong>Reply</strong> under their comment.</li>
-</ol>
-{widget}
+<p class="meta">No sign-up, no account &mdash; just type and press <strong>Send</strong>.</p>
+<form class="say" novalidate>
+<p class="replying" hidden></p>
+<label>Your name<input name="name" autocomplete="nickname" maxlength="40" required></label>
+<label>Your message<textarea name="message" rows="6" maxlength="4000" required placeholder="Type here..."></textarea></label>
+<label><span class="q">A quick Myth question, so we know you're not a robot:</span><input name="answer" autocomplete="off" required></label>
+<label class="trap" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
+<p><button class="btn send" type="submit">Send &rarr;</button> <span class="status" role="status"></span></p>
+</form>
+<h2 class="convo">The conversation so far</h2>
+<div class="thread"><p class="meta">Loading&hellip;</p></div>
 </section>"""
+
+COMMENTS_JS = """
+(function(){
+  var box=document.getElementById("answer"); if(!box) return;
+  var api=box.dataset.api, term=box.dataset.term, form=box.querySelector("form");
+  var list=box.querySelector(".thread"), status=form.querySelector(".status");
+  var replying=form.querySelector(".replying"), replyTo=null, send=form.querySelector(".send");
+  try{var saved=localStorage.getItem("name"); if(saved) form.name.value=saved;}catch(e){}
+  function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+  function when(at){try{return new Date(at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}catch(e){return "";}}
+  function reply(c){replyTo=c.id; replying.hidden=false; replying.textContent="";
+    replying.append("Replying to "+c.name+" ");
+    var x=el("button","link","(cancel)"); x.type="button";
+    x.onclick=function(){replyTo=null; replying.hidden=true;}; replying.append(x);
+    form.message.focus(); form.scrollIntoView({behavior:"smooth",block:"start"});}
+  function item(c,top){var a=el("article","comment"+(top?"":" sub"));
+    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" \u00b7 "+when(c.at)); a.append(h);
+    a.append(el("p","text",c.text));
+    if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
+    return a;}
+  function render(cs){list.textContent="";
+    if(!cs.length){list.append(el("p","meta","Nothing here yet \u2014 yours will be the first."));return;}
+    cs.forEach(function(c){var a=item(c,true); (c.replies||[]).forEach(function(r){a.append(item(r,false));}); list.append(a);});}
+  fetch(api+"/config").then(function(r){return r.json();}).then(function(d){
+    if(d.question) form.querySelector(".q").textContent=d.question;}).catch(function(){});
+  fetch(api+"/comments?term="+encodeURIComponent(term)).then(function(r){return r.json();})
+    .then(function(d){render(d.comments||[]);})
+    .catch(function(){list.textContent=""; list.append(el("p","meta","The conversation couldn't be loaded just now \u2014 try reloading the page."));});
+  form.addEventListener("submit",function(ev){ev.preventDefault();
+    status.textContent="Sending\u2026"; send.disabled=true;
+    try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
+    fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({term:term,name:form.name.value,message:form.message.value,
+        answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through \u2014 please try again.";return;}
+      render(x.d.comments||[]); form.message.value=""; replyTo=null; replying.hidden=true;
+      status.textContent="Sent \u2014 thank you!";})
+    .catch(function(){status.textContent="That didn't go through \u2014 please try again.";})
+    .then(function(){send.disabled=false;});
+  });
+})();
+"""
 
 CREDIT = (
     "Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> "
@@ -230,17 +278,17 @@ STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 
 def page(title, heading, body, depth, term=None, kicker=""):
     up = "../" * depth
-    answer = ""
+    answer = scripts = ""
     if term:
-        attrs = " ".join(f'{k}="{html.escape(v)}"' for k, v in {**GISCUS, "data-term": term}.items())
-        widget = f'<script src="https://giscus.app/client.js" {attrs} crossorigin="anonymous" async></script>'
-        answer = GIVE_ANSWER.format(widget=widget)
+        answer = GIVE_ANSWER.format(term=html.escape(term), api=html.escape(COMMENTS_API))
+        scripts = f"<script>{COMMENTS_JS}</script>"
     kicker_html = f'<p class="meta">{kicker}</p>' if kicker else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>{html.escape(title)} &middot; Myth TFL to Myth II</title>
 <script>try{{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -260,6 +308,7 @@ def page(title, heading, body, depth, term=None, kicker=""):
 </main>
 <footer>{CREDIT}</footer>
 <script>{THEME_JS}</script>
+{scripts}
 </body>
 </html>
 """
@@ -295,8 +344,8 @@ def build():
 <ol class="steps">
 <li class="step"><b>1 &middot; Click</b>any card below</li>
 <li class="step"><b>2 &middot; Read</b>the update or question</li>
-<li class="step"><b>3 &middot; Sign in</b>with GitHub, once</li>
-<li class="step"><b>4 &middot; Type</b>your answer and press Comment</li>
+<li class="step"><b>3 &middot; Type</b>your name and your answer</li>
+<li class="step"><b>4 &middot; Send</b>&mdash; no account needed</li>
 </ol>
 <h2>Updates</h2>
 <ul class="cards">
@@ -306,7 +355,7 @@ def build():
 <ul class="cards">
 {questions}
 </ul>
-<p class="meta" style="margin-top:2rem">Everything written here is also kept in the repository's <a href="{REPO_URL}/discussions">Discussions</a>. Source code and technical notes: <a href="{REPO_URL}">{REPO}</a>.</p>"""
+<p class="meta" style="margin-top:2rem">Source code and technical notes: <a href="{REPO_URL}">{REPO}</a>.</p>"""
     (OUT / "index.html").write_text(
         page("Progress for KEEP", "Progress, and questions for KEEP", index, 0), encoding="utf-8"
     )
