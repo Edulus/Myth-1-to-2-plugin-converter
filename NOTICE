@@ -50,10 +50,12 @@ resolution rather than a different bookkeeping convention.
 Trademarks and game data
 ------------------------
 
-Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their
-respective rights holders. This project is an unofficial, non-commercial
-interoperability tool. It is not affiliated with, endorsed by, or sponsored by
-any rights holder.
+The Myth intellectual property passed from Bungie to Take-Two Interactive in
+2000 and, as far as is publicly known, remains with Take-Two. The Myth trademark
+registration lapsed in 2021; copyright in the games and their assets is
+unaffected and still belongs to the rights holder. This project is an unofficial,
+non-commercial interoperability tool. It is not affiliated with, endorsed by, or
+sponsored by Take-Two or any other rights holder.
 
 No game data or other copyrighted assets are included in this repository. The
 tool operates on files you supply from your own legally obtained installation,

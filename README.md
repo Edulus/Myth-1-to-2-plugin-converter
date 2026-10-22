@@ -285,10 +285,11 @@ the algorithm, but Myth II 1.8.5 validates neither field, so writing zeros works
 
 ## Game data
 
-No copyrighted Bungie game data (plugins, `.gor` monoliths, extracted tags, sounds, art)
-is ever committed to this repository. `.gitignore` is set up to keep it out. Tests read
-from paths supplied at runtime and skip when absent. You supply your own legally obtained
-Myth installation when running the tool.
+This repository contains code only, never game assets. `.gitignore` keeps game data
+(plugins, `.gor` monoliths, extracted tags, sounds, art) out, and the tests read from
+paths you supply at runtime, skipping when absent. The tool transforms files from your own
+Myth installation; it neither ships nor needs any copyrighted content to build or run. That
+single rule, no committed assets, is the whole of what the project has to get right here.
 
 ## License and credits
 
@@ -300,6 +301,9 @@ This project would not exist without [jwheare/mythextract](https://github.com/jw
 [NOTES.md](NOTES.md) documents what was taken from it, file by file, with citations at
 each use site in the source.
 
-Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights
-holders. This is an unofficial, non-commercial interoperability tool, not affiliated with
-or endorsed by any rights holder.
+The Myth intellectual property passed from Bungie to Take-Two Interactive in 2000 and, as
+far as is publicly known, remains with Take-Two; the *Myth* trademark registration lapsed
+in 2021, but copyright in the games and their assets is unaffected and still belongs to the
+rights holder. This is an unofficial, non-commercial interoperability tool. It is not
+affiliated with, endorsed by, or sponsored by Take-Two or any other rights holder, and it
+includes no game assets (see [Game data](#game-data) above).
