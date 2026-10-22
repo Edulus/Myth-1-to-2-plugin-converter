@@ -9,15 +9,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="../style.css?v=e502b571">
+<link rel="stylesheet" href="../style.css?v=f3efd1d0">
 </head>
 <body>
-<header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
+<header class="hero compact">
+<button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button>
+<div class="panes" aria-hidden="true">
+<div class="pane one"><span class="num">I</span><span class="cap">The Fallen Lords</span></div>
+<div class="arrow">&rarr;</div>
+<div class="pane two"><span class="num">II</span><span class="cap">Soulblighter</span></div>
+</div>
+<div class="band"><div class="inner">
 <a class="brand" href="../index.html">Myth Plugin Converter &middot; The Fallen Lords &rarr; Soulblighter</a>
 <p class="meta">Question 6 of 6</p>
 <h1>Q6. What does &ldquo;done&rdquo; look like for you?</h1>
 
-</div></header>
+</div></div>
+</header>
 <main class="wrap">
 <p>A tool anyone can run? A finished pack of converted maps to share? Both?</p>
 <p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
@@ -82,7 +90,7 @@
     status.textContent="Sending…"; send.disabled=true;
     try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
     fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({term:term,name:form.name.value,message:form.message.value,
+      body:JSON.stringify({term:term,page:location.href.split("#")[0],name:form.name.value,message:form.message.value,
         answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
     .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
     .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through — please try again.";return;}

@@ -7,9 +7,13 @@
 //   GET  /comments?term=  -> { comments: [...] }     a page's thread
 //   POST /comments        -> { comments: [...] }     add a comment or reply
 //
-// Secrets: GITHUB_TOKEN (fine-grained, Discussions read/write on the repo).
+// Secrets: GITHUB_TOKEN (fine-grained, Discussions read/write on the repo);
+//          NTFY_TOPIC (optional) -- an unguessable ntfy.sh topic. Each new
+//          comment is pushed there, since posts made through the site go out
+//          under the token owner's account and GitHub does not notify you
+//          of your own activity.
 
-import { shapeThread, validate, formatComment } from "./core.js";
+import { shapeThread, validate, formatComment, alertFor } from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
 
@@ -110,8 +114,20 @@ async function addComment(env, discussionId, body, replyTo) {
   );
 }
 
+async function notify(env, alert) {
+  try {
+    await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
+      method: "POST",
+      headers: { Title: alert.title, Click: alert.click, Tags: "speech_balloon" },
+      body: alert.body,
+    });
+  } catch (err) {
+    console.error("ntfy", err);
+  }
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const headers = cors(env, request);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
     const url = new URL(request.url);
@@ -144,6 +160,7 @@ export default {
 
         const discussion = (await findDiscussion(env, term)) ?? (await createDiscussion(env, term));
         await addComment(env, discussion.id, formatComment(name, message), replyTo);
+        if (env.NTFY_TOPIC) ctx.waitUntil(notify(env, alertFor(checked.value, input.page, env.SITE_URL)));
         return json({ comments: shapeThread(await findDiscussion(env, term)) }, 200, headers);
       }
 

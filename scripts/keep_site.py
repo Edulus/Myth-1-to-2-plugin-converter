@@ -134,9 +134,19 @@ a{color:var(--blood-hi)}
 h1,h2,.brand,.tag,.btn,.step b{font-family:Cinzel,"Trajan Pro",Georgia,serif;letter-spacing:.04em}
 h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.15;margin:.2rem 0 .6rem;font-weight:700}
 h2{font-size:1.2rem;margin:2.2rem 0 .7rem;color:var(--fg);border-bottom:1px solid var(--line);padding-bottom:.3rem}
-.hero{position:relative;min-height:15rem;display:flex;align-items:flex-end;background:#000 url(img/banner.jpg) center/cover no-repeat;border-bottom:1px solid var(--line)}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.55) 60%,rgba(0,0,0,.82) 100%)}
-.hero .inner{position:relative;z-index:1;width:100%;max-width:50rem;margin:0 auto;padding:2.5rem 1.25rem 1.2rem}
+.hero{position:relative;background:#0b0a09;border-bottom:1px solid #2a2622}
+.panes{display:grid;grid-template-columns:1fr auto 1fr;height:clamp(9rem,28vw,17rem)}
+.hero.compact .panes{height:clamp(5.5rem,14vw,8.5rem)}
+.pane{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000 center/cover no-repeat}
+.pane.one{background-image:url(img/hero-i.jpg)}
+.pane.two{background-image:url(img/hero-ii.jpg)}
+.pane::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.12) 0%,rgba(0,0,0,.5) 100%)}
+.num{position:relative;z-index:1;font-family:Cinzel,Georgia,serif;font-weight:700;line-height:1;font-size:clamp(3.5rem,13vw,8.5rem);color:#f7f2e8;text-shadow:0 0 22px rgba(0,0,0,.95),0 4px 0 rgba(0,0,0,.55)}
+.hero.compact .num{font-size:clamp(2.2rem,7vw,3.8rem)}
+.cap{position:absolute;z-index:1;left:0;right:0;bottom:.7rem;text-align:center;font-family:Cinzel,Georgia,serif;font-size:clamp(.62rem,1.6vw,.85rem);letter-spacing:.22em;text-transform:uppercase;color:#ece5d8;text-shadow:0 1px 8px #000}
+.hero.compact .cap{display:none}
+.arrow{display:flex;align-items:center;padding:0 clamp(.5rem,2.2vw,1.4rem);background:#0b0a09;color:#d0452c;font-family:Cinzel,Georgia,serif;font-size:clamp(1.6rem,5vw,3rem)}
+.band .inner{max-width:50rem;margin:0 auto;padding:1rem 1.25rem 1.3rem}
 .brand{display:inline-block;color:#c9c0b1;text-decoration:none;font-size:.82rem;text-transform:uppercase;letter-spacing:.18em}
 .hero h1{color:#f3ede2;text-shadow:0 2px 12px #000}
 .subtitle{margin:-.2rem 0 .4rem;color:#e0d7c8;font-family:Cinzel,Georgia,serif;font-size:clamp(1rem,2.6vw,1.3rem);letter-spacing:.06em;text-shadow:0 2px 10px #000}
@@ -259,7 +269,7 @@ COMMENTS_JS = """
     status.textContent="Sending\u2026"; send.disabled=true;
     try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
     fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({term:term,name:form.name.value,message:form.message.value,
+      body:JSON.stringify({term:term,page:location.href.split("#")[0],name:form.name.value,message:form.message.value,
         answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
     .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
     .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through \u2014 please try again.";return;}
@@ -306,12 +316,20 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
 <link rel="stylesheet" href="{up}style.css?v={STYLE_VERSION}">
 </head>
 <body>
-<header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
+<header class="hero{' compact' if depth else ''}">
+<button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button>
+<div class="panes" aria-hidden="true">
+<div class="pane one"><span class="num">I</span><span class="cap">The Fallen Lords</span></div>
+<div class="arrow">&rarr;</div>
+<div class="pane two"><span class="num">II</span><span class="cap">Soulblighter</span></div>
+</div>
+<div class="band"><div class="inner">
 {brand}
 {kicker_html}
 <h1>{heading}</h1>
 {subtitle_html}
-</div></header>
+</div></div>
+</header>
 <main class="wrap">
 {body}
 {answer}

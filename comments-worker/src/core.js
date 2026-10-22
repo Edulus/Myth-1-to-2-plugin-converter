@@ -68,3 +68,13 @@ export function shapeThread(discussion) {
     replies: (c.replies?.nodes ?? []).map(parseComment),
   }));
 }
+
+// The phone alert for a new comment. ``page`` is where it was written, as
+// the site reports it; only an address on the site itself is trusted.
+export function alertFor({ name, term, message, replyTo }, page, siteUrl) {
+  const click = typeof page === "string" && page.startsWith(siteUrl) ? page : siteUrl;
+  const short = message.length > 200 ? `${message.slice(0, 200)}...` : message;
+  // HTTP headers carry Latin-1 only; keep the title plain.
+  const title = `${name} ${replyTo ? "replied" : "wrote"} on ${term}`.replace(/[^ -~]/g, "");
+  return { title: title.slice(0, 150), click, body: short };
+}

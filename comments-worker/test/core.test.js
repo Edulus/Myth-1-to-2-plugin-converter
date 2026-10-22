@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { answerAccepted, formatComment, parseComment, shapeThread, validate } from "../src/core.js";
+import { alertFor, answerAccepted, formatComment, parseComment, shapeThread, validate } from "../src/core.js";
 
 const ANSWERS = ["bottle", "satchel", "satchel charges", "molotov"];
 const good = { term: "Q2: Terrain - faithful or smooth?", name: "KEEP", message: "smooth please", answer: "Satchel" };
@@ -59,4 +59,20 @@ test("a thread nests replies under their comment", () => {
   assert.equal(thread[0].name, "KEEP");
   assert.equal(thread[0].replies[0].name, "Edulus");
   assert.deepEqual(shapeThread(null), []);
+});
+
+test("the phone alert says who, where, and opens the page", () => {
+  const site = "https://edulus.github.io/Myth-1-to-2-plugin-converter/";
+  const a = alertFor({ name: "KEEP", term: "Q2: Terrain", message: "smooth please", replyTo: null }, site + "q/2.html", site);
+  assert.equal(a.title, "KEEP wrote on Q2: Terrain");
+  assert.equal(a.click, site + "q/2.html");
+  assert.equal(a.body, "smooth please");
+});
+
+test("the alert never links off the site, and stays short", () => {
+  const site = "https://edulus.github.io/x/";
+  const a = alertFor({ name: "KEEP", term: "Q1", message: "x".repeat(500), replyTo: "c1" }, "https://evil.example/", site);
+  assert.equal(a.click, site);
+  assert.match(a.title, /replied/);
+  assert.ok(a.body.length < 210);
 });
