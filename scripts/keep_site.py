@@ -29,7 +29,7 @@ GISCUS = {
     "data-reactions-enabled": "1",
     "data-emit-metadata": "0",
     "data-input-position": "top",
-    "data-theme": "noborder_dark",
+    "data-theme": "noborder_light",
     "data-lang": "en",
     "data-loading": "lazy",
 }
@@ -129,7 +129,8 @@ QUESTIONS = [
 ]
 
 STYLE = """
-:root{--bg:#0d0c0b;--panel:#171513;--panel2:#1f1c19;--fg:#e9e2d6;--muted:#a39b8e;--line:#3a352f;--blood:#a8321f;--blood-hi:#d0452c;--code:#24211d}
+:root{--bg:#f3eee3;--panel:#fbf8f1;--panel2:#fffdf8;--fg:#1f1b15;--muted:#6c6457;--line:#d6ccb9;--blood:#9b2a17;--blood-hi:#b5351f;--code:#e9e1d1;--tint:rgba(155,42,23,.08);color-scheme:light}
+:root[data-theme=dark]{--bg:#0d0c0b;--panel:#171513;--panel2:#1f1c19;--fg:#e9e2d6;--muted:#a39b8e;--line:#3a352f;--blood:#a8321f;--blood-hi:#d0452c;--code:#24211d;--tint:rgba(168,50,31,.18);color-scheme:dark}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.65 "IM Fell English",Georgia,"Times New Roman",serif}
@@ -139,10 +140,11 @@ h1,h2,.brand,.tag,.btn,.step b{font-family:Cinzel,"Trajan Pro",Georgia,serif;let
 h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.15;margin:.2rem 0 .6rem;font-weight:700}
 h2{font-size:1.2rem;margin:2.2rem 0 .7rem;color:var(--fg);border-bottom:1px solid var(--line);padding-bottom:.3rem}
 .hero{position:relative;min-height:15rem;display:flex;align-items:flex-end;background:#000 url(img/banner.jpg) center/cover no-repeat;border-bottom:1px solid var(--line)}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,12,11,.15) 0%,rgba(13,12,11,.55) 55%,var(--bg) 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.55) 60%,rgba(0,0,0,.82) 100%)}
 .hero .inner{position:relative;z-index:1;width:100%;max-width:50rem;margin:0 auto;padding:2.5rem 1.25rem 1.2rem}
-.brand{display:inline-block;color:var(--muted);text-decoration:none;font-size:.82rem;text-transform:uppercase;letter-spacing:.18em}
-.hero h1{text-shadow:0 2px 12px #000}
+.brand{display:inline-block;color:#c9c0b1;text-decoration:none;font-size:.82rem;text-transform:uppercase;letter-spacing:.18em}
+.hero h1{color:#f3ede2;text-shadow:0 2px 12px #000}
+.hero .meta{color:#c9c0b1}
 .wrap{max-width:50rem;margin:0 auto;padding:1rem 1.25rem 4rem}
 .meta{color:var(--muted);font-size:.95rem}
 .lede{display:grid;grid-template-columns:1fr 11rem;gap:1.5rem;align-items:start}
@@ -158,7 +160,7 @@ h2{font-size:1.2rem;margin:2.2rem 0 .7rem;color:var(--fg);border-bottom:1px soli
 .card .title{display:block;font-size:1.08rem}
 .card .sub{display:block;color:var(--muted);font-size:.92rem;margin-top:.15rem}
 .tag{color:var(--blood-hi);font-weight:700;margin-right:.45rem}
-.btn{display:inline-block;flex:none;padding:.45rem .8rem;border:1px solid var(--blood);border-radius:4px;color:var(--fg);background:rgba(168,50,31,.18);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;text-decoration:none;white-space:nowrap}
+.btn{display:inline-block;flex:none;padding:.45rem .8rem;border:1px solid var(--blood);border-radius:4px;color:var(--fg);background:var(--tint);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;text-decoration:none;white-space:nowrap}
 .card a:hover .btn,.btn:hover{background:var(--blood);border-color:var(--blood-hi)}
 @media (max-width:520px){.card a{flex-direction:column;align-items:flex-start}}
 code,pre{font:.82rem/1.5 ui-monospace,Consolas,monospace;background:var(--code);border-radius:4px}
@@ -179,9 +181,29 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .reply ol{margin:.2rem 0 1rem 1.2rem;padding:0}
 .reply li{margin:.15rem 0}
 .nav{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2rem;font-size:.95rem}
+.theme{position:absolute;top:.8rem;right:.9rem;z-index:2;font:1rem/1 Georgia,serif;color:#f3ede2;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:.4rem .75rem;cursor:pointer}
+.theme:hover,.theme:focus-visible{background:rgba(0,0,0,.7);outline:none}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 """
 
+
+THEME_JS = """
+(function(){
+  var root=document.documentElement, btn=document.querySelector(".theme");
+  function giscusTheme(){return root.dataset.theme==="dark"?"noborder_dark":"noborder_light";}
+  function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
+  function tellGiscus(){var f=document.querySelector("iframe.giscus-frame");
+    if(f)f.contentWindow.postMessage({giscus:{setConfig:{theme:giscusTheme()}}},"https://giscus.app");}
+  var s=document.querySelector("script[src*='giscus.app']"); if(s)s.setAttribute("data-theme",giscusTheme());
+  window.addEventListener("message",function(e){if(e.origin==="https://giscus.app")tellGiscus();});
+  btn.addEventListener("click",function(){
+    if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
+    try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
+    paint();tellGiscus();
+  });
+  paint();
+})();
+"""
 
 GIVE_ANSWER = """
 <section class="reply" id="answer">
@@ -220,13 +242,14 @@ def page(title, heading, body, depth, term=None, kicker=""):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} &middot; Myth TFL to Myth II</title>
+<script>try{{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
 <link rel="stylesheet" href="{up}style.css?v={STYLE_VERSION}">
 </head>
 <body>
-<header class="hero"><div class="inner">
+<header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
 <a class="brand" href="{up}index.html">Myth: The Fallen Lords &rarr; Myth II</a>
 {kicker_html}
 <h1>{heading}</h1>
@@ -236,6 +259,7 @@ def page(title, heading, body, depth, term=None, kicker=""):
 {answer}
 </main>
 <footer>{CREDIT}</footer>
+<script>{THEME_JS}</script>
 </body>
 </html>
 """
