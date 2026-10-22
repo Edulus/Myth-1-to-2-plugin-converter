@@ -4,19 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TFL levels now play in Myth II &middot; Myth TFL to Myth II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-<div class="wrap">
-<header class="site"><a class="home" href="../index.html">Myth: The Fallen Lords &rarr; Myth II converter &middot; progress for KEEP</a></header>
+<header class="hero"><div class="inner">
+<a class="brand" href="../index.html">Myth: The Fallen Lords &rarr; Myth II</a>
 <p class="meta">Update &middot; 21 October 2026</p>
 <h1>TFL levels now play in Myth II</h1>
+</div></header>
+<main class="wrap">
 
 <p><strong>Two levels from <em>Sir Mauriac's Tale</em> now load, play and finish in Myth II 1.8.5, converted entirely by the tool.</strong></p>
 <ul>
 <li><strong>Tandem</strong> &mdash; the river level with 77 buildings. Rain falls, units and trees are drawn, the fighting works, and it ends on the normal end-game screen.</li>
 <li><strong>In the Name of Glory</strong> &mdash; the snow level, with 146 scripted map actions. Plays from the start to the end-game screen with no errors in the log.</li>
 </ul>
+<figure><img src="../img/tandem.jpg" alt="Tandem running in Myth II: warriors in formation, two archers and a villager on a stone path" width="1200" height="621"><figcaption>Tandem, converted from TFL, running in Myth II 1.8.5 &mdash; the first screenshot with units drawn.</figcaption></figure>
 <p>Your TFL tags folder is what made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting your <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Your files stay on our machine; no game data goes into the repository.)</p>
 
 <h2>What converts now</h2>
@@ -56,11 +62,16 @@ python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Ma
 
 <div class="nav"><a href="../index.html">&larr; All updates and questions</a><a href="../q/1.html">Questions for you &rarr;</a></div>
 
-<section class="comments">
-<h2>Comments</h2>
-<p class="meta">Sign in with GitHub in the box below to comment or reply.</p>
-<script src="https://giscus.app/client.js" data-repo="Edulus/Myth-1-to-2-plugin-converter" data-repo-id="R_kgDOTmqt9g" data-category="Announcements" data-category-id="DIC_kwDOTmqt9s4DJWN2" data-mapping="specific" data-strict="1" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="en" data-loading="lazy" data-term="Update 2026-10-21: TFL levels now play in Myth II" crossorigin="anonymous" async></script>
+<section class="reply" id="answer">
+<h2>&#9998; Your answer</h2>
+<ol>
+<li>Click <strong>Sign in with GitHub</strong> in the box below (only the first time).</li>
+<li>Type in the box &mdash; as long or short as you like.</li>
+<li>Press <strong>Comment</strong>. To answer someone, press <strong>Reply</strong> under their comment.</li>
+</ol>
+<script src="https://giscus.app/client.js" data-repo="Edulus/Myth-1-to-2-plugin-converter" data-repo-id="R_kgDOTmqt9g" data-category="Announcements" data-category-id="DIC_kwDOTmqt9s4DJWN2" data-mapping="specific" data-strict="1" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="noborder_dark" data-lang="en" data-loading="lazy" data-term="Update 2026-10-21: TFL levels now play in Myth II" crossorigin="anonymous" async></script>
 </section>
-</div>
+</main>
+<footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>
 </body>
 </html>
