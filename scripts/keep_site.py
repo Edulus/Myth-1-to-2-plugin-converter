@@ -21,6 +21,11 @@ OUT = ROOT / "docs"
 REPO = "Edulus/Myth-1-to-2-plugin-converter"
 REPO_URL = f"https://github.com/{REPO}"
 
+# The project's name, as the site presents it. The site is the KEEP
+# communicator for now, and is set up to grow into the project website.
+SITE_NAME = "Myth Plugin Converter"
+SITE_TAGLINE = "The Fallen Lords &rarr; Soulblighter"
+
 # The deployed comments-worker (see comments-worker/).
 COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 
@@ -134,6 +139,8 @@ h2{font-size:1.2rem;margin:2.2rem 0 .7rem;color:var(--fg);border-bottom:1px soli
 .hero .inner{position:relative;z-index:1;width:100%;max-width:50rem;margin:0 auto;padding:2.5rem 1.25rem 1.2rem}
 .brand{display:inline-block;color:#c9c0b1;text-decoration:none;font-size:.82rem;text-transform:uppercase;letter-spacing:.18em}
 .hero h1{color:#f3ede2;text-shadow:0 2px 12px #000}
+.subtitle{margin:-.2rem 0 .4rem;color:#e0d7c8;font-family:Cinzel,Georgia,serif;font-size:clamp(1rem,2.6vw,1.3rem);letter-spacing:.06em;text-shadow:0 2px 10px #000}
+.intro{font-size:1.1rem;margin:.6rem 0 0}
 .hero .meta{color:#c9c0b1}
 .wrap{max-width:50rem;margin:0 auto;padding:1rem 1.25rem 4rem}
 .meta{color:var(--muted);font-size:.95rem}
@@ -276,20 +283,22 @@ CREDIT = (
 STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 
 
-def page(title, heading, body, depth, term=None, kicker=""):
+def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
     up = "../" * depth
     answer = scripts = ""
     if term:
         answer = GIVE_ANSWER.format(term=html.escape(term), api=html.escape(COMMENTS_API))
         scripts = f"<script>{COMMENTS_JS}</script>"
     kicker_html = f'<p class="meta">{kicker}</p>' if kicker else ""
+    subtitle_html = f'<p class="subtitle">{subtitle}</p>' if subtitle else ""
+    brand = "" if depth == 0 else f'<a class="brand" href="{up}index.html">{SITE_NAME} &middot; {SITE_TAGLINE}</a>'
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>{html.escape(title)} &middot; Myth TFL to Myth II</title>
+<title>{html.escape(title)} &middot; {SITE_NAME}</title>
 <script>try{{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -298,9 +307,10 @@ def page(title, heading, body, depth, term=None, kicker=""):
 </head>
 <body>
 <header class="hero"><button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button><div class="inner">
-<a class="brand" href="{up}index.html">Myth: The Fallen Lords &rarr; Myth II</a>
+{brand}
 {kicker_html}
 <h1>{heading}</h1>
+{subtitle_html}
 </div></header>
 <main class="wrap">
 {body}
@@ -334,7 +344,9 @@ def build():
         for u in UPDATES
     )
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
-    index = f"""<div class="lede">
+    index = f"""<p class="intro">A tool that converts <em>Myth: The Fallen Lords</em> plugins into <em>Myth II: Soulblighter</em> plugins &mdash; maps, units, art and all.</p>
+<h2>Progress &amp; questions for KEEP</h2>
+<div class="lede">
 <div>
 <p>The converter you proposed: turning <em>Myth: The Fallen Lords</em> plugins into <em>Myth II</em> plugins. Here is where it stands, and the questions where your knowledge of the game would steer it.</p>
 <p><strong>Every card below opens a page of its own with a box where you can write your answer</strong> &mdash; reply to as many or as few as you like.</p>
@@ -357,7 +369,7 @@ def build():
 </ul>
 <p class="meta" style="margin-top:2rem">Source code and technical notes: <a href="{REPO_URL}">{REPO}</a>.</p>"""
     (OUT / "index.html").write_text(
-        page("Progress for KEEP", "Progress, and questions for KEEP", index, 0), encoding="utf-8"
+        page(html.unescape(SITE_TAGLINE), SITE_NAME, index, 0, subtitle=SITE_TAGLINE), encoding="utf-8"
     )
 
     for u in UPDATES:
