@@ -16,12 +16,20 @@ project still has to build.
 
 ## Status
 
-**Phase 0 complete** -- research. mythextract solves reading, and already converts a single
-tag *header* from TFL to SB form (`myth_headers.tfl2sb`). What it has no code path for at
-all is **writing a monolithic container**. Details, verified struct sizes, and open
-questions are in [NOTES.md](NOTES.md).
+**Public beta.** Two levels from *Sir Mauriac's Tale* -- **Tandem** and
+**In the Name of Glory** -- load, play and reach the end-game screen in Myth II
+1.8.5, converted entirely by the tool. Other levels and multiplayer remain
+unverified. See [NOTES.md](NOTES.md) sections 17-18.
 
-**Phase 1 complete. Gate cleared on both game versions against real data.**
+The converter handles terrain, markers, map actions, monsters/units and their
+objects, projectiles, artifacts, scenery, weather, mesh effects, lighting,
+sprite collections and text. Building models are measured but not converted;
+lighting uses standard values for every map, terrain uses duplicated cells,
+and some tag bodies (including sounds and projectile groups) pass through
+unchanged. The support matrix below records those limits.
+
+The container reader/writer also passed the historical byte-exact round-trip
+gate on 282 real archives. This checks container preservation, not gameplay:
 
 | Corpus | Files | Bytes | Result |
 |---|---:|---:|---|
@@ -46,18 +54,65 @@ python -m src roundtrip "/path/to/Myth II/plugins"
 python -m src roundtrip "/path/to/Myth II/tags"
 ```
 
-## Requirements
+## Get started
 
-Python 3.12+. No dependencies -- standard library only, no build step.
+Download this repository with **Code -> Download ZIP** and extract it, or:
+
+```sh
+git clone https://github.com/Edulus/Myth-1-to-2-plugin-converter.git
+cd Myth-1-to-2-plugin-converter
+```
+
+You need Python 3.12+, Myth II 1.8.5, your own TFL game's `tags` folder
+(`TAGS.GOR` and `ARTSOUND.GOR`), and an extracted TFL plugin (`.gor`). No game
+data is included. No Python packages or build step are needed. There is no
+packaged GitHub release yet.
+
+On Windows, `launch.bat` finds Python or attempts to install it with winget,
+then opens the studio. Follow its prompt to run it again after installation;
+if winget is unavailable it opens the Python download page. The studio cannot
+build the stock tagset, so use the terminal commands below first. On other
+systems, install Python 3.12+ yourself.
+
+**Quit Myth II first.** Open a terminal in the extracted repository folder
+(the one containing `src` and `launch.bat`). In Windows File Explorer, open that
+folder, type `powershell` into the address bar and press Enter. Replace the
+example paths below with your own, keeping the quotes. If needed, replace
+`python` with `python3` or, on Windows, `py -3.12`.
+
+```sh
+python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR" --out "Myth II/plugins/ZZ TFL stock"
+python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"
+```
+
+Build the stock tagset once; convert each plugin separately. **No decisions
+file is required for this baseline workflow.** Output files have no extension.
+If the install folder is not writable, write to a folder you can access and
+copy the results into Myth II's `plugins` folder while the game is closed.
+
+Start Myth II: **New Game -> converted campaign -> Tagsets -> activate
+ZZ TFL stock -> choose a level -> OK**. Select the tagset after the campaign:
+changing campaigns can clear it. Only one campaign can load at a time; the
+stock tagset has no selectable levels, so it can accompany the campaign.
+
+- Restart Myth II after adding files, and quit it before replacing files.
+- Output filenames must be at most 32 characters. Their internal names default
+  to the output filenames; use distinct names to avoid hidden duplicates.
+- Activate the stock tagset only for converted TFL levels: it overrides
+  same-ID tags from Myth II while active.
+- Conversion warnings matter. A readable output does not guarantee gameplay.
+
+To report a problem, include the plugin and level, Myth II version, expected
+and observed behaviour, and the end of `myth_log.txt`. For crashes, include
+relevant lines from the newest `myth_crashlog- <date>.txt` too. Remove private
+paths and share observations rather than game files. The
+[project website](https://edulus.github.io/Myth-1-to-2-plugin-converter/)
+has comment boxes that require no account.
 
 ## The app
 
-**Windows, no Python yet:** double-click [`launch.bat`](launch.bat). It looks for Python
-3.12+ and, if it can't find one, installs it via `winget` (built into current Windows) and
-tells you to run it again. Windows may warn that the script is from an unidentified
-publisher the first time -- click **More info -> Run anyway**; there is no code signing on
-a community tool like this one. The one-time detection logic lives in
-[`scripts/launch.ps1`](scripts/launch.ps1).
+**Windows:** double-click [`launch.bat`](launch.bat). See the setup instructions
+above; its Python detection logic lives in [`scripts/launch.ps1`](scripts/launch.ps1).
 
 **Already have Python (any OS):**
 
@@ -65,7 +120,9 @@ a community tool like this one. The one-time detection logic lives in
 python -m src studio
 ```
 
-Opens a guided app in your browser for converting a map. Built for someone doing this for
+Opens a guided app in your browser for converting an individual plugin. It does
+**not** build the stock tagset; use `tagset` above first. Its missing-reference
+suggestions do not validate the complete stock-tagset dependency chain. Built for someone doing this for
 the first time: it explains what tags and plugins are, why a Fallen Lords plugin is not
 self-contained, what each decision costs, and how to read the game's log when a level fails
 to start. An **Expert** tab drops the hand-holding once you know the ropes.
@@ -202,26 +259,19 @@ run that is meant to be the real gate.
 "Pass-through" means the body is copied byte-for-byte and the tag is reported as
 unconverted. It is never silently presented as converted.
 
-**Entrypoints are synthesised**, one per mesh tag, so converted levels appear in Myth II's
-menu by name -- confirmed in-engine. Starting one still fails, for two separate reasons:
+**Entrypoints are synthesised**, one per mesh tag, so converted levels appear
+in Myth II's campaign menu. A TFL plugin still depends on the original game's
+stock tags: use `tagset` above to provide them alongside the converted campaign.
+The two tested levels finish; unsupported tag layouts can still affect others.
 
-1. The pass-through bodies above (`arti`, `proj`, `prgr`, and the rest) are still in TFL
-   format.
-2. **A TFL plugin is not self-contained.** It references the stock TFL tag library the way
-   a Myth II plugin references the base game. Counting mesh header fields, marker palette
-   entries, and now `mons` header/sound/attack references and `unit` references too, the
-   test plugin's tags point at 458 tags (4,148 references) they do not contain. Converting a
-   plugin in isolation cannot fix that -- the stock tags have to come from a TFL installation
-   supplied as a second input, or be mapped onto Myth II equivalents. See
-   [NOTES.md](NOTES.md) sections 12-14, 16.
-
-The container side, however, is confirmed working: a plugin built by `src/writer.py` with
+The container side is confirmed working: a plugin built by `src/writer.py` with
 **both checksums zeroed** loads and plays in Myth II 1.8.5. See below.
 
 ## Verified in-engine
 
-Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the subject
-([NOTES.md](NOTES.md) section 11):
+Current gameplay results are in [NOTES.md](NOTES.md) section 18: *Tandem* and
+*In the Name of Glory* reach the end-game screen. Earlier container checks used
+**Myth II 1.8.5 build 471b** and a real 102-tag plugin (section 11):
 
 - **Neither container checksum is validated.** A plugin we built, with `checksum` and
   `header_checksum` both zero, loads and plays. This removes what was the project's biggest
@@ -234,15 +284,15 @@ Tested against **Myth II 1.8.5 build 471b**, using a real 102-tag plugin as the 
   entrypoints is a *campaign*, and campaigns are single-select -- so two of them cannot load
   together. Stripping entrypoints with `src/writer.py` turns one into a tagset, which is how
   the stock-tag dependency problem below can be worked around.
-- **Supplying the stock TFL tags does resolve the dependency problem.** With a converted
-  TFL port loaded as a tagset, the missing-tag errors disappear and loading proceeds to the
-  next layer -- a crash in the engine's `byte_swap_data` while reading the mesh's data
-  blocks, which are still TFL-shaped. See [NOTES.md](NOTES.md) section 13.
+- **Converting the original stock TFL tags resolves dependencies that Magma's
+  port did not supply under the original IDs.** The `tagset` command implements
+  this workflow. Earlier failures and their fixes are recorded in NOTES sections
+  13 and 18.
 - **Markers, marker-palette entries, and map-action headers need no format conversion at
   all** -- verified against a real, working 2011 community tool's source code as well as
   mythextract's own declared struct formats. The one genuine bug found: TFL's map-action
   parameter type numbering is missing a slot Myth II has, so every TFL type code from 12
-  up is off by one -- a very plausible cause of the crash above. Fixed and validated
+  up is off by one -- a suspected cause of an earlier loading crash. Fixed and validated
   against all 2,760 map actions / 7,942 parameters in the real test plugin. See
   [NOTES.md](NOTES.md) section 14.
 
@@ -271,22 +321,20 @@ NOTES.md           research notes on the reference implementation and the format
 
 ## Honest limitations
 
-This tool will get a map most of the way, not all of the way. `text`, `stli` and
-pass-through types are tractable. `mons`, `unit`, and every structural block of `mesh`
-(header, terrain, markers, map actions) now convert; `arti` involves the same kind of real
-format change with fields that have no TFL source and must be defaulted, and has not been
-started. `mesh` is the hardest, and its terrain is the least certain part: the LOD data is
-zero-filled because its encoding is not understood, and nothing since the terrain converter
-landed has been tried in-engine.
-Expect manual finishing work, and see [NOTES.md](NOTES.md) section 6 for the known unknowns.
-The container checksums, once the biggest of those, turned out not to matter: nobody knows
-the algorithm, but Myth II 1.8.5 validates neither field, so writing zeros works (see
-*Verified in-engine* above).
+Only two single-player levels have been tested through to the end-game screen.
+Building models (`mode`/`geom`) are not converted, lighting uses standard values,
+and terrain is upsampled by duplication. Mesh LOD data is zero-filled because
+its encoding is not understood. References inside map-action parameter data
+are not yet remapped. Sounds, projectile groups, collection references and
+other unsupported bodies are copied unchanged. Expect manual finishing work
+and verify each level in-game; a passing file round-trip is not a gameplay test.
+See [NOTES.md](NOTES.md) sections 17-18 and the support matrix above.
 
 ## Game data
 
-No copyrighted Bungie game data (plugins, `.gor` monoliths, extracted tags, sounds, art)
-is ever committed to this repository. `.gitignore` is set up to keep it out. Tests read
+No game archives, extracted tags, playable plugins or sound files are distributed
+with the converter. The project website includes credited artwork and a testing
+screenshot; it does not supply the game data required to run a conversion. `.gitignore` is set up to keep it out. Tests read
 from paths supplied at runtime and skip when absent. You supply your own legally obtained
 Myth installation when running the tool.
 
