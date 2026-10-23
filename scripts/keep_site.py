@@ -1,12 +1,12 @@
-"""Build the progress site for KEEP into docs/ (served by GitHub Pages).
+"""Build the public project site into docs/ (served by GitHub Pages).
 
     python scripts/keep_site.py
 
 Each update and each question gets a page of its own with a comment box that
-needs no account -- KEEP types a name, a message and a one-word Myth answer.
+needs no account -- a visitor types a name, a message and a one-word Myth answer.
 The box talks to comments-worker/ (a Cloudflare Worker), which stores each
 page's thread as a GitHub Discussion in the repo's Announcements category, so
-KEEP can answer and reply section by section. To add to the site, add an entry
+Visitors can answer and reply section by section. To add to the site, add an entry
 to UPDATES or QUESTIONS below -- newest update first -- and rerun.
 
 A thread is tied to its entry's ``term``, not its URL: keep terms stable once
@@ -21,8 +21,7 @@ OUT = ROOT / "docs"
 REPO = "Edulus/Myth-1-to-2-plugin-converter"
 REPO_URL = f"https://github.com/{REPO}"
 
-# The project's name, as the site presents it. The site is the KEEP
-# communicator for now, and is set up to grow into the project website.
+# Public project identity. Keep published discussion terms stable.
 SITE_NAME = "Myth Plugin Converter"
 SITE_TAGLINE = "The Fallen Lords &rarr; Soulblighter"
 
@@ -43,11 +42,11 @@ UPDATES = [
 <li><strong>In the Name of Glory</strong> &mdash; the snow level, with 146 scripted map actions. Plays from the start to the end-game screen with no errors in the log.</li>
 </ul>
 <figure><img src="../img/tandem.jpg" alt="Tandem running in Myth II: warriors in formation, two archers and a villager on a stone path" width="1200" height="621"><figcaption>Tandem, converted from TFL, running in Myth II 1.8.5 &mdash; the first screenshot with units drawn.</figcaption></figure>
-<p>Your TFL tags folder is what made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting your <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Your files stay on our machine; no game data goes into the repository.)</p>
+<p>Converting the original TFL tags made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting the original <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Visitors supply their own files locally; no game data is distributed.)</p>
 
 <h2>What converts now</h2>
 <table>
-<tr><th>Maps</th><td>terrain (upsampled to Myth II's finer grid), markers, map actions, buildings' footprints</td></tr>
+<tr><th>Maps</th><td>terrain (upsampled to Myth II's finer grid), markers and map actions</td></tr>
 <tr><th>Units</th><td>monsters, units, and each monster's own &ldquo;object&rdquo; (its size, health and damage resistances)</td></tr>
 <tr><th>Combat</th><td>projectiles, artifacts, mesh effects (explosion ripples)</td></tr>
 <tr><th>World</th><td>scenery, weather (rain/snow), lighting, sprite art</td></tr>
@@ -58,7 +57,7 @@ UPDATES = [
 <ul>
 <li><strong>Why units were invisible at first.</strong> In TFL a monster's size, health and damage resistances live on the monster. Myth II moved them into a separate &ldquo;object&rdquo; tag, which TFL shares between every monster. Read by Myth II, TFL's object says &ldquo;size 0&rdquo;, so every unit and tree was there &mdash; you could hear them fight and see their shadows &mdash; but drawn at zero size. Each monster now gets its own object, which is what Project Magma did by hand.</li>
 <li><strong>Myth II halved the world unit</strong>, as the Fear manual warns. It shows up in places &mdash; a ground ripple's height doubles &mdash; but not everywhere: unit speeds and ranges did not need doubling.</li>
-<li><strong>Your point about models was right.</strong> TFL stores each building's footprint in terrain cells, and Myth II's cells are half the size, so footprints have to be split 2&times;2. That's measured against your tags; converting it is next on the list.</li>
+<li><strong>Building footprints need conversion.</strong> TFL stores each building's footprint in terrain cells, and Myth II's cells are half the size, so footprints have to be split 2&times;2. That's measured against the original TFL tags; converting it is next on the list.</li>
 <li><strong>Some stock TFL tags must not replace Myth II's.</strong> The end-of-level statistics screen crashed until we stopped TFL's versions of Myth II's internal text, dialogs and fonts from overriding the originals.</li>
 </ul>
 
@@ -71,14 +70,8 @@ UPDATES = [
 <li>Only two levels have been tested so far, both single-player.</li>
 </ul>
 
-<h2>How to try it yourself</h2>
-<p>You need Python 3.12 or later and Myth II 1.8.5. From the repository:</p>
-<pre><code># 1. Once: turn your TFL tags folder into a Myth II tagset.
-python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR" --out "Myth II/plugins/ZZ TFL stock"
-
-# 2. Convert a TFL plugin.
-python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"</code></pre>
-<p>In Myth II: New Game &rarr; pick the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <code>ZZ TFL stock</code> &rarr; pick a level. Choosing a campaign clears the tagset, so pick the tagset <em>after</em> the campaign.</p>
+<h2>Try it and report what happens</h2>
+<p>Follow the <a href="../index.html#get-started">download, setup and play instructions</a> on the front page. Report the plugin, level, Myth II version and relevant log lines in the comment box below. No account is needed.</p>
 """,
     },
 ]
@@ -88,7 +81,7 @@ QUESTIONS = [
         "n": 1,
         "term": "Q1: Which TFL content matters most?",
         "title": "Which TFL content matters most to you?",
-        "body": "<p>The original campaign? Specific community plugins? Multiplayer maps or single-player? Whatever you name, we'll test next.</p>",
+        "body": "<p>The original campaign? Specific community plugins? Multiplayer maps or single-player? Suggest a plugin and level, and explain what makes it a useful test.</p>",
     },
     {
         "n": 2,
@@ -101,7 +94,7 @@ QUESTIONS = [
         "n": 3,
         "term": "Q3: A coop map with known scoring to test against",
         "title": "Is there a coop map with known scoring we could test against?",
-        "body": "<p>You mentioned coop scoring and map actions. We've converted the map-action format, but we don't yet know whether TFL and Myth II scripts <em>mean</em> the same thing in play. A map whose correct behaviour you know would tell us.</p>",
+        "body": "<p>Coop scoring and map actions need play-testing. We've converted the map-action format, but we don't yet know whether TFL and Myth II scripts <em>mean</em> the same thing in play. A map whose correct behaviour you know would tell us.</p>",
     },
     {
         "n": 4,
@@ -112,14 +105,14 @@ QUESTIONS = [
     {
         "n": 5,
         "term": "Q5: Would you play-test?",
-        "title": "Would you play-test?",
+        "title": "Help test converted levels",
         "body": "<p>A converted level played by someone who knows TFL well would find the subtle problems &mdash; wrong unit sizes, sounds, balance &mdash; that logs can't.</p>",
     },
     {
         "n": 6,
         "term": "Q6: What does done look like?",
-        "title": "What does &ldquo;done&rdquo; look like for you?",
-        "body": "<p>A tool anyone can run? A finished pack of converted maps to share? Both?</p>",
+        "title": "What should a successful conversion preserve?",
+        "body": "<p>Which behaviours must match TFL before a conversion feels complete: movement, combat balance, scenery, scripted objectives or something else? Describe a specific level and a way to check it.</p>",
     },
 ]
 
@@ -362,37 +355,59 @@ def build():
         for u in UPDATES
     )
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
-    index = f"""<p class="intro">A tool that converts <em>Myth: The Fallen Lords</em> plugins into <em>Myth II: Soulblighter</em> plugins &mdash; maps, units, art and all.</p>
-<h2>Progress &amp; questions for KEEP</h2>
-<div class="lede">
-<div>
-<p>The converter you proposed: turning <em>Myth: The Fallen Lords</em> plugins into <em>Myth II</em> plugins. Here is where it stands, and the questions where your knowledge of the game would steer it.</p>
-<p><strong>Every card below opens a page of its own with a box where you can write your answer</strong> &mdash; reply to as many or as few as you like.</p>
-</div>
-<img src="img/fallen-lords.jpg" alt="Myth: The Fallen Lords box art in black and white: a warrior and a dwarf fighting a ghol" width="450" height="440">
-</div>
-<ol class="steps">
-<li class="step"><b>1 &middot; Click</b>any card below</li>
-<li class="step"><b>2 &middot; Read</b>the update or question</li>
-<li class="step"><b>3 &middot; Type</b>your name and your answer</li>
-<li class="step"><b>4 &middot; Send</b>&mdash; no account needed</li>
+    index = f"""<section aria-labelledby="get-started">
+<h2 id="get-started" style="margin-top:0">Get started &mdash; public beta</h2>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
+<p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
+<ol>
+<li><strong>Download and unzip.</strong> Open <a href="{REPO_URL}">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
+<pre><code>git clone {REPO_URL}.git
+cd Myth-1-to-2-plugin-converter</code></pre></li>
+<li><strong>Set up Python.</strong> On Windows, double-click <code>launch.bat</code> in the extracted folder. It looks for Python 3.12+ and attempts to install it with winget if missing; follow its instructions and run it again after installation. If winget is unavailable, it opens the Python download page. On other systems, install Python 3.12+ first.
+<p>The launcher opens the guided browser app. <strong>That app cannot build the stock tagset yet.</strong> Use a terminal for the next two steps. On Windows, open the extracted folder in File Explorer, type <code>powershell</code> into its address bar and press Enter. Commands must run in the folder containing <code>launch.bat</code> and <code>src</code>. Close Myth II before writing plugins.</p></li>
+<li><strong>Build the stock tagset once.</strong> Replace every example path with your own, keeping the quotes. Use <code>python3</code> instead of <code>python</code> if that is your Python 3.12+ command; on Windows, <code>py -3.12</code> is another option.
+<pre><code>python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR" --out "Myth II/plugins/ZZ TFL stock"</code></pre>
+<p>This supplies the original game's tags that community plugins depend on. The output is a file with no extension, inside your Myth II <code>plugins</code> folder.</p></li>
+<li><strong>Convert a plugin.</strong> Extract the plugin's ZIP first, then point at its <code>.gor</code> file:
+<pre><code>python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"</code></pre>
+<p>No decisions file is required for this baseline workflow. Conversion warnings identify unsupported content; producing a file does not guarantee that every level will play.</p></li>
+<li><strong>Play in Myth II.</strong> Start the game &rarr; <strong>New Game</strong> &rarr; choose the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <strong>ZZ TFL stock</strong> &rarr; pick a level &rarr; <strong>OK</strong>. Choose the tagset <em>after</em> the campaign, because changing campaigns can clear the selection.</li>
 </ol>
-<h2>Updates</h2>
-<ul class="cards">
-{updates}
+<h3>Before you test</h3>
+<ul>
+<li>Quit Myth II before converting or replacing plugin files; the game holds them open. Restart after adding files.</li>
+<li>Keep output filenames at most 32 characters. The internal plugin name defaults to that filename; use distinct names so plugins do not hide each other.</li>
+<li>The stock tagset replaces same-ID Myth II tags while active. Activate it only for converted TFL levels.</li>
+<li>Only one campaign can load at a time. The stock tagset contains no selectable levels, so it can load alongside your converted campaign.</li>
+<li>If writing to the install folder fails, write to a folder you can access and copy the finished files into Myth II's <code>plugins</code> folder while the game is closed.</li>
 </ul>
-<h2>Questions for you</h2>
-<ul class="cards">
-{questions}
+<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</section>
+<h2>What works &mdash; and what needs testing</h2>
+<p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
+<ul>
+<li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
+<li>Building models (<code>mode</code>/<code>geom</code>) are measured but not converted. Lighting uses standard values for every map. Terrain cells are duplicated into a finer grid, which can look blocky.</li>
+<li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
 </ul>
-<p class="meta" style="margin-top:2rem">Source code and technical notes: <a href="{REPO_URL}">{REPO}</a>.</p>"""
+<h2>Help test or report a problem</h2>
+<p>Every visitor can help. Try a level you know and report what differs from TFL. Open a question or progress update below and use its comment box: a name, message and one-word Myth check &mdash; <strong>no account or sign-in</strong>.</p>
+<p>Include the plugin and level names, Myth II version, what you expected, what happened, and the final lines of <code>myth_log.txt</code> from the Myth II folder. For a crash, include relevant lines from the newest <code>myth_crashlog- &lt;date&gt;.txt</code>. Check that the log lists both your campaign and stock tagset after <code>Starting mesh</code>. Share logs and observations, not game files; remove private paths if needed.</p>
+<p>Code contributions are welcome through <a href="{REPO_URL}">GitHub</a>; the <a href="{REPO_URL}/blob/main/README.md">README</a> and <a href="{REPO_URL}/blob/main/NOTES.md">format notes</a> describe current support and research.</p>
+<h2>Open questions for testers</h2>
+<ul class="cards">{questions}</ul>
+<h2>Progress log</h2>
+<ul class="cards">{updates}</ul>
+<h2>About, credits and licence</h2>
+<p>Built on <a href="https://github.com/jwheare/mythextract">mythextract</a>, MIT licence, &copy; 2025 James Wheare. The converter's code is <a href="{REPO_URL}/blob/main/LICENSE">MIT-licensed</a>; see <a href="{REPO_URL}/blob/main/NOTICE">NOTICE</a> for prior art.</p>
+<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. No game data is distributed; users supply their own copies.</p>"""
     (OUT / "index.html").write_text(
         page(html.unescape(SITE_TAGLINE), SITE_NAME, index, 0, subtitle=SITE_TAGLINE), encoding="utf-8"
     )
 
     for u in UPDATES:
         body = f"""{u["body"]}
-<div class="nav"><a href="../index.html">&larr; All updates and questions</a><a href="../q/1.html">Questions for you &rarr;</a></div>"""
+<div class="nav"><a href="../index.html">&larr; All updates and questions</a><a href="../q/1.html">Questions for testers &rarr;</a></div>"""
         (OUT / "updates" / f'{u["slug"]}.html').write_text(
             page(u["title"], u["title"], body, 1, u["term"], kicker=f'Update &middot; {u["date"]}'),
             encoding="utf-8",

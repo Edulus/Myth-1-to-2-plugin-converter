@@ -27,35 +27,57 @@
 </div></div>
 </header>
 <main class="wrap">
-<p class="intro">A tool that converts <em>Myth: The Fallen Lords</em> plugins into <em>Myth II: Soulblighter</em> plugins &mdash; maps, units, art and all.</p>
-<h2>Progress &amp; questions for KEEP</h2>
-<div class="lede">
-<div>
-<p>The converter you proposed: turning <em>Myth: The Fallen Lords</em> plugins into <em>Myth II</em> plugins. Here is where it stands, and the questions where your knowledge of the game would steer it.</p>
-<p><strong>Every card below opens a page of its own with a box where you can write your answer</strong> &mdash; reply to as many or as few as you like.</p>
-</div>
-<img src="img/fallen-lords.jpg" alt="Myth: The Fallen Lords box art in black and white: a warrior and a dwarf fighting a ghol" width="450" height="440">
-</div>
-<ol class="steps">
-<li class="step"><b>1 &middot; Click</b>any card below</li>
-<li class="step"><b>2 &middot; Read</b>the update or question</li>
-<li class="step"><b>3 &middot; Type</b>your name and your answer</li>
-<li class="step"><b>4 &middot; Send</b>&mdash; no account needed</li>
+<section aria-labelledby="get-started">
+<h2 id="get-started" style="margin-top:0">Get started &mdash; public beta</h2>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
+<p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
+<ol>
+<li><strong>Download and unzip.</strong> Open <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
+<pre><code>git clone https://github.com/Edulus/Myth-1-to-2-plugin-converter.git
+cd Myth-1-to-2-plugin-converter</code></pre></li>
+<li><strong>Set up Python.</strong> On Windows, double-click <code>launch.bat</code> in the extracted folder. It looks for Python 3.12+ and attempts to install it with winget if missing; follow its instructions and run it again after installation. If winget is unavailable, it opens the Python download page. On other systems, install Python 3.12+ first.
+<p>The launcher opens the guided browser app. <strong>That app cannot build the stock tagset yet.</strong> Use a terminal for the next two steps. On Windows, open the extracted folder in File Explorer, type <code>powershell</code> into its address bar and press Enter. Commands must run in the folder containing <code>launch.bat</code> and <code>src</code>. Close Myth II before writing plugins.</p></li>
+<li><strong>Build the stock tagset once.</strong> Replace every example path with your own, keeping the quotes. Use <code>python3</code> instead of <code>python</code> if that is your Python 3.12+ command; on Windows, <code>py -3.12</code> is another option.
+<pre><code>python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR" --out "Myth II/plugins/ZZ TFL stock"</code></pre>
+<p>This supplies the original game's tags that community plugins depend on. The output is a file with no extension, inside your Myth II <code>plugins</code> folder.</p></li>
+<li><strong>Convert a plugin.</strong> Extract the plugin's ZIP first, then point at its <code>.gor</code> file:
+<pre><code>python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"</code></pre>
+<p>No decisions file is required for this baseline workflow. Conversion warnings identify unsupported content; producing a file does not guarantee that every level will play.</p></li>
+<li><strong>Play in Myth II.</strong> Start the game &rarr; <strong>New Game</strong> &rarr; choose the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <strong>ZZ TFL stock</strong> &rarr; pick a level &rarr; <strong>OK</strong>. Choose the tagset <em>after</em> the campaign, because changing campaigns can clear the selection.</li>
 </ol>
-<h2>Updates</h2>
-<ul class="cards">
-<li class="card"><a href="updates/2026-10-21.html"><span class="body"><span class="title"><span class="tag">21 October 2026</span>TFL levels now play in Myth II</span><span class="sub">Two levels from Sir Mauriac&#x27;s Tale load, play and finish in Myth II, converted entirely by the tool.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<h3>Before you test</h3>
+<ul>
+<li>Quit Myth II before converting or replacing plugin files; the game holds them open. Restart after adding files.</li>
+<li>Keep output filenames at most 32 characters. The internal plugin name defaults to that filename; use distinct names so plugins do not hide each other.</li>
+<li>The stock tagset replaces same-ID Myth II tags while active. Activate it only for converted TFL levels.</li>
+<li>Only one campaign can load at a time. The stock tagset contains no selectable levels, so it can load alongside your converted campaign.</li>
+<li>If writing to the install folder fails, write to a folder you can access and copy the finished files into Myth II's <code>plugins</code> folder while the game is closed.</li>
 </ul>
-<h2>Questions for you</h2>
-<ul class="cards">
-<li class="card"><a href="q/1.html"><span class="body"><span class="title"><span class="tag">Q1</span>Which TFL content matters most to you?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</section>
+<h2>What works &mdash; and what needs testing</h2>
+<p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
+<ul>
+<li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
+<li>Building models (<code>mode</code>/<code>geom</code>) are measured but not converted. Lighting uses standard values for every map. Terrain cells are duplicated into a finer grid, which can look blocky.</li>
+<li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
+</ul>
+<h2>Help test or report a problem</h2>
+<p>Every visitor can help. Try a level you know and report what differs from TFL. Open a question or progress update below and use its comment box: a name, message and one-word Myth check &mdash; <strong>no account or sign-in</strong>.</p>
+<p>Include the plugin and level names, Myth II version, what you expected, what happened, and the final lines of <code>myth_log.txt</code> from the Myth II folder. For a crash, include relevant lines from the newest <code>myth_crashlog- &lt;date&gt;.txt</code>. Check that the log lists both your campaign and stock tagset after <code>Starting mesh</code>. Share logs and observations, not game files; remove private paths if needed.</p>
+<p>Code contributions are welcome through <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">GitHub</a>; the <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/README.md">README</a> and <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/NOTES.md">format notes</a> describe current support and research.</p>
+<h2>Open questions for testers</h2>
+<ul class="cards"><li class="card"><a href="q/1.html"><span class="body"><span class="title"><span class="tag">Q1</span>Which TFL content matters most to you?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 <li class="card"><a href="q/2.html"><span class="body"><span class="title"><span class="tag">Q2</span>Terrain: faithful or smooth?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 <li class="card"><a href="q/3.html"><span class="body"><span class="title"><span class="tag">Q3</span>Is there a coop map with known scoring we could test against?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 <li class="card"><a href="q/4.html"><span class="body"><span class="title"><span class="tag">Q4</span>TFL gameplay or Myth II gameplay?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/5.html"><span class="body"><span class="title"><span class="tag">Q5</span>Would you play-test?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/6.html"><span class="body"><span class="title"><span class="tag">Q6</span>What does &ldquo;done&rdquo; look like for you?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-</ul>
-<p class="meta" style="margin-top:2rem">Source code and technical notes: <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">Edulus/Myth-1-to-2-plugin-converter</a>.</p>
+<li class="card"><a href="q/5.html"><span class="body"><span class="title"><span class="tag">Q5</span>Help test converted levels</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/6.html"><span class="body"><span class="title"><span class="tag">Q6</span>What should a successful conversion preserve?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
+<h2>Progress log</h2>
+<ul class="cards"><li class="card"><a href="updates/2026-10-21.html"><span class="body"><span class="title"><span class="tag">21 October 2026</span>TFL levels now play in Myth II</span><span class="sub">Two levels from Sir Mauriac&#x27;s Tale load, play and finish in Myth II, converted entirely by the tool.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
+<h2>About, credits and licence</h2>
+<p>Built on <a href="https://github.com/jwheare/mythextract">mythextract</a>, MIT licence, &copy; 2025 James Wheare. The converter's code is <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/LICENSE">MIT-licensed</a>; see <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/NOTICE">NOTICE</a> for prior art.</p>
+<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. No game data is distributed; users supply their own copies.</p>
 
 </main>
 <footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>

@@ -34,11 +34,11 @@
 <li><strong>In the Name of Glory</strong> &mdash; the snow level, with 146 scripted map actions. Plays from the start to the end-game screen with no errors in the log.</li>
 </ul>
 <figure><img src="../img/tandem.jpg" alt="Tandem running in Myth II: warriors in formation, two archers and a villager on a stone path" width="1200" height="621"><figcaption>Tandem, converted from TFL, running in Myth II 1.8.5 &mdash; the first screenshot with units drawn.</figcaption></figure>
-<p>Your TFL tags folder is what made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting your <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Your files stay on our machine; no game data goes into the repository.)</p>
+<p>Converting the original TFL tags made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting the original <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Visitors supply their own files locally; no game data is distributed.)</p>
 
 <h2>What converts now</h2>
 <table>
-<tr><th>Maps</th><td>terrain (upsampled to Myth II's finer grid), markers, map actions, buildings' footprints</td></tr>
+<tr><th>Maps</th><td>terrain (upsampled to Myth II's finer grid), markers and map actions</td></tr>
 <tr><th>Units</th><td>monsters, units, and each monster's own &ldquo;object&rdquo; (its size, health and damage resistances)</td></tr>
 <tr><th>Combat</th><td>projectiles, artifacts, mesh effects (explosion ripples)</td></tr>
 <tr><th>World</th><td>scenery, weather (rain/snow), lighting, sprite art</td></tr>
@@ -49,7 +49,7 @@
 <ul>
 <li><strong>Why units were invisible at first.</strong> In TFL a monster's size, health and damage resistances live on the monster. Myth II moved them into a separate &ldquo;object&rdquo; tag, which TFL shares between every monster. Read by Myth II, TFL's object says &ldquo;size 0&rdquo;, so every unit and tree was there &mdash; you could hear them fight and see their shadows &mdash; but drawn at zero size. Each monster now gets its own object, which is what Project Magma did by hand.</li>
 <li><strong>Myth II halved the world unit</strong>, as the Fear manual warns. It shows up in places &mdash; a ground ripple's height doubles &mdash; but not everywhere: unit speeds and ranges did not need doubling.</li>
-<li><strong>Your point about models was right.</strong> TFL stores each building's footprint in terrain cells, and Myth II's cells are half the size, so footprints have to be split 2&times;2. That's measured against your tags; converting it is next on the list.</li>
+<li><strong>Building footprints need conversion.</strong> TFL stores each building's footprint in terrain cells, and Myth II's cells are half the size, so footprints have to be split 2&times;2. That's measured against the original TFL tags; converting it is next on the list.</li>
 <li><strong>Some stock TFL tags must not replace Myth II's.</strong> The end-of-level statistics screen crashed until we stopped TFL's versions of Myth II's internal text, dialogs and fonts from overriding the originals.</li>
 </ul>
 
@@ -62,16 +62,10 @@
 <li>Only two levels have been tested so far, both single-player.</li>
 </ul>
 
-<h2>How to try it yourself</h2>
-<p>You need Python 3.12 or later and Myth II 1.8.5. From the repository:</p>
-<pre><code># 1. Once: turn your TFL tags folder into a Myth II tagset.
-python -m src tagset --in "TFL/tags/TAGS.GOR" --in "TFL/tags/ARTSOUND.GOR" --out "Myth II/plugins/ZZ TFL stock"
+<h2>Try it and report what happens</h2>
+<p>Follow the <a href="../index.html#get-started">download, setup and play instructions</a> on the front page. Report the plugin, level, Myth II version and relevant log lines in the comment box below. No account is needed.</p>
 
-# 2. Convert a TFL plugin.
-python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"</code></pre>
-<p>In Myth II: New Game &rarr; pick the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <code>ZZ TFL stock</code> &rarr; pick a level. Choosing a campaign clears the tagset, so pick the tagset <em>after</em> the campaign.</p>
-
-<div class="nav"><a href="../index.html">&larr; All updates and questions</a><a href="../q/1.html">Questions for you &rarr;</a></div>
+<div class="nav"><a href="../index.html">&larr; All updates and questions</a><a href="../q/1.html">Questions for testers &rarr;</a></div>
 
 <section class="reply" id="answer" data-term="Update 2026-10-21: TFL levels now play in Myth II" data-api="https://keep-comments.edyersh.workers.dev">
 <h2>&#9998; Your answer</h2>
