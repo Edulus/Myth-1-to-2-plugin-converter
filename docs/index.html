@@ -29,13 +29,12 @@
 <main class="wrap">
 <section aria-labelledby="ready-made">
 <h2 id="ready-made">Ready-made download: <em>Sir Mauriac's Tale</em></h2>
-<p>Skip the conversion and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 with this tool and shared with their permission.</p>
-<p><a class="btn" href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/releases/download/sir-mauriac-sb-1/Sir-Mauriac-Tale-for-Myth-II.zip">&darr; Download (36 MB)</a></p>
+<p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 with this tool and shared with their permission. Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
+<p><a class="btn" href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/releases/download/sir-mauriac-sb-1/Sir-Mauriac-Tale-for-Myth-II.zip">&darr; Download (220 MB)</a></p>
 <ul>
 <li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested.</li>
-<li><strong>You still need the stock tagset</strong>, built once from your own copy of the Fallen Lords (step 3 below). It is not included.</li>
-<li>Quit Myth II and extract the zip into Myth II's <code>plugins</code> folder. It unpacks to a <code>Sir Mauriac's Tale for M2</code> folder holding the plugin, a <code>README.txt</code> and CbC's <code>credits.txt</code>. Then play as in step 5 below.</li>
-<li>SHA-256: <code style="word-break:break-all">df5133ac860258cc434a33eaaf2044a6302fcab5d5c52f147f45050ca79ec3d1</code></li>
+<li>Quit Myth II and extract the zip into Myth II's <code>plugins</code> folder. It unpacks to a <code>Sir Mauriac's Tale for M2</code> folder holding the plugin, a <code>README.txt</code> and CbC's <code>credits.txt</code>. Then choose <strong>New Game</strong> &rarr; <em>Sir Mauriac's Tale</em> &rarr; a level.</li>
+<li>SHA-256: <code style="word-break:break-all">07d68f89645041ce0bc22ee2f2bf1a89909018e442adb0a6004210fb25afaaf1</code></li>
 </ul>
 </section>
 <section aria-labelledby="get-started">
@@ -53,6 +52,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p>This supplies the original game's tags that community plugins depend on. The output is a file with no extension, inside your Myth II <code>plugins</code> folder.</p></li>
 <li><strong>Convert a plugin.</strong> Extract the plugin's ZIP first, then point at its <code>.gor</code> file:
 <pre><code>python -m src convert --in "Sir Mauriac's Tale.gor" --out "Myth II/plugins/ZZ Mauriac"</code></pre>
+<p><strong>Shortcut:</strong> add <code>--stock "TFL/tags/TAGS.GOR" --stock "TFL/tags/ARTSOUND.GOR"</code> to this command and the stock tags are built into the converted plugin. You can then skip step 3 and the tagset choice in step 5. The file is much larger, and it is the form to share. Only share a plugin whose author agrees.</p>
 <p>No decisions file is required for this baseline workflow. Conversion warnings identify unsupported content; producing a file does not guarantee that every level will play.</p></li>
 <li><strong>Play in Myth II.</strong> Start the game &rarr; <strong>New Game</strong> &rarr; choose the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <strong>ZZ TFL stock</strong> &rarr; pick a level &rarr; <strong>OK</strong>. Choose the tagset <em>after</em> the campaign, because changing campaigns can clear the selection.</li>
 </ol>
