@@ -31,7 +31,7 @@ COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 # A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
 DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
 DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
-DOWNLOAD_SHA256 = "2e6766f1bf3122d189a970f6d6bedf9a2305edc724baa3ce1d9c8800f958b88a"
+DOWNLOAD_SHA256 = "df5133ac860258cc434a33eaaf2044a6302fcab5d5c52f147f45050ca79ec3d1"
 DOWNLOAD_MB = 36
 
 UPDATES = [
@@ -368,7 +368,7 @@ def build():
 <ul>
 <li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested.</li>
 <li><strong>You still need the stock tagset</strong>, built once from your own copy of the Fallen Lords (step 3 below). It is not included.</li>
-<li>Unzip, quit Myth II, copy <code>ZZ Mauriac TFL2SB</code> into Myth II's <code>plugins</code> folder, then play as in step 5 below. A <code>README.txt</code> and CbC's <code>credits.txt</code> are in the zip.</li>
+<li>Quit Myth II and extract the zip into Myth II's <code>plugins</code> folder. It unpacks to a <code>Sir Mauriac's Tale for M2</code> folder holding the plugin, a <code>README.txt</code> and CbC's <code>credits.txt</code>. Then play as in step 5 below.</li>
 <li>SHA-256: <code style="word-break:break-all">{DOWNLOAD_SHA256}</code></li>
 </ul>
 </section>
