@@ -85,5 +85,59 @@ class TestTagset(unittest.TestCase):
             convert_plugin.convert_tagset([sb], self.out)
 
 
+class TestBundleStock(unittest.TestCase):
+    """`convert --stock`: a plugin that carries the stock tags it leans on."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = pathlib.Path(self.tmp.name)
+        self.plugin = self.dir / "plugin.gor"
+        self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS))
+        self.stock = self.dir / "TAGS.GOR"
+        self.stock.write_bytes(fixtures.build_tfl_mono([
+            (b"stock text", b"text", b"stk1", b"from the stock set"),
+            (b"clash", b"stli", b"30cc", b"the stock version"),
+            (b"a stock level", b"mesh", b"stlv", fixtures.MESH_TAGS[0][3]),
+            (b"internal solo postgame", b"stli", b"in03", b"%d killed\0"),
+        ]))
+        self.out = self.dir / "ZZ bundled"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def bundle(self):
+        report, _written = convert_plugin.convert_file(
+            self.plugin, self.out, stock_paths=[self.stock]
+        )
+        return report, reader.read(self.out)
+
+    def test_stock_tags_are_carried_into_the_plugin(self):
+        report, result = self.bundle()
+        ids = {(t.tag_type, t.tag_id) for t in result.tags}
+        self.assertIn((b"text", b"stk1"), ids)
+        self.assertEqual(1, report.bundled_stock)
+
+    def test_the_plugins_own_tag_beats_a_stock_tag_of_the_same_id(self):
+        _report, result = self.bundle()
+        bodies = [t.body for t in result.tags if (t.tag_type, t.tag_id) == (b"stli", b"30cc")]
+        self.assertEqual(1, len(bodies))
+        self.assertNotEqual(b"the stock version", bodies[0])
+
+    def test_stock_levels_do_not_become_entrypoints(self):
+        _report, result = self.bundle()
+        self.assertEqual(1, len(result.entrypoints), "only the plugin's own level")
+        self.assertNotIn((b"mesh", b"stlv"), {(t.tag_type, t.tag_id) for t in result.tags})
+
+    def test_engine_facing_stock_tags_are_left_for_myth_ii(self):
+        _report, result = self.bundle()
+        self.assertNotIn((b"stli", b"in03"), {(t.tag_type, t.tag_id) for t in result.tags})
+
+    def test_a_myth_ii_stock_archive_is_refused(self):
+        sb = self.dir / "myth2"
+        sb.write_bytes(fixtures.build_sb_mono([(b"x", b"text", b"xxxx", b"hi")]))
+        with self.assertRaises(convert_plugin.ConversionError):
+            convert_plugin.convert_file(self.plugin, self.out, stock_paths=[sb])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -261,7 +261,8 @@ def cmd_convert(args):
 
     try:
         report, written = convert_plugin.convert_file(
-            args.inp, args.out, id_map=id_map, name=name, context=context
+            args.inp, args.out, id_map=id_map, name=name, context=context,
+            stock_paths=args.stock,
         )
     except (reader.FormatError, writer.PackError, convert_plugin.ConversionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -373,6 +374,11 @@ def build_parser():
     con.add_argument(
         "--decisions", type=pathlib.Path,
         help="apply a decisions file (tag mappings, mesh overrides, options)",
+    )
+    con.add_argument(
+        "--stock", type=pathlib.Path, action="append",
+        help="a TFL stock archive (TAGS.GOR, ARTSOUND.GOR) to bundle into the plugin, "
+        "making it self-contained; repeat for several, most authoritative first",
     )
     con.add_argument(
         "--emit-decisions", type=pathlib.Path, metavar="FILE",

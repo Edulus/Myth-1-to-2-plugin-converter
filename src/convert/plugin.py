@@ -66,6 +66,7 @@ class ConversionReport:
     entrypoints: list = field(default_factory=list)
     unresolved: dict = field(default_factory=dict)
     source_tags: int = 0
+    bundled_stock: int = 0
 
     def converted(self):
         return [o for o in self.outcomes if o.status == "converted"]
@@ -402,20 +403,67 @@ def _free_id(wanted, taken):
 MAX_PLUGIN_FILENAME = 32
 
 
-def convert_file(in_path, out_path, id_map=None, name=None, description=b"", context=None):
+def convert_file(
+    in_path, out_path, id_map=None, name=None, description=b"", context=None,
+    stock_paths=None,
+):
     """Convert a TFL container file into a Myth II plugin file.
 
     Returns ``(report, bytes_written)``. ``name`` -- the name Myth II identifies
     the plugin by -- defaults to the output file's name, as `convert_tagset`'s
     does: defaulting to the *source* file's name let two plugins converted from
     one source hide each other in-engine.
+
+    ``stock_paths`` -- TFL archives (``TAGS.GOR``, ``ARTSOUND.GOR``) -- are
+    bundled into the plugin by `bundle_stock`, making it self-contained.
     """
     mono = reader.read(in_path)
     name = name or _name_from(out_path)
+    bundled = 0
+    if stock_paths:
+        mono, bundled = bundle_stock(mono, stock_paths)
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description, context=context
     )
+    report.bundled_stock = bundled
     return report, _write_plugin(sb_mono, out_path, report)
+
+
+def bundle_stock(mono, stock_paths):
+    """Fold the stock TFL tags into a plugin's container, so the converted
+    plugin is self-contained and needs no separate tagset.
+
+    The stock tags are added the way `convert_tagset` would add them -- first
+    archive wins, engine-facing tags left for Myth II's own -- except that the
+    plugin's own tag always beats a stock tag of the same ID, and stock ``mesh``
+    tags (TFL's own levels) are left out so they do not become entrypoints of
+    this plugin. The whole stock set goes in rather than a computed subset:
+    `unresolved_references` admits it undercounts, and a missing tag fails
+    silently in-engine.
+
+    Returns ``(combined_container, number_of_stock_tags_added)``.
+    """
+    taken = {(tag.tag_type, tag.tag_id) for tag in mono.tags}
+    added = []
+    for path in stock_paths:
+        stock = reader.read(path)
+        if not stock.is_tfl:
+            raise ConversionError(f"{path} is not a TFL archive")
+        for tag in stock.tags:
+            key = (tag.tag_type, tag.tag_id)
+            if key in taken or tag.tag_type == b"mesh" or is_engine_facing(tag):
+                continue
+            taken.add(key)
+            added.append(tag)
+    combined = reader.Monolith(
+        game_version=mono.game_version,
+        header=mono.header,
+        tags=list(mono.tags) + added,
+        entrypoints=[],
+        filename=mono.filename,
+        source=b"",
+    )
+    return combined, len(added)
 
 
 def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
