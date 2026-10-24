@@ -55,3 +55,6 @@ dist/
 Thumbs.db
 .idea/
 .vscode/
+
+# Third-party plugins used for testing the Civil War swap tool; never commit
+/civil war plugins/

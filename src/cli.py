@@ -13,7 +13,7 @@ import argparse
 import pathlib
 import sys
 
-from . import codec, decisions, plan as plan_module, plugindiff, reader, writer
+from . import codec, decisions, plan as plan_module, plugindiff, reader, swap as swap_module, writer
 from .views import html as html_view, text as text_view
 from .convert import plugin as convert_plugin
 
@@ -302,6 +302,65 @@ def cmd_convert(args):
     return 0
 
 
+def _unit_id(text):
+    """A 4-character unit id as given on the command line (``@0sh``)."""
+    raw = text.encode("mac-roman", errors="replace")
+    if len(raw) != 4:
+        raise ValueError(f"{text!r} is not a 4-character unit id")
+    return raw
+
+
+def _unit_names(paths):
+    """``{unit_id: name}`` from tagsets, for readable listings."""
+    names = {}
+    for path in paths or []:
+        for tag in reader.read(path).tags:
+            if tag.tag_type == b"unit":
+                names.setdefault(tag.tag_id, tag.name)
+    return names
+
+
+def cmd_swap(args):
+    try:
+        mono = reader.read(args.inp)
+        names = _unit_names(args.tags)
+        if args.list:
+            used = swap_module.units_used(mono)
+            print(f"{len(used)} unit types placed by {len(mono.by_type(b'mesh'))} maps in {args.inp}")
+            for use in sorted(used.values(), key=lambda u: (-len(u.maps), u.key)):
+                label = names.get(use.tag_id, "")
+                print(f"  {use.key}  {len(use.maps):3d} maps  {label}")
+            return 0
+        if not args.out:
+            print("error: --out is required (or use --list)", file=sys.stderr)
+            return 2
+        if args.out.exists() and not args.force:
+            print(f"error: {args.out} already exists (use --force to overwrite)", file=sys.stderr)
+            return 2
+        swaps = {}
+        for pair in args.swap or []:
+            old, _, new = pair.partition("=")
+            swaps[_unit_id(old)] = _unit_id(new)
+        if not swaps:
+            print("error: give at least one --swap OLD=NEW (or use --list)", file=sys.stderr)
+            return 2
+        if names:
+            unknown = [new for new in swaps.values() if new not in names]
+            for new in unknown:
+                print(f"warning: {codec.decode_string(new)} is not a unit in the --tags given", file=sys.stderr)
+        swapped, changed = swap_module.swap_units(mono, swaps, name=args.name or args.out.name)
+        data = writer.pack(swapped, preserve_layout=True)
+        args.out.write_bytes(data)
+    except (OSError, ValueError, reader.FormatError, writer.PackError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    for old, new in swaps.items():
+        print(f"{codec.decode_string(old)} -> {codec.decode_string(new)}  {names.get(old, '')} -> {names.get(new, '')}")
+    print(f"Changed {sum(changed.values())} palette slots in {len(changed)} maps. Wrote {len(data):,} bytes.")
+    print("The replacement units must be in the load order, normally the maps' own tagset.")
+    return 0
+
+
 def cmd_tagset(args):
     if args.out.exists() and not args.force:
         print(
@@ -424,6 +483,27 @@ def build_parser():
     pln.add_argument("--title", help="title for the page")
     pln.add_argument("-v", "--verbose", action="store_true", help="list everything")
     pln.set_defaults(func=cmd_plan)
+
+    swp = sub.add_parser(
+        "swap",
+        help="replace the units a Myth II plugin's maps place (e.g. Civil War units)",
+    )
+    swp.add_argument("--in", dest="inp", required=True, type=pathlib.Path)
+    swp.add_argument("--out", type=pathlib.Path)
+    swp.add_argument("--name", help="plugin name to write (default: the output filename)")
+    swp.add_argument("--force", action="store_true", help="overwrite an existing output")
+    swp.add_argument(
+        "--list", action="store_true", help="list the unit types the maps place and exit"
+    )
+    swp.add_argument(
+        "--swap", action="append", metavar="OLD=NEW",
+        help="replace unit OLD with unit NEW (4-character ids); repeat for several",
+    )
+    swp.add_argument(
+        "--tags", action="append", type=pathlib.Path,
+        help="a tagset to read unit names from and check replacements against; repeatable",
+    )
+    swp.set_defaults(func=cmd_swap)
 
     stu = sub.add_parser(
         "studio", help="open the guided browser app (local only)"
