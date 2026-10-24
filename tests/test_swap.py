@@ -104,5 +104,78 @@ class TestSwap(unittest.TestCase):
             self.assertIn(b"warr", swap.units_used(reader.read(out)))
 
 
+class TestRestoreStock(unittest.TestCase):
+    """A tagset that redefines stock unit ids: the real unit has to come back."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = pathlib.Path(self.tmp.name)
+        (self.dir / "tags").mkdir()
+
+        def unit(mons):
+            return mons + b"core" + bytes(120)  # a 128-byte unit body
+
+        # The base game: two units, and the monster of one.
+        self.stock = self.dir / "tags" / "small install"
+        self.stock.write_bytes(fixtures.build_sb_mono([
+            (b"M2-warrior", b"unit", b"wam1", unit(b"wara")),
+            (b"M2-ghol", b"unit", b"ghol", unit(b"ghmo")),
+            (b"warrior monster", b"mons", b"wara", b"stock warrior monster"),
+        ]))
+        # The tagset repoints the warrior unit at its own monster and leaves
+        # the ghol alone.
+        self.tagset = self.dir / "tagset"
+        self.tagset.write_bytes(fixtures.build_sb_mono([
+            (b"M2-warrior", b"unit", b"wam1", unit(b"_zuv")),
+            (b"M2-ghol", b"unit", b"ghol", unit(b"ghmo")),
+            (b"union veteran", b"mons", b"_zuv", b"civil war soldier"),
+        ]))
+        self.maps = reader.read_bytes(fixtures.build_sb_mono([
+            (b"map one", b"mesh", b"map1", _sb_mesh([(UNIT, b"@0sh")])),
+        ]), filename="maps")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def restore(self, unit_ids):
+        return swap.restore_stock_units(self.maps, unit_ids, [self.tagset], self.dir)
+
+    def test_only_tags_the_tagset_changed_are_carried(self):
+        modified = swap.modified_stock_tags(
+            swap.tag_index([self.tagset]), swap.tag_index([self.stock])
+        )
+        self.assertEqual({(b"unit", b"wam1"), (b"mons", b"_zuv")} & modified, {(b"unit", b"wam1")})
+        self.assertNotIn((b"unit", b"ghol"), modified)
+
+    def test_a_redefined_unit_is_restored_to_the_base_games(self):
+        restored, report = self.restore([b"wam1"])
+        self.assertEqual(1, report["carried"])
+        body = restored.find(b"unit", b"wam1").body
+        self.assertTrue(body.startswith(b"wara"), "points at the stock monster again")
+
+    def test_a_unit_the_tagset_left_alone_needs_nothing(self):
+        restored, report = self.restore([b"ghol"])
+        self.assertEqual(0, report["carried"])
+        self.assertEqual([b"ghol"], report["unchanged"])
+        self.assertIsNone(restored.find(b"unit", b"ghol"))
+
+    def test_a_unit_that_is_not_in_the_base_game_is_refused(self):
+        with self.assertRaises(swap.SwapError):
+            self.restore([b"@0sh"])
+
+    def test_the_plugins_own_tag_beats_a_restored_one(self):
+        stock_unit = swap.tag_index([self.stock])[(b"unit", b"wam1")]
+        mono, added = swap.add_tags(self.maps, [stock_unit])
+        _again, added_again = swap.add_tags(mono, [stock_unit])
+        self.assertEqual((1, 0), (added, added_again))
+
+    def test_restored_tags_get_unique_identifiers_and_survive_packing(self):
+        restored, _ = self.restore([b"wam1"])
+        ids = [t.header.identifier for t in restored.tags]
+        self.assertEqual(len(ids), len(set(ids)))
+        reread = reader.read_bytes(writer.pack(restored, preserve_layout=False))
+        self.assertEqual(2, len(reread.tags))
+
+
 if __name__ == "__main__":
     unittest.main()

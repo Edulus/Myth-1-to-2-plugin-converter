@@ -349,7 +349,18 @@ def cmd_swap(args):
             for new in unknown:
                 print(f"warning: {codec.decode_string(new)} is not a unit in the --tags given", file=sys.stderr)
         swapped, changed = swap_module.swap_units(mono, swaps, name=args.name or args.out.name)
-        data = writer.pack(swapped, preserve_layout=True)
+        restored = None
+        if args.myth2_dir:
+            if not args.tags:
+                print("error: --myth2-dir needs --tags (the tagset the maps use)", file=sys.stderr)
+                return 2
+            stock = swap_module.tag_index(swap_module.stock_archive_paths(args.myth2_dir))
+            wanted = [new for new in set(swaps.values()) if (b"unit", new) in stock]
+            swapped, restored = swap_module.restore_stock_units(
+                swapped, wanted, args.tags, args.myth2_dir
+            )
+        # Added tags have no place in the source layout, so pack canonically.
+        data = writer.pack(swapped, preserve_layout=restored is None or not restored["carried"])
         args.out.write_bytes(data)
     except (OSError, ValueError, reader.FormatError, writer.PackError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -357,7 +368,14 @@ def cmd_swap(args):
     for old, new in swaps.items():
         print(f"{codec.decode_string(old)} -> {codec.decode_string(new)}  {names.get(old, '')} -> {names.get(new, '')}")
     print(f"Changed {sum(changed.values())} palette slots in {len(changed)} maps. Wrote {len(data):,} bytes.")
-    print("The replacement units must be in the load order, normally the maps' own tagset.")
+    if restored is not None:
+        print(
+            f"Restored {restored['carried']} original base-game unit tags the tagset had "
+            f"redefined ({len(restored['unchanged'])} replacement units needed no restoring)."
+        )
+        print("Load the tagset first, then this plugin: it must come after the tagset.")
+    else:
+        print("The replacement units must be in the load order, normally the maps' own tagset.")
     return 0
 
 
@@ -498,6 +516,11 @@ def build_parser():
     swp.add_argument(
         "--swap", action="append", metavar="OLD=NEW",
         help="replace unit OLD with unit NEW (4-character ids); repeat for several",
+    )
+    swp.add_argument(
+        "--myth2-dir", type=pathlib.Path, metavar="DIR",
+        help="a Myth II folder: replacement units that a --tags tagset has redefined are "
+        "restored to the base game's own, so a warrior is a warrior again",
     )
     swp.add_argument(
         "--tags", action="append", type=pathlib.Path,

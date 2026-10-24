@@ -15,9 +15,12 @@ The replacement units are not copied into the output. They have to be in the
 load order, normally the tagset the maps came with.
 """
 
+import collections
+import pathlib
 from dataclasses import dataclass, field
 
 from . import codec, formats, mesh, reader, writer
+from .convert import headers as convert_headers
 
 
 class SwapError(ValueError):
@@ -142,3 +145,154 @@ def swap_file(in_path, out_path, swaps, name=None):
     with open(out_path, "wb") as out:
         out.write(data)
     return changed, len(data)
+
+
+# --- Restoring stock units -----------------------------------------------------
+#
+# A big community tagset can redefine the base game's own unit ids. Civil War
+# Reloaded 1.8.4 redefines all 165 of Myth II's, and 87 of them now point at a
+# different monster: its `wam1` ("warrior") is a Union veteran, `arch` ("archer")
+# a Union sharpshooter. Pointing a map at `wam1` with that tagset loaded gives a
+# Civil War soldier, not a warrior (checked in-engine on a clean 1.8.5 install).
+#
+# To give a map the real unit, the swapped plugin carries the original tags. Only
+# the tags the tagset *changed* are carried: anything it left alone still shows
+# through from the base game. A plugin loaded after the tagset wins over it.
+
+# The base game's tag archives in the order Myth II layers them, later winning;
+# the Unity patches stand in for the "1.8.5 gameplay" the engine reports using.
+STOCK_ARCHIVES = (
+    "tags/small install",
+    "tags/medium install",
+    "tags/large install",
+    "tags/international small install",
+    "tags/international large install",
+    "plugins/Patch 1.2",
+    "plugins/Patch 1.3",
+    "plugins/Patch 1.4",
+    "plugins/Patch 1.5",
+    "plugins/Patch 1.5 Unity",
+    "plugins/Patch 1.8 Interface",
+    "plugins/Patch 1.8.5 Maps",
+    "plugins/Patch 1.8.5 Unity",
+)
+
+
+def stock_archive_paths(myth2_dir):
+    """The base game's archives found in a Myth II folder, in layering order."""
+    root = pathlib.Path(myth2_dir)
+    found = [root / name for name in STOCK_ARCHIVES if (root / name).is_file()]
+    if not found:
+        raise SwapError(f"no base-game tag archives found in {myth2_dir}")
+    return found
+
+
+def tag_index(paths):
+    """``{(tag_type, tag_id): tag}`` over several archives, later ones winning --
+    what Myth II sees once they are all loaded."""
+    index = {}
+    for path in paths:
+        for tag in reader.read(path).tags:
+            index[tag.key] = tag
+    return index
+
+
+def modified_stock_tags(tagset_index, stock_index):
+    """Keys a tagset redefines with a body different from the base game's."""
+    return {
+        key
+        for key, tag in tagset_index.items()
+        if key in stock_index and stock_index[key].body != tag.body
+    }
+
+
+def _referenced(body, by_id):
+    """Keys in ``by_id`` whose 4-byte id sits at an even offset in ``body``.
+
+    Tag bodies hold references as bare ids with no type, and a full reference
+    walker for every tag type does not exist yet, so this errs on the side of
+    carrying too much (an extra stock tag, restored) rather than too little (a
+    missing tag fails silently in-engine). ``by_id`` holds only the tags the
+    tagset changed, which keeps chance matches rare.
+    """
+    found = set()
+    for offset in range(0, len(body) - 3, 2):
+        for key in by_id.get(body[offset : offset + 4], ()):
+            found.add(key)
+    return found
+
+
+def restore_closure(unit_ids, stock_index, modified):
+    """The stock tags to carry so each unit in ``unit_ids`` is the real one
+    again: its own tag plus every changed stock tag it leads to.
+
+    Returns ``(keys, unchanged_units)`` -- ``unchanged_units`` being ids whose
+    unit tag the tagset left alone, which need nothing carried.
+    """
+    by_id = collections.defaultdict(list)
+    for key in modified:
+        by_id[key[1]].append(key)
+
+    wanted, unchanged, todo = set(), [], []
+    for unit_id in unit_ids:
+        key = (b"unit", unit_id)
+        if key not in stock_index:
+            raise SwapError(f"{codec.decode_string(unit_id)!r} is not a base-game unit")
+        if key in modified:
+            todo.append(key)
+        else:
+            unchanged.append(unit_id)
+    while todo:
+        key = todo.pop()
+        if key in wanted:
+            continue
+        wanted.add(key)
+        for nxt in _referenced(stock_index[key].body, by_id):
+            if nxt not in wanted:
+                todo.append(nxt)
+    return wanted, unchanged
+
+
+def add_tags(mono, tags):
+    """A copy of ``mono`` with ``tags`` appended. A tag whose key the container
+    already holds is skipped: the plugin's own always wins. Returns
+    ``(new_monolith, added)``."""
+    taken = {tag.key for tag in mono.tags}
+    identifier = max((tag.header.identifier for tag in mono.tags), default=0)
+    added, tags_out = 0, list(mono.tags)
+    for tag in tags:
+        if tag.key in taken:
+            continue
+        identifier += 1
+        if identifier > convert_headers.INT16_MAX:
+            raise SwapError("too many tags to give each a unique identifier")
+        header = tag.header.replace(
+            identifier=identifier, type=int(formats.ArchiveType.PLUGIN)
+        )
+        tags_out.append(reader.Tag(header=header, body=tag.body))
+        taken.add(tag.key)
+        added += 1
+    result = reader.Monolith(
+        game_version=mono.game_version,
+        header=mono.header,
+        tags=tags_out,
+        entrypoints=mono.entrypoints,
+        filename=mono.filename,
+        source=b"",
+    )
+    return result, added
+
+
+def restore_stock_units(mono, unit_ids, tagset_paths, myth2_dir):
+    """Carry the original stock tags for ``unit_ids`` into ``mono``.
+
+    Returns ``(new_monolith, report)`` where ``report`` has ``carried`` (tag
+    count added), ``keys`` and ``unchanged`` (units needing nothing).
+    """
+    stock = tag_index(stock_archive_paths(myth2_dir))
+    tagset = tag_index(tagset_paths)
+    modified = modified_stock_tags(tagset, stock)
+    keys, unchanged = restore_closure(unit_ids, stock, modified)
+    ordered = sorted(keys)
+    new_mono, added = add_tags(mono, [stock[k] for k in ordered])
+    return new_mono, {"carried": added, "keys": ordered, "unchanged": unchanged}
