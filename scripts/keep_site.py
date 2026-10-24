@@ -28,6 +28,12 @@ SITE_TAGLINE = "The Fallen Lords &rarr; Soulblighter"
 # The deployed comments-worker (see comments-worker/).
 COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 
+# A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
+DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
+DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
+DOWNLOAD_SHA256 = "2e6766f1bf3122d189a970f6d6bedf9a2305edc724baa3ce1d9c8800f958b88a"
+DOWNLOAD_MB = 36
+
 UPDATES = [
     {
         "slug": "2026-10-21",
@@ -355,7 +361,18 @@ def build():
         for u in UPDATES
     )
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
-    index = f"""<section aria-labelledby="get-started">
+    index = f"""<section aria-labelledby="ready-made">
+<h2 id="ready-made">Ready-made download: <em>Sir Mauriac's Tale</em></h2>
+<p>Skip the conversion and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 with this tool and shared with their permission.</p>
+<p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download ({DOWNLOAD_MB} MB)</a></p>
+<ul>
+<li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested.</li>
+<li><strong>You still need the stock tagset</strong>, built once from your own copy of the Fallen Lords (step 3 below). It is not included.</li>
+<li>Unzip, quit Myth II, copy <code>ZZ Mauriac TFL2SB</code> into Myth II's <code>plugins</code> folder, then play as in step 5 below. A <code>README.txt</code> and CbC's <code>credits.txt</code> are in the zip.</li>
+<li>SHA-256: <code style="word-break:break-all">{DOWNLOAD_SHA256}</code></li>
+</ul>
+</section>
+<section aria-labelledby="get-started">
 <h2 id="get-started" style="margin-top:0">Get started &mdash; public beta</h2>
 <p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
