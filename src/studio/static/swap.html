@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swap units - Myth plugin converter</title>
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .swaptable td, .swaptable th { padding:7px 10px; vertical-align:middle; }
+  .swaptable th { text-align:left; font-size:12px; letter-spacing:.06em;
+                  text-transform:uppercase; color:var(--faint); }
+  .swaptable select { min-width:230px; }
+  .swaptable tr.set td { background:var(--patina-soft); }
+  .bulk { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .bulk select { width:auto; min-width:220px; }
+  .tablewrap { max-height:62vh; overflow:auto; border:1px solid var(--rule); border-radius:9px; }
+  .tablewrap thead th { position:sticky; top:0; background:var(--surface); z-index:1; }
+  textarea { font-family:var(--mono); font-size:13px; padding:8px 10px; border-radius:7px;
+             border:1px solid var(--rule); background:var(--raised); color:var(--ink); width:100%; }
+  .fine { font-size:12.5px; color:var(--faint); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div>
+      <strong>Swap units</strong>
+      <span class="tag">Choose which units a Myth II plugin's maps place</span>
+    </div>
+  </div>
+  <a id="back" href="/">&larr; Plugin converter</a>
+</header>
+
+<main>
+
+  <section class="step" id="s-open">
+    <h1>Swap the units in a plugin's maps</h1>
+    <p class="lede">
+      Built for the Civil War plugins: pick which regular units appear in place of
+      the Civil War soldiers. A new plugin is written; the original is never changed.
+    </p>
+
+    <div class="teach">
+      <p>
+        You need the plugin that holds the <b>maps</b>, the <b>tagset</b> its units live in,
+        and your <b>Myth II folder</b> (the original units are read from it, and nothing
+        is copied anywhere else).
+      </p>
+    </div>
+
+    <label class="field"><span>Maps plugin</span>
+      <input type="text" id="maps" placeholder="C:\Games\Myth II\plugins\CWR-Maps-184b" spellcheck="false">
+      <em>The file holding the maps, with no extension.</em></label>
+    <label class="field"><span>Tagset (one path per line)</span>
+      <textarea id="tagsets" rows="2" placeholder="C:\Games\Myth II\plugins\CWR-Tagset-184b" spellcheck="false"></textarea>
+      <em>The tagset the maps need. Its unit names are shown below.</em></label>
+    <label class="field"><span>Myth II folder</span>
+      <input type="text" id="myth2" placeholder="C:\Games\Myth II" spellcheck="false">
+      <em>The folder holding your <code>tags</code> and <code>plugins</code> folders.</em></label>
+    <div class="suggestions" id="suggest"></div>
+
+    <div class="rowbtns">
+      <button class="primary" id="open">Read the maps</button>
+      <span class="result" id="open-result"></span>
+    </div>
+  </section>
+
+  <section class="step" id="s-choose" hidden>
+    <h2>Choose replacements</h2>
+    <p class="hint" id="summary"></p>
+
+    <div class="teach" id="bulkbox">
+      <h3>Swap a whole side at once</h3>
+      <div class="bulk">
+        <label>Yours &rarr; <select id="bulk-@"></select></label>
+        <label>Enemy &rarr; <select id="bulk-+"></select></label>
+        <button id="apply-bulk">Apply to the table</button>
+        <button class="ghost" id="clear-all">Clear all</button>
+      </div>
+      <p class="fine" style="margin-top:8px">
+        Sides are read from the unit names (starting <code>@</code> or <code>+</code>).
+        You can still change any single row below.
+      </p>
+    </div>
+
+    <label class="rowbtns"><input type="checkbox" id="only-sides" checked>
+      <span>Show only side units (<code>@</code> and <code>+</code>); untick to see every unit the maps place</span></label>
+
+    <div class="tablewrap">
+      <table class="swaptable">
+        <thead><tr><th>Unit</th><th>Maps</th><th>Replace with</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="fine">
+      <b>Real Myth II units</b> are the base game's own units. If the tagset has redefined
+      one (the Civil War tagset redefines all of them), the original is restored inside your
+      new plugin. That plugin must load <b>after</b> the tagset: choose the campaign first,
+      then activate the tagset.
+    </p>
+
+    <label class="field"><span>Name of the new plugin</span>
+      <input type="text" id="outname" value="ZZ Swapped units" spellcheck="false">
+      <em>At most 32 characters, or Myth II will not list it. It is written next to the original.</em></label>
+
+    <div class="rowbtns">
+      <button class="primary" id="build" disabled>Write the new plugin</button>
+      <span class="result" id="build-result"></span>
+    </div>
+  </section>
+
+</main>
+<div id="toast" class="toast" hidden></div>
+<script src="/static/swap.js"></script>
+</body>
+</html>

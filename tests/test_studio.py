@@ -241,6 +241,112 @@ class TestEndpoints(StudioTestCase):
         self.assertTrue(any(e["dir"] for e in out["entries"]))
 
 
+class TestSwapPage(StudioTestCase):
+    """The "swap units" page: describe a maps plugin, then write a swapped one."""
+
+    def setUp(self):
+        super().setUp()
+        from .test_swap import UNIT, _sb_mesh
+
+        def unit(mons):
+            return mons + b"core" + bytes(120)
+
+        # Base game: a warrior, which the tagset below has redefined.
+        (self.install / "tags" / "small install").write_bytes(fixtures.build_sb_mono([
+            (b"warrior", b"unit", b"wam1", unit(b"wara")),
+            (b"ghol", b"unit", b"ghol", unit(b"ghmo")),
+        ], name=b"small install"))
+        self.tagset = self.root / "tagset"
+        self.tagset.write_bytes(fixtures.build_sb_mono([
+            (b"M2-warrior", b"unit", b"wam1", unit(b"_zuv")),
+            (b"ghol", b"unit", b"ghol", unit(b"ghmo")),
+            (b"@04-SGT-HeavyInfantry", b"unit", b"@0sh", unit(b"_zuv")),
+            (b"+ai04-SGT", b"unit", b"+ash", unit(b"_zct")),
+        ]))
+        self.maps = self.root / "maps"
+        self.maps.write_bytes(fixtures.build_sb_mono([
+            (b"map one", b"mesh", b"map1", _sb_mesh([(UNIT, b"@0sh"), (UNIT, b"+ash")])),
+        ]))
+        self.opened = {
+            "mapsPath": str(self.maps),
+            "tagsetPaths": [str(self.tagset)],
+            "myth2Dir": str(self.install),
+        }
+
+    def test_the_page_is_served_only_with_the_token(self):
+        ok = urllib.request.urlopen(
+            f"http://127.0.0.1:{self.port}/swap?token={self.studio.token}"
+        )
+        self.assertEqual(200, ok.status)
+        self.assertIn(b"Swap the units", ok.read())
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(f"http://127.0.0.1:{self.port}/swap")
+        self.assertEqual(403, caught.exception.code)
+
+    def test_open_describes_the_units_and_the_choices(self):
+        status, body = self.call("/api/swap/open", self.opened)
+        self.assertEqual(200, status, body)
+        units = {u["id"]: u for u in body["units"]}
+        self.assertEqual({"@0sh", "+ash"}, set(units))
+        self.assertEqual("@", units["@0sh"]["side"])
+        self.assertEqual("+", units["+ash"]["side"])
+        self.assertEqual("@04-SGT-HeavyInfantry", units["@0sh"]["name"])
+        stock = {u["id"]: u for u in body["choices"]["stock"]}
+        self.assertTrue(stock["wam1"]["restored"], "the tagset redefined the warrior")
+        self.assertFalse(stock["ghol"]["restored"])
+
+    def test_a_fallen_lords_file_is_refused(self):
+        status, body = self.call("/api/swap/open", {**self.opened, "mapsPath": str(self.plugin)})
+        self.assertEqual(400, status)
+        self.assertIn("Fallen Lords", body["error"])
+
+    def test_a_tagset_is_required(self):
+        status, body = self.call("/api/swap/open", {**self.opened, "tagsetPaths": []})
+        self.assertEqual(400, status)
+        self.assertIn("tagset", body["error"])
+
+    def test_build_writes_a_swapped_plugin_and_restores_the_real_unit(self):
+        self.call("/api/swap/open", self.opened)
+        out = self.root / "ZZ swapped"
+        original = self.maps.read_bytes()
+        status, body = self.call("/api/swap/build", {
+            "swaps": {"@0sh": "wam1", "+ash": "ghol"},
+            "outPath": str(out), "pluginName": "ZZ swapped",
+        })
+        self.assertEqual(200, status, body)
+        self.assertEqual(2, body["swapped"])
+        self.assertEqual(1, body["restored"], "wam1 was redefined; ghol was not")
+        self.assertFalse(body["filenameTooLong"])
+        result = reader.read(out)
+        self.assertEqual("ZZ swapped", result.name)
+        self.assertTrue(result.find(b"unit", b"wam1").body.startswith(b"wara"))
+        self.assertEqual(original, self.maps.read_bytes(), "the source plugin is untouched")
+
+    def test_build_refuses_to_overwrite_the_original(self):
+        self.call("/api/swap/open", self.opened)
+        status, body = self.call("/api/swap/build", {
+            "swaps": {"@0sh": "wam1"}, "outPath": str(self.maps),
+        })
+        self.assertEqual(400, status)
+        self.assertIn("new file", body["error"])
+
+    def test_build_needs_a_swap_and_an_opened_plugin(self):
+        status, _ = self.call("/api/swap/build", {"swaps": {"@0sh": "wam1"}, "outPath": str(self.root / "x")})
+        self.assertEqual(400, status)
+        self.call("/api/swap/open", self.opened)
+        status, body = self.call("/api/swap/build", {"swaps": {}, "outPath": str(self.root / "x")})
+        self.assertEqual(400, status)
+        self.assertIn("at least one", body["error"])
+
+    def test_a_unit_id_must_be_four_characters(self):
+        self.call("/api/swap/open", self.opened)
+        status, body = self.call("/api/swap/build", {
+            "swaps": {"@0sh": "warrior"}, "outPath": str(self.root / "x"),
+        })
+        self.assertEqual(400, status)
+        self.assertIn("4-character", body["error"])
+
+
 class TestDecisionCoercion(unittest.TestCase):
     def test_numbers_survive_the_form_round_trip(self):
         coerced = studio_server._coerce(

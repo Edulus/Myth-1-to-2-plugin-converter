@@ -31,6 +31,7 @@ import webbrowser
 
 from .. import codec, decisions as decisions_module, plan as plan_module, reader
 from ..convert import plugin as convert_plugin
+from .swapping import SwapSession
 
 STATIC = pathlib.Path(__file__).parent / "static"
 
@@ -47,6 +48,7 @@ class Studio:
         self.myth2_dir = None
         self.candidates = {}
         self.plan = None
+        self.swap = SwapSession()
 
     # -- actions ------------------------------------------------------------
 
@@ -271,6 +273,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 )
             return self._serve_static("index.html")
 
+        if route == "/swap":
+            if not self._authorised():
+                return self._send(
+                    403,
+                    b"<h1>Not authorised</h1><p>Open the link printed in the terminal.</p>",
+                    "text/html; charset=utf-8",
+                )
+            return self._serve_static("swap.html")
+
         if route.startswith("/static/"):
             return self._serve_static(route[len("/static/") :])
 
@@ -303,6 +314,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._guard(
                 lambda: self.studio.build_plan(
                     _decisions_from(body), body.get("pluginName") or None
+                )
+            )
+        if route == "/api/swap/open":
+            return self._guard(
+                lambda: self.studio.swap.open(
+                    body["mapsPath"], body.get("tagsetPaths") or [], body["myth2Dir"]
+                )
+            )
+        if route == "/api/swap/build":
+            return self._guard(
+                lambda: self.studio.swap.build(
+                    body.get("swaps") or {}, body["outPath"], body.get("pluginName") or None
                 )
             )
         if route == "/api/convert":
