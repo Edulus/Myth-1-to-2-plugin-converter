@@ -124,9 +124,9 @@ $("build").addEventListener("click", async () => {
   const result = $("build-result");
   const name = $("outname").value.trim();
   if (!name) { toast("Give the new plugin a name.", true); return; }
-  const maps = $("maps").value.trim();
-  const sep = maps.includes("\\") ? "\\" : "/";
-  const out = maps.slice(0, maps.lastIndexOf(sep) + 1) + name;
+  const myth2 = $("myth2").value.trim().replace(/[\/]+$/, "");
+  const sep = myth2.includes("\\") ? "\\" : "/";
+  const out = myth2 + sep + "plugins" + sep + name;
   result.className = "result"; result.textContent = "Writing...";
   $("build").disabled = true;
   try {
