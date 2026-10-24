@@ -31,7 +31,7 @@ COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 # A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
 DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
 DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
-DOWNLOAD_SHA256 = "07d68f89645041ce0bc22ee2f2bf1a89909018e442adb0a6004210fb25afaaf1"
+DOWNLOAD_SHA256 = "92ff08aed5aa0ca612d77ecd0ab393efd240a86477fc12735e635c4b5d921f4f"
 DOWNLOAD_MB = 220
 
 UPDATES = [
@@ -366,8 +366,8 @@ def build():
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 with this tool and shared with their permission. Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download ({DOWNLOAD_MB} MB)</a></p>
 <ul>
-<li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested.</li>
-<li>Quit Myth II and extract the zip into Myth II's <code>plugins</code> folder. It unpacks to a <code>Sir Mauriac's Tale for M2</code> folder holding the plugin, a <code>README.txt</code> and CbC's <code>credits.txt</code>. Then choose <strong>New Game</strong> &rarr; <em>Sir Mauriac's Tale</em> &rarr; a level.</li>
+<li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested. This exact download has been checked on a plain Myth II 1.8.5 install, with no other plugins, loading and playing <em>Tandem</em>.</li>
+<li>Quit Myth II and extract the zip <strong>straight into</strong> Myth II's <code>plugins</code> folder, not a subfolder (Myth II only finds plugins sitting directly in it). You get the plugin <code>ZZ Mauriac TFL2SB</code> plus a read-me and CbC's credits. Then choose <strong>New Game</strong> &rarr; the campaign <em>ZZ Mauriac TFL2SB</em> &rarr; a level. Leave Tagsets empty.</li>
 <li>SHA-256: <code style="word-break:break-all">{DOWNLOAD_SHA256}</code></li>
 </ul>
 </section>
