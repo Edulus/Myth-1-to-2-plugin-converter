@@ -361,9 +361,10 @@ def build():
         for u in UPDATES
     )
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
-    index = f"""<section aria-labelledby="ready-made">
-<h2 id="ready-made">Ready-made download: <em>Sir Mauriac's Tale</em></h2>
-<p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 with this tool and shared with their permission. Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
+    index = f"""<section aria-labelledby="news">
+<h2 id="news" style="margin-top:0">News</h2>
+<h3>Ready-made download: <em>Sir Mauriac's Tale</em></h3>
+<p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude), and shared with CbC's permission. Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download ({DOWNLOAD_MB} MB)</a></p>
 <ul>
 <li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested. This exact download has been checked on a plain Myth II 1.8.5 install, with no other plugins, loading and playing <em>Tandem</em>.</li>
@@ -372,7 +373,7 @@ def build():
 </ul>
 </section>
 <section aria-labelledby="get-started">
-<h2 id="get-started" style="margin-top:0">Get started &mdash; public beta</h2>
+<h2 id="get-started">Get started &mdash; public beta</h2>
 <p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
 <ol>
