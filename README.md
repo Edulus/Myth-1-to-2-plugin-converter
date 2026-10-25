@@ -28,6 +28,11 @@ lighting uses standard values for every map, terrain uses duplicated cells,
 and some tag bodies (including sounds and projectile groups) pass through
 unchanged. The support matrix below records those limits.
 
+**Also in this beta:** a ready-made, already-converted *Sir Mauriac's Tale*
+(a GitHub release, linked from the project website) that needs nothing else
+installed, and a companion tool that swaps the units in the Civil War plugins'
+maps for regular ones -- see [Swapping units](#swapping-units-civil-war-maps).
+
 The container reader/writer also passed the historical byte-exact round-trip
 gate on 282 real archives. This checks container preservation, not gameplay:
 
@@ -134,6 +139,49 @@ It binds to `127.0.0.1` only, refuses cross-site requests, and requires a token 
 startup and passed in the URL it prints. It reads and writes real files on your machine and
 is not safe to expose beyond your own computer.
 
+## Swapping units (Civil War maps)
+
+A companion tool for the Civil War plugins (tested with *Civil War Reloaded
+1.8.4*). Their maps place custom rank-and-role soldiers; this swaps them for
+regular units you choose, such as warriors or ghols, and writes a new plugin.
+The original is never changed.
+
+You need the plugin that holds the **maps**, the **tagset** its units live in
+(both from the Civil War download, which this project does not supply), and
+your **Myth II folder**.
+
+In the app (`python -m src studio`), click **Swap units (Civil War)** at the top.
+Give it those three paths, press *Read the maps*, then pick a replacement for each
+unit -- or set the whole "yours" and "enemy" side at once -- and press *Write the
+new plugin*. It lands in your `plugins` folder.
+
+From the command line:
+
+```sh
+# What do the maps place?
+python -m src swap --in <maps> --tags <tagset> --list
+
+# Swap units. OLD and NEW are the 4-character ids shown by --list.
+python -m src swap --in <maps> --tags <tagset> --myth2-dir "<Myth II>" \
+    --out "<Myth II>/plugins/ZZ Swapped units" --swap @0sh=wam1 --swap +ash=ghol
+```
+
+**Why `--myth2-dir`.** The Civil War tagset redefines every one of Myth II's own
+unit ids: in it, `wam1` ("warrior") is a Union veteran. So pointing a map at a
+stock id is not enough. With `--myth2-dir` the tool reads the original unit tags
+from your own install and carries them into the new plugin (only those the tagset
+changed -- a few hundred bytes each).
+
+**To play it:** in Myth II choose the new campaign *first*, then activate the
+tagset under **Tagsets**. The new plugin has to load after the tagset.
+
+**How far it is verified:** on a clean Myth II 1.8.5 install, real warriors and
+ghols fought on *Fort Sumter* from the Civil War maps. Other maps, other
+replacement units and other Civil War packs are untested. The "yours" and "enemy"
+shortcuts rely on that tagset naming its units with a leading `@` or `+`. Maps
+unlock in order in the campaign list, so only the first levels are playable at
+first. See [NOTES.md](NOTES.md) for the details.
+
 ## Usage
 
 ```sh
@@ -143,6 +191,7 @@ python -m src roundtrip <container|dir>... # verify read/write is byte-exact
 python -m src diff <a> <b>                 # compare two containers tag by tag
 python -m src plan --in <gor>                     # what a conversion would do
 python -m src convert --in <gor> --out <plugin>   # do it
+python -m src swap --in <maps> --tags <tagset> --list   # units a Myth II plugin's maps place
 ```
 
 ### Supplying the stock TFL tags
@@ -310,7 +359,8 @@ src/plan.py        the model: what a conversion would do, computed without doing
 src/decisions.py   the control: choices no measurement can settle
 src/views/         the views: text report and shareable HTML page
 src/convert/       per-tag-type conversion; tags/ holds the body converters
-src/studio/        the guided local browser app
+src/studio/        the guided local browser app (swapping.py: the Swap units page)
+src/swap.py        swap the units a Myth II plugin's maps place; restore stock units
 src/plugindiff.py  tag-by-tag comparison of two containers
 src/cli.py         command line entry point
 tests/             unittest suite; fixtures.py builds synthetic containers
@@ -332,8 +382,11 @@ See [NOTES.md](NOTES.md) sections 17-18 and the support matrix above.
 
 ## Game data
 
-No game archives, extracted tags, playable plugins or sound files are distributed
-with the converter. The project website includes credited artwork and a testing
+No game archives, extracted tags, playable plugins or sound files are in this
+repository or distributed with the converter. The one exception is the ready-made
+*Sir Mauriac's Tale* release: to need nothing else installed, it carries the
+Myth: The Fallen Lords stock tags inside the plugin. Neither Civil War download
+is supplied. The project website includes credited artwork and a testing
 screenshot; it does not supply the game data required to run a conversion. `.gitignore` is set up to keep it out. Tests read
 from paths supplied at runtime and skip when absent. You supply your own legally obtained
 Myth installation when running the tool.
@@ -351,3 +404,8 @@ each use site in the source.
 Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights
 holders. This is an unofficial, non-commercial interoperability tool, not affiliated with
 or endorsed by any rights holder.
+
+The swap tool was checked against *Civil War Reloaded 1.8.4* by PoinT of
+ARMY Munitions Factory, which builds on work by IronDuke (Project Magma),
+Cydonian, Thoran and others credited in its own readme. It is a third-party
+plugin; nothing from it is included here.

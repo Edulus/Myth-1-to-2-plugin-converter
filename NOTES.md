@@ -1416,3 +1416,66 @@ picture asks for sequence 3 of *Mauriac*'s two-sequence `zp08`.
 - **`arti`**: 128 → 168 bytes, embeds an attack definition (§16 Deferred).
 - Still unconverted in the tagset after this round: 1,698 of 2,672 tags,
   mostly `.256` and `soun` (art and sound, untested), `core`, `prgr`, `amso`.
+
+
+## 19. Swapping the units a map places — and a tagset that redefines the stock ones
+
+Written for the Civil War plugins; code in `src/swap.py`, page in
+`src/studio/swapping.py`. Tested with *Civil War Reloaded 1.8.4* (`CWR-Maps-184b`,
+81 maps; `CWR-Tagset-184b`, 580 unit tags) in a clean Myth II 1.8.5 copy.
+
+### How a map says which unit goes where
+
+A unit marker names a slot in the mesh's **marker palette**, and the slot holds a
+unit tag id. Rewriting that id changes every marker using the slot and nothing else.
+`mesh.remap_marker_palette` already did this for TFL conversion; `swap.swap_units`
+reuses it with an id map that only touches `unit` ids.
+
+Map actions need no change. All 8,323 `MONSTER_IDENTIFIER` parameters in the CWR
+maps hold 2-byte values (marker ids), none a unit tag id, and no action type takes
+a unit tag by name.
+
+Proof the engine reads the palette: with every Fort Sumter unit slot set to the
+non-existent id `zzzz`, the level did not load and the log said
+`couldn't read header for unit definition 'zzzz'`.
+
+### Stock ids are not stock units
+
+The first swap used `ogre`, `wam1`, `arch`, `dwar`: Myth II's maul, warrior,
+archer and dwarf. The game still showed Civil War soldiers. The tagset redefines
+**all 165** of the base game's unit tags, and for 87 of them the unit now points at
+a different `mons` (`wam1` "M2-warrior" -> `_zuv` Union veteran; `arch` -> `_zus`
+sharpshooter; `ogre` -> `_zcs` Confederate soldier). The names are stale labels.
+Only 78 stay as they were: ambient and animals, peasants, cannons, posts.
+
+The fix is to restore the original unit tags. The tagset repointed the *unit* tags
+and mostly left the base `mons` alone, so the restore is tiny: for the tested
+units the closure is just the one 128-byte `unit` tag. `swap.restore_stock_units`
+compares the tagset to the base game (installs, then the patches, later wins) and
+carries only tags the tagset changed. 481 stock tags are changed in total (154
+units, 64 scenery, 58 projectiles, 57 objects, 45 monsters ...). The reference
+scan that finds dependencies is a heuristic over even offsets, limited to those
+481, because a full per-type reference walker does not exist.
+
+The swapped plugin has to load **after** the tagset, as later wins. Choose the
+campaign first, then the tagset.
+
+### Result
+
+On *Fort Sumter*, real warriors (`wam1`) and ghols (`ghol`) replaced the Civil War
+soldiers, from a plugin built on the command line and from one built in the
+studio's Swap units page.
+
+### Open
+
+- Only one map and two replacement units have been played.
+- The base-game load order (`swap.STOCK_ARCHIVES`) is inferred from the log's
+  "monolithic tags" list plus the "1.8.5 gameplay" line; the three Unity/Maps
+  patches' position is a guess.
+- Restoring a stock unit at its own id also changes any other slot that uses it.
+- The marker records read by `mesh.MarkerHead` disagree with palette entry types
+  for most markers (e.g. marker type 3 pointing at a type 1 palette entry), so the
+  marker `type` / `palette_index` fields as declared are probably misread. The swap
+  does not use them; counts of "units placed" per map are unreliable until fixed.
+- The 1.7 CWR map packs (Fields of Battle) need the 1.7 tagset and are untested.
+- Campaign levels unlock in order, so a swap is only checkable on unlocked levels.
