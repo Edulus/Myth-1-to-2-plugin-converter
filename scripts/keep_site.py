@@ -166,6 +166,7 @@ h2{font-size:1.2rem;margin:2.2rem 0 .7rem;color:var(--fg);border-bottom:1px soli
 .card .title{display:block;font-size:1.08rem}
 .card .sub{display:block;color:var(--muted);font-size:.92rem;margin-top:.15rem}
 .tag{color:var(--blood-hi);font-weight:700;margin-right:.45rem}
+hr.news-rule{border:0;border-top:1px solid var(--rule,currentColor);opacity:.5;margin:1.6rem 0}
 .btn{display:inline-block;flex:none;padding:.45rem .8rem;border:1px solid var(--blood);border-radius:4px;color:var(--fg);background:var(--tint);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;text-decoration:none;white-space:nowrap}
 .card a:hover .btn,.btn:hover{background:var(--blood);border-color:var(--blood-hi)}
 @media (max-width:520px){.card a{flex-direction:column;align-items:flex-start}}
@@ -371,6 +372,7 @@ def build():
 <li><strong>To play:</strong> choose the new campaign first, then activate the tagset under Tagsets.</li>
 <li>Steps and limits are in the <a href="{REPO_URL}#swapping-units-civil-war-maps">README</a>.</li>
 </ul>
+<hr class="news-rule">
 <h3>Ready-made download: <em>Sir Mauriac's Tale</em></h3>
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude). Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download ({DOWNLOAD_MB} MB)</a></p>
