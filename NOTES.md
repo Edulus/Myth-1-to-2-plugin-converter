@@ -1466,6 +1466,15 @@ On *Fort Sumter*, real warriors (`wam1`) and ghols (`ghol`) replaced the Civil W
 soldiers, from a plugin built on the command line and from one built in the
 studio's Swap units page.
 
+A second pack, *CWR Fields of Battle Map Pack A* (25 maps) with the 1.7 tagset
+(`CWR-12-02-09-Tagset.TM2`, 3,709 tags, 420 units), behaved the same: 110 side
+units swapped across 25 maps, and warriors and ghols appeared on *Little Flat Top*.
+That tagset also redefines the base game's units (`wam1`, `ghol`, `arch` among
+them; 154 stock units, 376 stock tags). Ten unit types those maps place are not in
+the 1.7 tagset (animals, flags); they come from the base game or the 1.8.4 tagset
+and need no swap. The tagset left active from an earlier test persisted in the
+Tagsets list, so switch it before playing a pack that needs the other one.
+
 ### Open
 
 - Only one map and two replacement units have been played.
@@ -1477,5 +1486,4 @@ studio's Swap units page.
   for most markers (e.g. marker type 3 pointing at a type 1 palette entry), so the
   marker `type` / `palette_index` fields as declared are probably misread. The swap
   does not use them; counts of "units placed" per map are unreliable until fixed.
-- The 1.7 CWR map packs (Fields of Battle) need the 1.7 tagset and are untested.
 - Campaign levels unlock in order, so a swap is only checkable on unlocked levels.

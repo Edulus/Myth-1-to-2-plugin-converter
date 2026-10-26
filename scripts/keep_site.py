@@ -367,7 +367,7 @@ def build():
 <h3>New: swap the Civil War soldiers for regular units (beta)</h3>
 <p>A companion tool for the Civil War plugins. Pick which regular units, such as warriors or ghols, appear in place of the Civil War soldiers on its maps. It writes a new plugin and leaves the original alone. It is part of this project's app (<code>python -m src studio</code>, then <strong>Swap units (Civil War)</strong>) and also works from the command line.</p>
 <ul>
-<li><strong>Tested so far:</strong> <em>Civil War Reloaded 1.8.4</em> on a clean Myth II 1.8.5 install. Real warriors and ghols fought on <em>Fort Sumter</em>. Other maps, other units and other Civil War packs are untested.</li>
+<li><strong>Tested so far:</strong> <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> map pack (with its 1.7 tagset), on a clean Myth II 1.8.5 install. Real warriors and ghols appeared on <em>Fort Sumter</em> and <em>Little Flat Top</em>. Other maps, other units and other Civil War packs are untested.</li>
 <li><strong>You supply the Civil War files</strong> (its maps and its tagset) and your own Myth II folder. None of it is included here.</li>
 <li><strong>To play:</strong> choose the new campaign first, then activate the tagset under Tagsets.</li>
 <li>Steps and limits are in the <a href="{REPO_URL}#swapping-units-civil-war-maps">README</a>.</li>

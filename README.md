@@ -142,7 +142,7 @@ is not safe to expose beyond your own computer.
 ## Swapping units (Civil War maps)
 
 A companion tool for the Civil War plugins (tested with *Civil War Reloaded
-1.8.4*). Their maps place custom rank-and-role soldiers; this swaps them for
+1.8.4* and the older *Fields of Battle* pack on the 1.7 tagset). Their maps place custom rank-and-role soldiers; this swaps them for
 regular units you choose, such as warriors or ghols, and writes a new plugin.
 The original is never changed.
 
@@ -176,8 +176,10 @@ changed -- a few hundred bytes each).
 tagset under **Tagsets**. The new plugin has to load after the tagset.
 
 **How far it is verified:** on a clean Myth II 1.8.5 install, real warriors and
-ghols fought on *Fort Sumter* from the Civil War maps. Other maps, other
-replacement units and other Civil War packs are untested. The "yours" and "enemy"
+ghols appeared on *Fort Sumter* (Civil War Reloaded 1.8.4) and on *Little Flat
+Top* (the Fields of Battle pack, with the 1.7 tagset). Other maps, other
+replacement units and other Civil War packs are untested. Use the tagset that
+matches your maps: the 1.7 tagset for the 1.7 map packs, the 1.8.4 one for 1.8.4. The "yours" and "enemy"
 shortcuts rely on that tagset naming its units with a leading `@` or `+`. Maps
 unlock in order in the campaign list, so only the first levels are playable at
 first. See [NOTES.md](NOTES.md) for the details.
