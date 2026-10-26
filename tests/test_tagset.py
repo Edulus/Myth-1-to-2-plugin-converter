@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from src import codec, reader  # noqa: E402
+from src import codec, idmap, reader  # noqa: E402
 from src.convert import plugin as convert_plugin  # noqa: E402
 
 from . import fixtures  # noqa: E402
@@ -92,10 +92,17 @@ class TestBundleStock(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.dir = pathlib.Path(self.tmp.name)
         self.plugin = self.dir / "plugin.gor"
-        self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS))
+        # The plugin points at stk1, and only stk1; a picture "mentions" stk4.
+        self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS + [
+            (b"refers", b"text", b"refs", b"..stk1.."),
+            (b"a picture", b".256", b"pict", b"pixels stk4 pixels"),
+        ]))
         self.stock = self.dir / "TAGS.GOR"
         self.stock.write_bytes(fixtures.build_tfl_mono([
-            (b"stock text", b"text", b"stk1", b"from the stock set"),
+            (b"stock text", b"text", b"stk1", b"from the stock set, see stk2"),
+            (b"reached via stk1", b"stli", b"stk2", b"chained\0"),
+            (b"never mentioned", b"text", b"stk3", b"unused"),
+            (b"only in pixels", b"text", b"stk4", b"unused"),
             (b"clash", b"stli", b"30cc", b"the stock version"),
             (b"a stock level", b"mesh", b"stlv", fixtures.MESH_TAGS[0][3]),
             (b"internal solo postgame", b"stli", b"in03", b"%d killed\0"),
@@ -105,17 +112,39 @@ class TestBundleStock(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def bundle(self):
+    def bundle(self, **kwargs):
         report, _written = convert_plugin.convert_file(
-            self.plugin, self.out, stock_paths=[self.stock]
+            self.plugin, self.out, stock_paths=[self.stock], **kwargs
         )
         return report, reader.read(self.out)
 
-    def test_stock_tags_are_carried_into_the_plugin(self):
+    def ids(self, result):
+        return {(t.tag_type, t.tag_id) for t in result.tags}
+
+    def test_stock_tags_the_plugin_uses_are_carried_in(self):
         report, result = self.bundle()
-        ids = {(t.tag_type, t.tag_id) for t in result.tags}
-        self.assertIn((b"text", b"stk1"), ids)
-        self.assertEqual(1, report.bundled_stock)
+        self.assertIn((b"text", b"stk1"), self.ids(result))
+        self.assertIn((b"stli", b"stk2"), self.ids(result), "reached through stk1")
+        self.assertEqual(2, report.bundled_stock)
+
+    def test_stock_tags_nothing_points_at_are_left_out(self):
+        _report, result = self.bundle()
+        self.assertNotIn((b"text", b"stk3"), self.ids(result))
+
+    def test_picture_data_is_not_searched_for_references(self):
+        _report, result = self.bundle()
+        self.assertNotIn((b"text", b"stk4"), self.ids(result))
+
+    def test_all_stock_carries_everything(self):
+        report, result = self.bundle(all_stock=True)
+        self.assertIn((b"text", b"stk3"), self.ids(result))
+        self.assertEqual(4, report.bundled_stock)
+
+    def test_a_decisions_mapping_target_is_carried_in(self):
+        id_map = idmap.IdMap()
+        id_map.add(b"text", b"gone", b"stk3")
+        _report, result = self.bundle(id_map=id_map)
+        self.assertIn((b"text", b"stk3"), self.ids(result))
 
     def test_the_plugins_own_tag_beats_a_stock_tag_of_the_same_id(self):
         _report, result = self.bundle()

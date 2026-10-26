@@ -1401,6 +1401,20 @@ projectiles index it by sequence. *In the Name of Glory* now plays through to
 its end-game screen with a clean log, save one harmless warning: its pregame
 picture asks for sequence 3 of *Mauriac*'s two-sequence `zp08`.
 
+### Bundling only the stock tags a plugin uses
+
+`convert --stock` first carried all 2,432 eligible stock tags (306 MB), making
+*Sir Mauriac's Tale* 419 MB. That is heavy for a browser to build (1.7 GB of
+WebAssembly memory in a Pyodide test). It now carries only the stock tags the
+plugin can reach, found cautiously: any four bytes at any offset that equal a
+stock tag ID pull in every stock tag with that ID, repeated from each one pulled
+in. `.256` and `soun` bodies are not searched, since they hold pixels and
+samples, not references; searching them pulled in 334 more tags on false
+matches. Result for *Mauriac*: 1,666 stock tags, 245 MB, and *Tandem* played the
+same as the full build on a clean 1.8.5 install. A typed walk of each tag's
+reference fields would cut deeper but could miss one, and a missing tag fails
+silently. `--all-stock` restores the old behaviour.
+
 ### Open
 
 - **Pregame picture sequence**: `sequence #3 not in [#0,#2) for "zp08"` at

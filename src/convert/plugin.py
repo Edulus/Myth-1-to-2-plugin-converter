@@ -20,6 +20,7 @@ the game's menu -- see `entrypoints`.
 """
 
 import struct
+import sys
 from dataclasses import dataclass, field
 
 from .. import (
@@ -405,7 +406,7 @@ MAX_PLUGIN_FILENAME = 32
 
 def convert_file(
     in_path, out_path, id_map=None, name=None, description=b"", context=None,
-    stock_paths=None,
+    stock_paths=None, all_stock=False,
 ):
     """Convert a TFL container file into a Myth II plugin file.
 
@@ -415,13 +416,16 @@ def convert_file(
     one source hide each other in-engine.
 
     ``stock_paths`` -- TFL archives (``TAGS.GOR``, ``ARTSOUND.GOR``) -- are
-    bundled into the plugin by `bundle_stock`, making it self-contained.
+    bundled into the plugin by `bundle_stock`, making it self-contained: only
+    the stock tags it uses, or all of them with ``all_stock``.
     """
     mono = reader.read(in_path)
     name = name or _name_from(out_path)
     bundled = 0
     if stock_paths:
-        mono, bundled = bundle_stock(mono, stock_paths)
+        mono, bundled = bundle_stock(
+            mono, stock_paths, only_used=not all_stock, id_map=id_map
+        )
     sb_mono, report = convert_container(
         mono, id_map=id_map, name=name, description=description, context=context
     )
@@ -429,7 +433,7 @@ def convert_file(
     return report, _write_plugin(sb_mono, out_path, report)
 
 
-def bundle_stock(mono, stock_paths):
+def bundle_stock(mono, stock_paths, only_used=True, id_map=None):
     """Fold the stock TFL tags into a plugin's container, so the converted
     plugin is self-contained and needs no separate tagset.
 
@@ -437,9 +441,12 @@ def bundle_stock(mono, stock_paths):
     archive wins, engine-facing tags left for Myth II's own -- except that the
     plugin's own tag always beats a stock tag of the same ID, and stock ``mesh``
     tags (TFL's own levels) are left out so they do not become entrypoints of
-    this plugin. The whole stock set goes in rather than a computed subset:
-    `unresolved_references` admits it undercounts, and a missing tag fails
-    silently in-engine.
+    this plugin.
+
+    With ``only_used``, just the stock tags the plugin can reach go in (see
+    `_reachable_stock`), which roughly halved *Sir Mauriac's Tale*. Otherwise
+    the whole stock set goes in. ``id_map`` targets count as reached, since
+    the plugin will point at them once converted.
 
     Returns ``(combined_container, number_of_stock_tags_added)``.
     """
@@ -455,6 +462,9 @@ def bundle_stock(mono, stock_paths):
                 continue
             taken.add(key)
             added.append(tag)
+    if only_used:
+        extra = {sb_id for _key, (sb_id, _name) in id_map.items()} if id_map else set()
+        added = _reachable_stock(mono.tags, added, extra)
     combined = reader.Monolith(
         game_version=mono.game_version,
         header=mono.header,
@@ -464,6 +474,49 @@ def bundle_stock(mono, stock_paths):
         source=b"",
     )
     return combined, len(added)
+
+
+# Tag types that hold pixel or sample data and no tag references. Scanning them
+# only finds false matches: random image bytes that happen to spell a tag ID.
+_NO_REFERENCES = {b".256", b"soun"}
+
+
+def _reachable_stock(own_tags, stock_tags, extra_ids=()):
+    """The ``stock_tags`` reachable from ``own_tags``, in their original order.
+
+    Deliberately cautious, because a missing tag fails silently in-engine: any
+    four bytes, at any offset, that equal a stock tag's ID pull in every stock
+    tag with that ID, of any type, and the search repeats from each tag pulled
+    in. Too many is harmless; too few is not. A typed walk of every reference
+    field (mythextract ``tag2local.py``) would cut deeper but could miss one.
+    """
+    by_id = {}
+    for tag in stock_tags:
+        by_id.setdefault(tag.tag_id, []).append(tag)
+    wanted = {int.from_bytes(tag_id, sys.byteorder): tag_id for tag_id in by_id}
+    picked, queue = set(), list(own_tags)
+
+    def reach(tag_id):
+        for tag in by_id.get(tag_id, ()):
+            if id(tag) not in picked:
+                picked.add(id(tag))
+                queue.append(tag)
+
+    for tag_id in extra_ids:
+        reach(tag_id)
+    while queue:
+        tag = queue.pop()
+        if tag.tag_type in _NO_REFERENCES:
+            continue
+        body = tag.body
+        for shift in range(4):
+            usable = (len(body) - shift) // 4 * 4
+            if usable <= 0:
+                break
+            words = memoryview(body[shift : shift + usable]).cast("I")
+            for word in wanted.keys() & set(words):
+                reach(wanted[word])
+    return [tag for tag in stock_tags if id(tag) in picked]
 
 
 def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
