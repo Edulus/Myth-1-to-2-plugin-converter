@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="style.css?v=358b26e7">
+<link rel="stylesheet" href="style.css?v=d41451ef">
 </head>
 <body>
 <header class="hero">
@@ -29,6 +29,14 @@
 <main class="wrap">
 <section aria-labelledby="news">
 <h2 id="news" style="margin-top:0">News</h2>
+<h3>New: convert a plugin in your browser (beta)</h3>
+<p>No Python, no command line, no setup. Drop a <em>Fallen Lords</em> plugin on the new page and it converts right there in your browser tab. Your file is not uploaded anywhere. You get back a Myth II plugin with the original game files it needs already inside, ready to put in your <code>plugins</code> folder.</p>
+<p><a class="btn" href="convert/index.html">Convert a plugin &rarr;</a></p>
+<ul>
+<li><strong>Tested so far:</strong> <em>Sir Mauriac's Tale</em>, in Chrome on Windows. The result played <em>Tandem</em> on a plain Myth II 1.8.5 install.</li>
+<li>Use a computer, not a phone: it needs about 1 GB of memory. The first time, it fetches about 320 MB of original game files from this site.</li>
+</ul>
+<hr class="news-rule">
 <h3>New: swap the Civil War soldiers for regular units (beta)</h3>
 <p>A companion tool for the Civil War plugins. Pick which regular units, such as warriors or ghols, appear in place of the Civil War soldiers on its maps. It writes a new plugin and leaves the original alone. It is part of this project's app (<code>python -m src studio</code>, then <strong>Swap units (Civil War)</strong>) and also works from the command line.</p>
 <ul>
@@ -48,7 +56,7 @@
 </section>
 <section aria-labelledby="get-started">
 <h2 id="get-started">Get started &mdash; public beta</h2>
-<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. The command-line steps below are for those who want more control; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
 <ol>
 <li><strong>Download and unzip.</strong> Open <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
@@ -97,7 +105,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <ul class="cards"><li class="card"><a href="updates/2026-10-21.html"><span class="body"><span class="title"><span class="tag">21 October 2026</span>TFL levels now play in Myth II</span><span class="sub">Two levels from Sir Mauriac&#x27;s Tale load, play and finish in Myth II, converted entirely by the tool.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
 <h2>About, credits and licence</h2>
 <p>Built on <a href="https://github.com/jwheare/mythextract">mythextract</a>, MIT licence, &copy; 2025 James Wheare. The converter's code is <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/LICENSE">MIT-licensed</a>; see <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/NOTICE">NOTICE</a> for prior art.</p>
-<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. No game data is distributed; users supply their own copies.</p>
+<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. The in-browser converter serves the original <em>Fallen Lords</em> game files (&copy; Bungie) so that converted plugins need nothing else installed; otherwise users supply their own copies.</p>
 
 </main>
 <footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>

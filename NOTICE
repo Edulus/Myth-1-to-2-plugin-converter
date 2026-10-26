@@ -55,7 +55,13 @@ respective rights holders. This project is an unofficial, non-commercial
 interoperability tool. It is not affiliated with, endorsed by, or sponsored by
 any rights holder.
 
-No game data or other copyrighted assets are included in this repository. The
-tool operates on files you supply from your own legally obtained installation,
-and the test suite reads only from paths given at runtime, skipping when they
-are absent.
+The converter's code, tests and fixtures include no game data or other
+copyrighted assets. The tool operates on files you supply from your own legally
+obtained installation, and the test suite reads only from paths given at
+runtime, skipping when they are absent.
+
+The exception is the project website (`docs/`). Its in-browser converter
+serves the Myth: The Fallen Lords stock tag archives (TAGS.GOR, ARTSOUND.GOR;
+Bungie Software) from `docs/convert/stock/`, so that a converted plugin needs
+nothing else installed. They are included for that purpose only and remain the
+property of their rights holders.

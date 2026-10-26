@@ -28,6 +28,15 @@ lighting uses standard values for every map, terrain uses duplicated cells,
 and some tag bodies (including sounds and projectile groups) pass through
 unchanged. The support matrix below records those limits.
 
+**Convert in your browser:** the project website has a *Convert a plugin* page.
+Drop a TFL plugin on it and it converts inside the browser tab, with nothing
+uploaded, and gives back a Myth II plugin with the stock tags it needs built in.
+It runs this converter unchanged under [Pyodide](https://pyodide.org)
+(`src/web.py` is its entry point, `web/convert/` holds the page's scripts, and
+`scripts/keep_site.py` builds it). Checked in Chrome on Windows with *Sir
+Mauriac's Tale*: about 5 seconds to convert, roughly 1.1 GB of browser memory,
+and the result played *Tandem* on a clean Myth II 1.8.5 install.
+
 **Also in this beta:** a ready-made, already-converted *Sir Mauriac's Tale*
 (a GitHub release, linked from the project website) that needs nothing else
 installed, and a companion tool that swaps the units in the Civil War plugins'
@@ -389,14 +398,20 @@ See [NOTES.md](NOTES.md) sections 17-18 and the support matrix above.
 
 ## Game data
 
-No game archives, extracted tags, playable plugins or sound files are in this
-repository or distributed with the converter. The one exception is the ready-made
-*Sir Mauriac's Tale* release: to need nothing else installed, it carries the
-Myth: The Fallen Lords stock tags inside the plugin. Neither Civil War download
-is supplied. The project website includes credited artwork and a testing
-screenshot; it does not supply the game data required to run a conversion. `.gitignore` is set up to keep it out. Tests read
-from paths supplied at runtime and skip when absent. You supply your own legally obtained
-Myth installation when running the tool.
+The converter's code, tests and fixtures contain no game data, and `.gitignore`
+keeps game files out. There are two deliberate exceptions, both so that players
+need nothing else installed:
+
+- The project website's in-browser converter serves the *Myth: The Fallen Lords*
+  stock tags (`TAGS.GOR` and `ARTSOUND.GOR`, split into pieces) from
+  `docs/convert/stock/`, and bundles the ones a plugin uses into its output.
+- The ready-made *Sir Mauriac's Tale* release carries those stock tags inside
+  the plugin.
+
+Neither Civil War download is supplied. The website also shows credited artwork
+and a testing screenshot. Tests read from paths supplied at runtime and skip
+when absent. When running the tool yourself, you supply your own legally
+obtained Myth installation.
 
 ## License and credits
 

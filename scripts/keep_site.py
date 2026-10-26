@@ -13,8 +13,12 @@ A thread is tied to its entry's ``term``, not its URL: keep terms stable once
 published, or the comments already on them will no longer show.
 """
 
+import hashlib
 import html
+import io
+import json
 import pathlib
+import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs"
@@ -205,6 +209,16 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .comment .who strong{color:var(--fg)}
 .comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
 .comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
+.drop{display:block;margin:1.2rem 0;padding:2rem 1rem;text-align:center;background:var(--panel);border:2px dashed var(--blood);border-radius:8px;cursor:pointer}
+.drop:hover,.drop.over,.drop:focus-within{background:var(--tint);border-color:var(--blood-hi)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.drop-big{display:block;font-size:1.15rem;margin-bottom:.3rem}
+.btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
+#progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
+.problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
+details{margin:1rem 0}
+summary{cursor:pointer;color:var(--muted)}
+details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 """
 
@@ -342,7 +356,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
 """
 
 
-def build():
+def build(stock_dir=None):
     OUT.mkdir(exist_ok=True)
     (OUT / "updates").mkdir(exist_ok=True)
     (OUT / "q").mkdir(exist_ok=True)
@@ -364,6 +378,14 @@ def build():
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
     index = f"""<section aria-labelledby="news">
 <h2 id="news" style="margin-top:0">News</h2>
+<h3>New: convert a plugin in your browser (beta)</h3>
+<p>No Python, no command line, no setup. Drop a <em>Fallen Lords</em> plugin on the new page and it converts right there in your browser tab. Your file is not uploaded anywhere. You get back a Myth II plugin with the original game files it needs already inside, ready to put in your <code>plugins</code> folder.</p>
+<p><a class="btn" href="convert/index.html">Convert a plugin &rarr;</a></p>
+<ul>
+<li><strong>Tested so far:</strong> <em>Sir Mauriac's Tale</em>, in Chrome on Windows. The result played <em>Tandem</em> on a plain Myth II 1.8.5 install.</li>
+<li>Use a computer, not a phone: it needs about 1 GB of memory. The first time, it fetches about 320 MB of original game files from this site.</li>
+</ul>
+<hr class="news-rule">
 <h3>New: swap the Civil War soldiers for regular units (beta)</h3>
 <p>A companion tool for the Civil War plugins. Pick which regular units, such as warriors or ghols, appear in place of the Civil War soldiers on its maps. It writes a new plugin and leaves the original alone. It is part of this project's app (<code>python -m src studio</code>, then <strong>Swap units (Civil War)</strong>) and also works from the command line.</p>
 <ul>
@@ -383,7 +405,7 @@ def build():
 </section>
 <section aria-labelledby="get-started">
 <h2 id="get-started">Get started &mdash; public beta</h2>
-<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. Start with the command-line steps below; no Python packages need installing.</p>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. The command-line steps below are for those who want more control; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
 <ol>
 <li><strong>Download and unzip.</strong> Open <a href="{REPO_URL}">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
@@ -427,7 +449,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <ul class="cards">{updates}</ul>
 <h2>About, credits and licence</h2>
 <p>Built on <a href="https://github.com/jwheare/mythextract">mythextract</a>, MIT licence, &copy; 2025 James Wheare. The converter's code is <a href="{REPO_URL}/blob/main/LICENSE">MIT-licensed</a>; see <a href="{REPO_URL}/blob/main/NOTICE">NOTICE</a> for prior art.</p>
-<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. No game data is distributed; users supply their own copies.</p>"""
+<p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. The in-browser converter serves the original <em>Fallen Lords</em> game files (&copy; Bungie) so that converted plugins need nothing else installed; otherwise users supply their own copies.</p>"""
     (OUT / "index.html").write_text(
         page(html.unescape(SITE_TAGLINE), SITE_NAME, index, 0, subtitle=SITE_TAGLINE), encoding="utf-8"
     )
@@ -458,8 +480,119 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
             encoding="utf-8",
         )
 
+    build_converter_page(stock_dir)
     print(f"built {len(UPDATES)} update(s) and {len(QUESTIONS)} question(s) into {OUT}")
 
 
+# --- The in-browser converter (docs/convert/) --------------------------------
+# The page's scripts live in web/convert/; the converter itself is src/, zipped
+# for Pyodide. The stock TFL tags it bundles are served from docs/convert/stock/,
+# split into pieces because GitHub refuses files over 100 MB. They are copied in
+# only when --stock-dir is given; otherwise the pieces already there are kept.
+
+WEB = ROOT / "web" / "convert"
+STOCK_FILES = ("TAGS.GOR", "ARTSOUND.GOR")  # most authoritative first
+STOCK_PIECE = 80 * 1024 * 1024
+# Not needed to convert in the browser, and the studio pulls in a web server.
+CODE_SKIP = ("studio",)
+
+
+def _short_hash(data):
+    return hashlib.sha256(data).hexdigest()[:12]
+
+
+def converter_zip():
+    """src/ as a zip, byte-for-byte the same for the same sources, so an
+    unchanged converter does not show up as a changed file."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted((ROOT / "src").rglob("*.py")):
+            rel = path.relative_to(ROOT)
+            if any(part in CODE_SKIP for part in rel.parts):
+                continue
+            info = zipfile.ZipInfo(rel.as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(info, path.read_bytes())
+    return buf.getvalue()
+
+
+def split_stock(stock_dir, out_dir):
+    """Copy the stock archives into out_dir in pieces, and describe them in
+    manifest.json for worker.js. The names avoid ``.gor``, which .gitignore
+    keeps out of the repository everywhere else."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for old in out_dir.iterdir():
+        old.unlink()
+    files, digest = [], hashlib.sha256()
+    for name in STOCK_FILES:
+        data = (pathlib.Path(stock_dir) / name).read_bytes()
+        digest.update(data)
+        stem = name.split(".")[0].lower()
+        parts = []
+        for i in range(0, len(data), STOCK_PIECE):
+            part = f"{stem}.{len(parts)}"
+            (out_dir / part).write_bytes(data[i : i + STOCK_PIECE])
+            parts.append(part)
+        files.append({"name": name, "bytes": len(data), "parts": parts})
+    manifest = {"version": digest.hexdigest()[:12], "files": files}
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
+
+
+CONVERT_BODY = """
+<div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}">
+<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong></p>
+<label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
+<span class="drop-big">Drop the plugin's <code>.gor</code> file here</span>
+<span class="meta">or click to choose it. Unzip it first if it came as a zip.</span></label>
+<div id="progress" hidden><p id="stage" role="status"></p><progress id="bar"></progress></div>
+<div id="problem" class="problem" role="alert" hidden></div>
+<div id="result" hidden></div>
+</div>
+<h2>Good to know</h2>
+<ul>
+<li><strong>Use a computer, not a phone.</strong> Converting needs a lot of memory; close other tabs if it fails.</li>
+<li>The first time, the page fetches the original Fallen Lords game files ({stock_mb} MB) from this website. Your browser keeps them for next time.</li>
+<li>The converted plugin carries the original game files it needs, so you don't need anything else installed.</li>
+<li><strong>Beta.</strong> Tested with <em>Sir Mauriac's Tale</em> on Windows. Other plugins may convert with parts missing, and the report tells you what it could not convert.</li>
+<li>Only share a converted plugin if its author agrees.</li>
+</ul>
+<div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
+<script src="page.js?v={page_v}"></script>"""
+
+
+def build_converter_page(stock_dir=None):
+    out = OUT / "convert"
+    out.mkdir(exist_ok=True)
+    code = converter_zip()
+    (out / "converter.zip").write_bytes(code)
+    versions = {"code_v": _short_hash(code)}
+    for name in ("worker.js", "page.js"):
+        data = (WEB / name).read_bytes()
+        (out / name).write_bytes(data)
+        versions[name.split(".")[0] + "_v"] = _short_hash(data)
+    if stock_dir:
+        split_stock(stock_dir, out / "stock")
+    manifest_path = out / "stock" / "manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        versions["stock_v"] = manifest["version"]
+        stock_mb = round(sum(f["bytes"] for f in manifest["files"]) / 1048576)
+    else:
+        print("warning: no stock files in docs/convert/stock; run with --stock-dir")
+        versions["stock_v"], stock_mb = "none", "about 320"
+    (out / "index.html").write_text(
+        page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(stock_mb=stock_mb, **versions), 1,
+             kicker="In your browser &middot; beta"),
+        encoding="utf-8",
+    )
+
+
 if __name__ == "__main__":
-    build()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Build the project site into docs/.")
+    parser.add_argument(
+        "--stock-dir", type=pathlib.Path,
+        help="a TFL tags folder holding TAGS.GOR and ARTSOUND.GOR, to copy into the converter page",
+    )
+    build(parser.parse_args().stock_dir)

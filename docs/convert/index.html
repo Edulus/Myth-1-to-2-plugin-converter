@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Convert a plugin &middot; Myth Plugin Converter</title>
+<script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
+<link rel="stylesheet" href="../style.css?v=d41451ef">
+</head>
+<body>
+<header class="hero compact">
+<button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button>
+<div class="panes" aria-hidden="true">
+<div class="pane one"><span class="num">I</span><span class="cap">The Fallen Lords</span></div>
+<div class="arrow">&rarr;</div>
+<div class="pane two"><span class="num">II</span><span class="cap">Soulblighter</span></div>
+</div>
+<div class="band"><div class="inner">
+<a class="brand" href="../index.html">Myth Plugin Converter &middot; The Fallen Lords &rarr; Soulblighter</a>
+<p class="meta">In your browser &middot; beta</p>
+<h1>Convert a plugin</h1>
+
+</div></div>
+</header>
+<main class="wrap">
+
+<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=ebd5eafa251e" data-manifest="stock/manifest.json?v=d37fb8c0bb01">
+<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong></p>
+<label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
+<span class="drop-big">Drop the plugin's <code>.gor</code> file here</span>
+<span class="meta">or click to choose it. Unzip it first if it came as a zip.</span></label>
+<div id="progress" hidden><p id="stage" role="status"></p><progress id="bar"></progress></div>
+<div id="problem" class="problem" role="alert" hidden></div>
+<div id="result" hidden></div>
+</div>
+<h2>Good to know</h2>
+<ul>
+<li><strong>Use a computer, not a phone.</strong> Converting needs a lot of memory; close other tabs if it fails.</li>
+<li>The first time, the page fetches the original Fallen Lords game files (320 MB) from this website. Your browser keeps them for next time.</li>
+<li>The converted plugin carries the original game files it needs, so you don't need anything else installed.</li>
+<li><strong>Beta.</strong> Tested with <em>Sir Mauriac's Tale</em> on Windows. Other plugins may convert with parts missing, and the report tells you what it could not convert.</li>
+<li>Only share a converted plugin if its author agrees.</li>
+</ul>
+<div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
+<script src="page.js?v=4d55cfeffc06"></script>
+
+</main>
+<footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.querySelector(".theme");
+  function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
+  btn.addEventListener("click",function(){
+    if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
+    try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
+    paint();
+  });
+  paint();
+})();
+</script>
+
+</body>
+</html>
