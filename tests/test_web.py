@@ -7,9 +7,34 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from src import reader, web  # noqa: E402
+from src import __version__, reader, web  # noqa: E402
 
 from . import fixtures  # noqa: E402
+
+CHANGES = pathlib.Path(__file__).resolve().parent.parent / "web" / "convert" / "changes.json"
+
+
+class TestChanges(unittest.TestCase):
+    """The website's list of changes and the version number must agree."""
+
+    def setUp(self):
+        import json
+
+        self.changes = json.loads(CHANGES.read_text(encoding="utf-8"))
+
+    def test_the_newest_change_is_the_current_version(self):
+        self.assertEqual(__version__, self.changes[0]["version"])
+
+    def test_newest_first_with_distinct_versions_and_dates(self):
+        import datetime
+
+        versions = [tuple(map(int, c["version"].split("."))) for c in self.changes]
+        self.assertEqual(sorted(versions, reverse=True), versions)
+        self.assertEqual(len(set(versions)), len(versions))
+        dates = [datetime.date.fromisoformat(c["date"]) for c in self.changes]
+        self.assertEqual(sorted(dates, reverse=True), dates)
+        for c in self.changes:
+            self.assertTrue(c["change"].strip())
 
 
 class TestOutputName(unittest.TestCase):
@@ -62,6 +87,9 @@ class TestConvert(unittest.TestCase):
 
     def test_keeps_the_technical_report(self):
         self.assertIn("Levels the game will list", self.convert()["details"])
+
+    def test_the_report_names_the_converter_version(self):
+        self.assertTrue(self.convert()["details"].startswith(f"Converter version {__version__}\n"))
 
     def test_no_levels_is_explained(self):
         self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.SAMPLE_TAGS))

@@ -1,0 +1,5 @@
+[
+ {"version": "0.3", "date": "2026-10-27", "change": "Hills and slopes are smooth, not stepped."},
+ {"version": "0.2", "date": "2026-10-27", "change": "Water now acts as water: units wade and slow down instead of walking on it."},
+ {"version": "0.1", "date": "2026-10-26", "change": "First beta: convert a plugin in your browser."}
+]

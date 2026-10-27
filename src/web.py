@@ -10,7 +10,7 @@ words, with the full technical report kept for anyone who wants it.
 import pathlib
 import re
 
-from . import codec, reader, writer
+from . import __version__, codec, reader, writer
 from .convert import plugin
 
 # Characters Windows and macOS refuse in a filename.
@@ -69,7 +69,10 @@ def convert(plugin_path, upload_name, out_dir, stock_paths):
         "bytes": written,
         "levels": levels,
         "notes": _notes(report, levels),
-        "details": "\n".join(plugin.format_report(report, upload_name, filename)),
+        "details": "\n".join(
+            [f"Converter version {__version__}", ""]
+            + plugin.format_report(report, upload_name, filename)
+        ),
     }
 
 

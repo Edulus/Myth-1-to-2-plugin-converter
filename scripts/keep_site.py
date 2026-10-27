@@ -217,6 +217,8 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
 details{margin:1rem 0}
+.version{margin:0}
+details.changes{margin:.2rem 0 1rem}
 summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
@@ -436,7 +438,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
 <ul>
 <li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
-<li>Building models (<code>mode</code>/<code>geom</code>) are measured but not converted. Lighting uses standard values for every map. Terrain cells are duplicated into a finer grid, which can look blocky.</li>
+<li>Building models (<code>mode</code>/<code>geom</code>) are measured but not converted. Lighting uses standard values for every map. Terrain is redrawn on Myth II's finer grid, with heights blended between the original points.</li>
 <li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
 </ul>
 <h2>Help test or report a problem</h2>
@@ -538,7 +540,32 @@ def split_stock(stock_dir, out_dir):
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
 
 
+# What testers see change. Add an entry, and bump src/__init__.py's
+# __version__ to match, whenever a push changes what the converter does.
+CHANGES = json.loads((WEB / "changes.json").read_text(encoding="utf-8"))
+
+
+def _long_date(iso):
+    year, month, day = (int(p) for p in iso.split("-"))
+    months = ("January February March April May June July August September "
+              "October November December").split()
+    return f"{day} {months[month - 1]} {year}"
+
+
+def changes_html():
+    """The version line and the list of changes, newest first."""
+    newest = CHANGES[0]
+    items = "\n".join(
+        f'<li><strong>{html.escape(c["version"])}</strong> ({_long_date(c["date"])}): {html.escape(c["change"])}</li>'
+        for c in CHANGES
+    )
+    return (f'<p class="meta version">Version {html.escape(newest["version"])} &middot; '
+            f'updated {_long_date(newest["date"])}</p>\n'
+            f'<details class="changes"><summary>What\'s new</summary>\n<ul>\n{items}\n</ul>\n</details>')
+
+
 CONVERT_BODY = """
+{changes}
 <div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}">
 <p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong></p>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
@@ -581,7 +608,7 @@ def build_converter_page(stock_dir=None):
         print("warning: no stock files in docs/convert/stock; run with --stock-dir")
         versions["stock_v"], stock_mb = "none", "about 320"
     (out / "index.html").write_text(
-        page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(stock_mb=stock_mb, **versions), 1,
+        page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(stock_mb=stock_mb, changes=changes_html(), **versions), 1,
              kicker="In your browser &middot; beta"),
         encoding="utf-8",
     )

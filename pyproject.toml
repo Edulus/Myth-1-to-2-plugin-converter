@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "myth-plugin-converter"
-version = "0.0.0"
+version = "0.3"
 description = "Converts Myth: The Fallen Lords plugins into Myth II: Soulblighter plugins"
 readme = "README.md"
 requires-python = ">=3.12"
