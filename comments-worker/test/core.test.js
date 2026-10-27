@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { alertFor, answerAccepted, formatComment, parseComment, shapeThread, validate } from "../src/core.js";
+import { alertFor, answerAccepted, applyVote, formatComment, parseComment, shapeThread, validate, validateVote } from "../src/core.js";
 
 const ANSWERS = ["bottle", "satchel", "satchel charges", "molotov"];
 const good = { term: "Q2: Terrain - faithful or smooth?", name: "KEEP", message: "smooth please", answer: "Satchel" };
@@ -79,6 +79,25 @@ test("a visitor's comment waits until the owner gives it a rocket", () => {
   assert.equal(thread[1].status, "addressed");
   assert.equal(thread[2].status, "waiting", "only the owner's rocket counts");
   assert.equal(thread[3].status, null, "the owner writing on GitHub is staff");
+});
+
+test("a vote counts once, and a changed vote moves rather than adds", () => {
+  let v = applyVote(undefined, null, "up");
+  assert.deepEqual(v, { up: 1, down: 0 });
+  v = applyVote(v, "up", "down");
+  assert.deepEqual(v, { up: 0, down: 1 });
+  v = applyVote(v, "down", "down");
+  assert.deepEqual(v, { up: 0, down: 1 }, "the same vote again changes nothing");
+  v = applyVote(v, "down", null);
+  assert.deepEqual(v, { up: 0, down: 0 }, "taking a vote back");
+  assert.deepEqual(applyVote({ up: 0, down: 0 }, "up", null), { up: 0, down: 0 }, "never below zero");
+});
+
+test("only up, down or nothing is a vote", () => {
+  assert.ok(validateVote({ term: "Q7", id: "DC_abc123", vote: "up", previous: null }).ok);
+  assert.ok(!validateVote({ term: "Q7", id: "DC_abc123", vote: "sideways" }).ok);
+  assert.ok(!validateVote({ term: "Q7", id: "../x", vote: "up" }).ok);
+  assert.ok(!validateVote({ id: "DC_abc123", vote: "up" }).ok);
 });
 
 test("the phone alert says who, where, and opens the page", () => {

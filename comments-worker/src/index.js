@@ -9,7 +9,10 @@
 //
 // Each comment carries a status: "addressed" once the repo owner reacts with
 // a rocket on GitHub, "waiting" before that, null for our own posts
-// (STAFF_NAMES).
+// (STAFF_NAMES). Our own posts also carry thumbs up/down counts, kept in the
+// VOTES KV store:
+//
+//   POST /vote  { term, id, vote, previous }  -> { votes: { up, down } }
 //
 // Secrets: GITHUB_TOKEN (fine-grained, Discussions read/write on the repo);
 //          NTFY_TOPIC (optional) -- an unguessable ntfy.sh topic. Each new
@@ -17,7 +20,7 @@
 //          under the token owner's account and GitHub does not notify you
 //          of your own activity.
 
-import { shapeThread, validate, formatComment, alertFor } from "./core.js";
+import { shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments } from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
 
@@ -69,6 +72,20 @@ const THREAD_FIELDS = `
 
 function threadOptions(env) {
   return { owner: env.REPO.split("/")[0], staff: (env.STAFF_NAMES ?? "").split(",") };
+}
+
+// A page's thread, with the vote counts on our own posts (status null).
+async function loadThread(env, term) {
+  const thread = shapeThread(await findDiscussion(env, term), threadOptions(env));
+  if (!env.VOTES) return thread;
+  await Promise.all(
+    allComments(thread)
+      .filter((c) => c.status === null)
+      .map(async (c) => {
+        c.votes = (await env.VOTES.get(`votes:${c.id}`, "json")) ?? { up: 0, down: 0 };
+      }),
+  );
+  return thread;
 }
 
 // Two queries, not one: GitHub refuses a query that could reach more than
@@ -150,7 +167,28 @@ export default {
       if (url.pathname === "/comments" && request.method === "GET") {
         const term = url.searchParams.get("term") ?? "";
         if (!term) return json({ error: "missing term" }, 400, headers);
-        return json({ comments: shapeThread(await findDiscussion(env, term), threadOptions(env)) }, 200, headers);
+        return json({ comments: await loadThread(env, term) }, 200, headers);
+      }
+
+      if (url.pathname === "/vote" && request.method === "POST") {
+        const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+        const { success } = await env.VOTE_LIMIT.limit({ key: ip });
+        if (!success) return json({ error: "Easy there -- please wait a minute." }, 429, headers);
+        let input;
+        try {
+          input = await request.json();
+        } catch {
+          return json({ error: "Sorry, that didn't go through." }, 400, headers);
+        }
+        const checked = validateVote(input);
+        if (!checked.ok) return json({ error: checked.error }, 400, headers);
+        const { term, id, vote, previous } = checked.value;
+        // Only our own posts on this page can be voted on.
+        const target = allComments(await loadThread(env, term)).find((c) => c.id === id);
+        if (!target || target.status !== null) return json({ error: "That reply can't be voted on." }, 400, headers);
+        const votes = applyVote(target.votes, previous, vote);
+        await env.VOTES.put(`votes:${id}`, JSON.stringify(votes));
+        return json({ votes }, 200, headers);
       }
 
       if (url.pathname === "/comments" && request.method === "POST") {
@@ -171,7 +209,7 @@ export default {
         const discussion = (await findDiscussion(env, term)) ?? (await createDiscussion(env, term));
         await addComment(env, discussion.id, formatComment(name, message), replyTo);
         if (env.NTFY_TOPIC) ctx.waitUntil(notify(env, alertFor(checked.value, input.page, env.SITE_URL)));
-        return json({ comments: shapeThread(await findDiscussion(env, term), threadOptions(env)) }, 200, headers);
+        return json({ comments: await loadThread(env, term) }, 200, headers);
       }
 
       return json({ error: "not found" }, 404, headers);

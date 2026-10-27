@@ -1,29 +1,51 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "keep-comments",
-  "main": "src/index.js",
-  "compatibility_date": "2026-10-15",
-  "observability": { "enabled": true },
-  "workers_dev": true,
-  // Only the one public address is used; no per-version preview addresses.
-  "preview_urls": false,
-
-  "vars": {
-    "REPO": "Edulus/Myth-1-to-2-plugin-converter",
-    "REPO_ID": "R_kgDOTmqt9g",
-    // Discussions category "Announcements" -- the threads giscus also used.
-    "CATEGORY_ID": "DIC_kwDOTmqt9s4DJWN2",
-    "SITE_URL": "https://edulus.github.io/Myth-1-to-2-plugin-converter/",
-    "ALLOWED_ORIGINS": "https://edulus.github.io",
-    // The check under the box: any of ANSWERS, compared on letters only.
-    // Names we post under; their comments get no addressed/waiting box.
-    "STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5",
-    "QUESTION": "In Myth, what do dwarves throw? (one word)",
-    "ANSWERS": "bottle,bottles,molotov,molotovs,molotovcocktail,molotovcocktails,cocktail,cocktails,satchel,satchels,satchelcharge,satchelcharges,bomb,bombs,explosive,explosives,grenade,grenades"
-  },
-
-  // At most 5 posts a minute from one address.
-  "ratelimits": [
-    { "name": "POST_LIMIT", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }
-  ]
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "keep-comments",
+	"main": "src/index.js",
+	"compatibility_date": "2026-10-15",
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": true,
+	// Only the one public address is used; no per-version preview addresses.
+	"preview_urls": false,
+	"vars": {
+		"REPO": "Edulus/Myth-1-to-2-plugin-converter",
+		"REPO_ID": "R_kgDOTmqt9g",
+		// Discussions category "Announcements" -- the threads giscus also used.
+		"CATEGORY_ID": "DIC_kwDOTmqt9s4DJWN2",
+		"SITE_URL": "https://edulus.github.io/Myth-1-to-2-plugin-converter/",
+		"ALLOWED_ORIGINS": "https://edulus.github.io",
+		// Names we post under; their comments get no addressed/waiting box.
+		"STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5",
+		// The check under the box: any of ANSWERS, compared on letters only.
+		"QUESTION": "In Myth, what do dwarves throw? (one word)",
+		"ANSWERS": "bottle,bottles,molotov,molotovs,molotovcocktail,molotovcocktails,cocktail,cocktails,satchel,satchels,satchelcharge,satchelcharges,bomb,bombs,explosive,explosives,grenade,grenades"
+	},
+	// At most 5 posts a minute from one address.
+	"ratelimits": [
+		{
+			"name": "POST_LIMIT",
+			"namespace_id": "1001",
+			"simple": {
+				"limit": 5,
+				"period": 60
+			}
+		},
+		// At most 10 votes a minute from one address.
+		{
+			"name": "VOTE_LIMIT",
+			"namespace_id": "1002",
+			"simple": {
+				"limit": 10,
+				"period": 60
+			}
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "VOTES",
+			"id": "f4edd975354e4d8a808e4754df46e86f"
+		}
+	]
 }

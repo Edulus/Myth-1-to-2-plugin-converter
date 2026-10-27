@@ -31,11 +31,16 @@ def main():
     for term in terms:
         for comment in thread(term):
             for c in [comment] + comment["replies"]:
+                first_line = c["text"].strip().splitlines()[0][:100]
                 if c.get("status") == "waiting":
                     waiting += 1
-                    first_line = c["text"].strip().splitlines()[0][:100]
                     print(f"[ ] {term}\n    {c['name']}, {c['at'][:10]} (id {c['id']}): {first_line}")
-    print(f"\n{waiting} waiting for a reply.")
+                elif c.get("votes", {}).get("down"):
+                    # A thumbs-down on one of our answers puts it back on the list.
+                    waiting += 1
+                    v = c["votes"]
+                    print(f"[-] {term}\n    our answer, {c['at'][:10]}, {v['up']} up / {v['down']} down: {first_line}")
+    print(f"\n{waiting} waiting for a reply or with a thumbs-down.")
 
 
 if __name__ == "__main__":

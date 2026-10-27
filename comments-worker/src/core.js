@@ -89,6 +89,37 @@ export function shapeThread(discussion, { owner = "", staff = [] } = {}) {
   }));
 }
 
+// Thumbs up/down on our replies. Each browser remembers its own vote and
+// sends it along with the new one, so a changed vote moves a count rather
+// than adding one.
+const VOTES = ["up", "down"];
+
+export function validateVote(input) {
+  const body = input && typeof input === "object" ? input : {};
+  const term = String(body.term ?? "").trim();
+  const id = String(body.id ?? "");
+  const vote = body.vote ?? null;
+  const previous = body.previous ?? null;
+  if (!term || term.length > 200) return { ok: false, error: "This page is missing its topic." };
+  if (!/^[A-Za-z0-9_=-]{4,100}$/.test(id)) return { ok: false, error: "That reply link is broken." };
+  if (vote !== null && !VOTES.includes(vote)) return { ok: false, error: "Sorry, that didn't go through." };
+  if (previous !== null && !VOTES.includes(previous)) return { ok: false, error: "Sorry, that didn't go through." };
+  return { ok: true, value: { term, id, vote, previous } };
+}
+
+export function applyVote(counts, previous, vote) {
+  const next = { up: counts?.up ?? 0, down: counts?.down ?? 0 };
+  if (previous === vote) return next;
+  if (previous) next[previous] = Math.max(0, next[previous] - 1);
+  if (vote) next[vote] += 1;
+  return next;
+}
+
+// Every comment in a thread, replies included, flattened.
+export function allComments(thread) {
+  return thread.flatMap((c) => [c, ...(c.replies ?? [])]);
+}
+
 // The phone alert for a new comment. ``page`` is where it was written, as
 // the site reports it; only an address on the site itself is trusted.
 export function alertFor({ name, term, message, replyTo }, page, siteUrl) {
