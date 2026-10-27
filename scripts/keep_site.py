@@ -124,6 +124,13 @@ QUESTIONS = [
         "title": "What should a successful conversion preserve?",
         "body": "<p>Which behaviours must match TFL before a conversion feels complete: movement, combat balance, scenery, scripted objectives or something else? Describe a specific level and a way to check it.</p>",
     },
+    {
+        "n": 7,
+        "term": "Q7: Web converter feature and bug reports",
+        "title": "Feature and bug reports for the web converter",
+        "body": """<p>Please enter any feature or bug reports here about the <a href="../convert/index.html">webtool for converting TFL to M2 plugins</a>.</p>
+<p>This question is only for the web converter. It helps to include the converter's version number (shown at the top of its page), the plugin you converted, your browser, and what happened. For a problem in a converted plugin, also paste the start of the <strong>Technical details</strong> shown after converting.</p>""",
+    },
 ]
 
 STYLE = """
@@ -582,6 +589,7 @@ CONVERT_BODY = """
 <li>The converted plugin carries the original game files it needs, so you don't need anything else installed.</li>
 <li><strong>Beta.</strong> Tested with <em>Sir Mauriac's Tale</em> on Windows. Other plugins may convert with parts missing, and the report tells you what it could not convert.</li>
 <li>Only share a converted plugin if its author agrees.</li>
+<li>Found a bug, or want a feature? Tell us in <a href="../q/7.html">Q7: feature and bug reports</a>.</li>
 </ul>
 <div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
 <script src="page.js?v={page_v}"></script>"""

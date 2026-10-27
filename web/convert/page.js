@@ -97,7 +97,11 @@
       "Start Myth II, choose New Game, pick the campaign \u201c" + res.filename + "\u201d, then a level, then OK. Leave Tagsets empty: the original game files it needs are already inside.",
     ].forEach(function (s) { steps.append(el("li", s)); });
     parts.push(steps);
-    parts.push(el("p", "This is a beta. If a level doesn't load or looks wrong, please tell us on the home page and include the technical details below.", "meta"));
+    var tell = el("p", "This is a beta. If a level doesn't load or looks wrong, please tell us in ", "meta");
+    var q7 = el("a", "Q7: feature and bug reports");
+    q7.href = "../q/7.html";
+    tell.append(q7, " and include the technical details below.");
+    parts.push(tell);
     parts.push(details(res.details));
     show(result, parts);
   }
