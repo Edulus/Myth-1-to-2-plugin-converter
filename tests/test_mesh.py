@@ -800,5 +800,47 @@ class TestRealPluginMeshBodies(unittest.TestCase):
         self.assertGreater(total_palette, 0, "sample has no palette entries to exercise")
 
 
+class TestGroundHeight(unittest.TestCase):
+    """Markers are set on the ground as Myth II draws it: two triangles per
+    cell, the split alternating like a chessboard."""
+
+    CELL = mesh.SB_CELL_WORLD_SIZE
+
+    def terrain(self, heights):
+        import struct
+
+        return b"".join(struct.pack(">hbbBBHhH", h, 0, 0, 0, 0, 0xFFFF, 0, 0xFFFF) for row in heights for h in row)
+
+    def test_a_corner_is_its_cell_height(self):
+        t = self.terrain([[0, 100], [200, 300]])
+        self.assertEqual(300, mesh.ground_height(t, 2, 2, self.CELL, self.CELL))
+
+    def test_the_split_alternates_between_cells(self):
+        # Raise the bottom-right corner of a cell and look at the same spot in
+        # it, halfway across and a quarter down. Cell (0, 0) splits through
+        # that corner, so the spot is a quarter of the way up; cell (1, 0)
+        # splits the other way, so the spot stays on the flat triangle.
+        half, quarter = self.CELL // 2, self.CELL // 4
+        even = self.terrain([[0, 0, 0], [0, 400, 0]])
+        self.assertEqual(100, mesh.ground_height(even, 3, 2, half, quarter))
+        odd = self.terrain([[0, 0, 0], [0, 0, 400]])
+        self.assertEqual(0, mesh.ground_height(odd, 3, 2, self.CELL + half, quarter))
+
+    def test_scenery_and_units_move_but_sounds_do_not(self):
+        def marker(kind):
+            return mesh.MarkerHead.build(
+                flags=0, type=kind, palette_index=0, id=0, min_difficulty=0,
+                pos_x=self.CELL // 2, pos_y=self.CELL // 2, pos_z=-500, yaw=0,
+            ).encode()
+
+        block = marker(mesh.MarkerType.SCENERY) + marker(mesh.MarkerType.UNIT) + marker(mesh.MarkerType.AMBIENT_SOUND)
+        # A 1x1-submesh mesh is 32x32 Myth II cells.
+        flat = self.terrain([[64] * 32 for _ in range(32)])
+        out, moved = mesh.place_markers_on_ground(block, 3, flat, 1, 1)
+        zs = [m.pos_z for m in mesh.MarkerHead.unpack_many(out, 0, 3)]
+        self.assertEqual([64, 64, -500], zs)
+        self.assertEqual(2, moved)
+
+
 if __name__ == "__main__":
     unittest.main()

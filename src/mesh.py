@@ -743,6 +743,65 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
     return bytes(out)
 
 
+# World units per Myth II cell, the scale of a marker's pos_x and pos_y.
+SB_CELL_WORLD_SIZE = 512
+
+# Markers whose height is the ground under them. TFL appears to have placed
+# these on the ground whatever pos_z said; Myth II uses pos_z, so a stale value
+# leaves a bush floating or buried. Project Magma's port of Crow's Bridge puts
+# all of them on its ground and leaves sounds, models and projectile groups be.
+GROUNDED_MARKER_TYPES = {MarkerType.OBSERVER, MarkerType.SCENERY, MarkerType.UNIT}
+
+
+def ground_height(terrain, columns, rows, x, y):
+    """The ground's height at world point (x, y) on a Myth II terrain block.
+
+    Each cell is two triangles, the split alternating like a chessboard: from
+    top-left to bottom-right where column + row is even, the other way where it
+    is odd. Measured on Crow's Bridge in *The Fallen Levels v2*, this puts 99%
+    of Magma's scenery and units at their stored height exactly and the rest
+    within 3; a single split direction or a bilinear blend misses by up to 45.
+    """
+
+    def at(cx, cy):
+        cx, cy = min(max(cx, 0), columns - 1), min(max(cy, 0), rows - 1)
+        return struct.unpack_from(">h", terrain, (cy * columns + cx) * SB_CELL_SIZE)[0]
+
+    cx, cy = int(x // SB_CELL_WORLD_SIZE), int(y // SB_CELL_WORLD_SIZE)
+    tx = x / SB_CELL_WORLD_SIZE - cx
+    ty = y / SB_CELL_WORLD_SIZE - cy
+    a, b = at(cx, cy), at(cx + 1, cy)
+    c, d = at(cx, cy + 1), at(cx + 1, cy + 1)
+    if (cx + cy) % 2 == 0:
+        if tx >= ty:
+            return a + (b - a) * tx + (d - b) * ty
+        return a + (c - a) * ty + (d - c) * tx
+    if tx + ty <= 1:
+        return a + (b - a) * tx + (c - a) * ty
+    return d + (c - d) * (1 - tx) + (b - d) * (1 - ty)
+
+
+def place_markers_on_ground(markers, count, terrain, submesh_width, submesh_height):
+    """Set each grounded marker's pos_z to the ground under it.
+
+    ``markers`` is a mesh's marker block and ``terrain`` its converted Myth II
+    terrain block. Returns ``(markers, moved)``: the new block, and how many
+    markers changed height.
+    """
+    columns, rows = cell_counts(submesh_width, submesh_height, formats.SB)
+    out = bytearray(markers)
+    moved = 0
+    for i, marker in enumerate(MarkerHead.unpack_many(markers, 0, count)):
+        if marker.type not in GROUNDED_MARKER_TYPES:
+            continue
+        z = round(ground_height(terrain, columns, rows, marker.pos_x, marker.pos_y))
+        if z != marker.pos_z:
+            start = i * MARKER_HEAD_SIZE
+            out[start : start + MARKER_HEAD_SIZE] = marker.replace(pos_z=z).encode()
+            moved += 1
+    return bytes(out), moved
+
+
 def build_lod_data(submesh_width, submesh_height):
     """A Myth II mesh level-of-detail block, sized to the cell count.
 

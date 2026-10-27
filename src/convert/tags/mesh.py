@@ -271,11 +271,22 @@ def _convert_blocks(tfl, trailing, id_map, context):
     else:
         blocks["palette"] = palette
 
-    # -- markers: same layout in both games, copied verbatim -----------------
+    # -- markers: same layout in both games; scenery and units re-seated -----
+    # Myth II draws a marker at its stored height, which TFL seems to have
+    # ignored for scenery and units; set them on the converted ground.
     markers = _slice(trailing, tfl.markers_offset, tfl.markers_size)
     if markers is None:
         blocks["markers"] = b""
         warnings.append("markers lie outside the mesh body; dropped")
+    elif tfl.marker_count and blocks["terrain"]:
+        try:
+            blocks["markers"], _moved = mesh_module.place_markers_on_ground(
+                markers, tfl.marker_count, blocks["terrain"],
+                tfl.submesh_width, tfl.submesh_height,
+            )
+        except (struct.error, ValueError) as exc:
+            blocks["markers"] = markers
+            warnings.append(f"markers left at their TFL heights: {exc}")
     else:
         blocks["markers"] = markers
 
