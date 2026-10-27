@@ -1501,3 +1501,48 @@ Tagsets list, so switch it before playing a pack that needs the other one.
   marker `type` / `palette_index` fields as declared are probably misread. The swap
   does not use them; counts of "units placed" per map are unreliable until fixed.
 - Campaign levels unlock in order, so a swap is only checkable on unlocked levels.
+
+
+## 20. Benchmarking against *The Fallen Levels v2* — water fixed
+
+KEEP's play-test of *Sir Mauriac's Tale* reported water not acting as water,
+blocky heights, and no 3D models, and proposed a yardstick: Project Magma's
+faithful port of the TFL solo levels, *The Fallen Levels v2*
+(projectmagma.net/downloads/TFL_Solo/, kept in the git-ignored `local/`).
+KEEP asked for v2 specifically; the `Magma - The Fallen Lords v1.9` used in
+earlier sections is a different, later product.
+
+*Crow's Bridge* is TFL `mesh.ambu` and the port's `mesh.30cb`. Both are 6×5
+submeshes (TFL 96×80 cells, Myth II 192×160). Our conversion against the port,
+cell by cell:
+
+| | Ours | Port |
+|---|---|---|
+| Media coverage block | dropped (0 bytes) | 7,668 bytes |
+| Heights identical | 5,887 of 30,720 (19%) | — |
+| Height range | −1,020 to 2,070 | −3,072 to 2,064 |
+| Cells with a model index | 0 | 916, 22 distinct |
+| Per-cell media height | 0 everywhere | 0 everywhere |
+
+### Media coverage is not resolution-dependent
+
+The converter had dropped the media coverage region as "resolution-dependent
+and not understood". It is neither a problem nor grid-sized: TFL's block is
+7,810 bytes and the port's 7,668, both runs of 6-byte records
+(`00 3b 00 b6 06 00`, ...) whose values already count on Myth II's scale (up to
+182 on a 192-cell-wide map). The port's block is TFL's re-traced: 77.5% of
+bytes match in sequence, and the differing records are off by 1 in the second
+value or one record added or dropped.
+
+So the block is now copied verbatim (`src/convert/tags/mesh.py`). In-engine, on
+a clean 1.8.5 install, *Tandem*: before the change units walked on top of the
+river; after it they slow down and wade with the water at their thighs.
+
+### Open
+
+- **Heights**: only 19% match, and the port goes three times deeper. Not just
+  2×2 copying versus smoothing; the scale or offset may differ too.
+- **3D models**: the port stamps model indexes into 916 cells (§17).
+- **Units**: KEEP asks that the port's units be used to correct ours
+  (walking in place, giants not attacking, sizes), with some licence to adopt
+  the port's proven units, including for vTFL mode.

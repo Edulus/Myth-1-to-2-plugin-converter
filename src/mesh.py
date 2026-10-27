@@ -732,8 +732,7 @@ def build_lod_data(submesh_width, submesh_height):
 
     Every one of the 87 Myth II meshes surveyed -- 47 native campaign meshes and
     40 from a community TFL port -- carries this block at exactly half a byte
-    per cell, and none has it empty, so it cannot simply be omitted the way the
-    media coverage region can.
+    per cell, and none has it empty, so it cannot simply be omitted.
 
     Its contents are rendering detail hints whose encoding is not understood
     here; real blocks are roughly half zero bytes with 0xF0 and 0xFF common.

@@ -40,9 +40,9 @@ every later parameter in the buffer and is a plausible cause of the
 
 **What this still does not do:** tag references *inside* map-action parameter
 data (a `SOUND` or `PROJECTILE`-typed parameter's element bytes) are not yet
-remapped through the ID map, only the palette's. Terrain, media coverage and
-mesh LOD data are copied verbatim untouched, and are not known to need
-anything else.
+remapped through the ID map, only the palette's. Terrain is upsampled by
+copying each cell into a 2x2 block, media coverage is copied verbatim, and mesh
+LOD data is zero-filled at the new size.
 """
 
 import struct
@@ -296,6 +296,20 @@ def _convert_blocks(tfl, trailing, id_map, context):
     else:
         blocks["actions"] = actions
 
+    # -- media coverage: where the water is, copied verbatim -----------------
+    # Not resolution-dependent after all: measured against Magma's faithful
+    # port of Crow's Bridge (TFL `ambu`, The Fallen Levels v2 `30cb`), its
+    # 6-byte records already count on Myth II's scale, and Magma's block is
+    # TFL's re-traced, each value within 1. Dropping it left water uncharted.
+    coverage = _slice(
+        trailing, tfl.media_coverage_region_offset, tfl.media_coverage_region_size
+    )
+    if coverage is None:
+        blocks["coverage"] = b""
+        warnings.append("media coverage lies outside the mesh body; dropped")
+    else:
+        blocks["coverage"] = coverage
+
     # -- level of detail: must exist, and must match the new cell count ------
     blocks["lod"] = mesh_module.build_lod_data(tfl.submesh_width, tfl.submesh_height)
 
@@ -306,14 +320,10 @@ def _lay_out_body(blocks):
     """Concatenate the blocks and report where each landed.
 
     Order follows what TFL and Myth II meshes both use in practice: terrain,
-    marker palette, markers, map actions, then level-of-detail data.
-
-    The media coverage region is deliberately dropped. It is the one
-    resolution-dependent block whose encoding is not understood here, and 14 of
-    the 87 real Myth II meshes surveyed ship with it empty -- so an empty one is
-    known-valid, where a wrongly-sized one would not be.
+    marker palette, markers, map actions, media coverage, then level-of-detail
+    data.
     """
-    order = ["terrain", "palette", "markers", "actions", "lod"]
+    order = ["terrain", "palette", "markers", "actions", "coverage", "lod"]
     data = bytearray()
     at = {}
     for name in order:
@@ -329,8 +339,8 @@ def _lay_out_body(blocks):
         "markers_size": len(blocks["markers"]),
         "map_actions_offset": at["actions"],
         "map_action_buffer_size": len(blocks["actions"]),
-        "media_coverage_region_offset": at["lod"],
-        "media_coverage_region_size": 0,
+        "media_coverage_region_offset": at["coverage"],
+        "media_coverage_region_size": len(blocks["coverage"]),
         "mesh_LOD_data_offset": at["lod"],
         "mesh_LOD_data_size": len(blocks["lod"]),
     }

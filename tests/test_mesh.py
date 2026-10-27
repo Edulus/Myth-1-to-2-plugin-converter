@@ -675,6 +675,23 @@ class TestMeshBodyConversion(unittest.TestCase):
         self.assertTrue([w for w in warnings if "markers" in w and "outside" in w])
         self.assertGreaterEqual(len(converted), mesh.MESH_HEADER_SIZE)
 
+    def test_media_coverage_is_carried_verbatim(self):
+        """Where the water is. Dropping it left water uncharted in-engine;
+        Magma's port of Crow's Bridge keeps TFL's block, re-traced."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        coverage = b"\x00\x3b\x00\xb6\x06\x00\x00\x3c\x00\xb6\x06\x00"
+        body = bytearray(fixtures.mesh_body(trailing=b"\xaa" * 8 + coverage))
+        struct.pack_into(">L", body, offsets["media_coverage_region_offset"], 8)
+        struct.pack_into(">L", body, offsets["media_coverage_region_size"], len(coverage))
+
+        converted, _ = self._convert(bytes(body))
+        after = mesh.parse_header(converted, formats.SB)
+        start = mesh.MESH_HEADER_SIZE + after.media_coverage_region_offset
+        self.assertEqual(len(coverage), after.media_coverage_region_size)
+        self.assertEqual(coverage, converted[start : start + len(coverage)])
+
     def test_vtfl_flag_is_opt_in(self):
         from src.convert.tags import mesh as mesh_converter
 
