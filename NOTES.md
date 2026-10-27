@@ -1538,10 +1538,34 @@ So the block is now copied verbatim (`src/convert/tags/mesh.py`). In-engine, on
 a clean 1.8.5 install, *Tandem*: before the change units walked on top of the
 river; after it they slow down and wade with the water at their thighs.
 
+### Heights are blended, not copied
+
+The scale was never wrong. At the original TFL points (every second cell each
+way) the port's heights fit ours at 0.996× with r = 0.9965, and the median
+ratio is 0.98. The difference is the cells in between: we copied each TFL cell
+into a 2×2 block, and the port sets them halfway between their neighbours (mean
+gap to the neighbours' average 5.8, against 38.0 to the nearest original
+point). The "three times deeper" range is 43 cells at −3,072, hand edits in the
+port, not a rule.
+
+The normals are copied in the port, not blended or recomputed. At the
+in-between cells copying is closer to the port than blending (mean gap 7.3
+against 8.0, and 4.4 against 7.2). So `upsample_terrain` (`src/mesh.py`) now
+blends heights only, rounding down, with the last row and column kept level, and
+copies every other field. Crow's Bridge against the port:
+
+| | Before | After |
+|---|---|---|
+| Mean height gap | 48.3 | 21.4 |
+| Median height gap | 16 | 10 |
+| Within 16 of the port | 50% | 72% |
+
+What is left is mostly hand work in the port: 785 cells still differ by more
+than 64.
+
 ### Open
 
-- **Heights**: only 19% match, and the port goes three times deeper. Not just
-  2×2 copying versus smoothing; the scale or offset may differ too.
+- **Heights**: check the blended ground in the game.
 - **3D models**: the port stamps model indexes into 916 cells (§17).
 - **Units**: KEEP asks that the port's units be used to correct ours
   (walking in place, giants not attacking, sizes), with some licence to adopt

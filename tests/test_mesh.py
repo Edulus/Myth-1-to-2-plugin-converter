@@ -505,16 +505,17 @@ class TestMeshBodyConversion(unittest.TestCase):
             after.mesh_LOD_data_offset + after.mesh_LOD_data_size, len(trailing)
         )
 
-    def test_terrain_cells_are_duplicated_into_2x2_blocks(self):
-        """Nearest-neighbour: one TFL cell becomes the four Myth II cells
-        covering the same ground, values unchanged."""
+    def test_terrain_heights_are_blended_into_2x2_blocks(self):
+        """One TFL cell becomes the four Myth II cells covering the same
+        ground: the first keeps its height, the others sit between it and its
+        neighbours, and every other field is copied."""
         import struct
 
         offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
-        # 1x1 submesh, every cell distinguishable by its height.
+        # 1x1 submesh, every cell distinguishable by its height and normal.
         terrain = bytearray()
         for i in range(16 * 16):
-            terrain += struct.pack(">hbbBBH", i, 0, 0, 0, 0, 0xFFFF)
+            terrain += struct.pack(">hbbBBH", i * 4, i % 100, 0, 0, 0, 0xFFFF)
         body = bytearray(fixtures.mesh_body(trailing=bytes(terrain)))
         struct.pack_into(">H", body, offsets["submesh_width"], 1)
         struct.pack_into(">H", body, offsets["submesh_height"], 1)
@@ -528,13 +529,23 @@ class TestMeshBodyConversion(unittest.TestCase):
         def height_at(x, y):
             return struct.unpack_from(">h", out, (y * 32 + x) * 12)[0]
 
-        # Source cell (3, 5) has height 5*16+3 = 83 and must fill the 2x2 block
-        # at (6, 10).
+        def normal_at(x, y):
+            return struct.unpack_from(">b", out, (y * 32 + x) * 12 + 2)[0]
+
+        # Source cell (3, 5) has height (5*16+3)*4 = 332; east 336, south 396,
+        # southeast 400. Its 2x2 block is at (6, 10).
+        self.assertEqual(332, height_at(6, 10))
+        self.assertEqual(334, height_at(7, 10))
+        self.assertEqual(364, height_at(6, 11))
+        self.assertEqual(366, height_at(7, 11))
         for dx in (0, 1):
             for dy in (0, 1):
-                self.assertEqual(83, height_at(6 + dx, 10 + dy))
-        # A different source cell must not bleed into it.
-        self.assertNotEqual(83, height_at(8, 10))
+                self.assertEqual(83, normal_at(6 + dx, 10 + dy))
+        # The last column and row have no neighbour beyond, so they stay level.
+        last = (15 * 16 + 15) * 4
+        for dx in (0, 1):
+            for dy in (0, 1):
+                self.assertEqual(last, height_at(30 + dx, 30 + dy))
 
     def test_media_height_is_written_into_every_cell(self):
         import struct

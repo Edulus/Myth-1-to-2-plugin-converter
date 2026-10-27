@@ -682,16 +682,15 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
     """Convert a TFL terrain block into a Myth II one.
 
     Each TFL cell becomes the 2x2 block of Myth II cells covering the same
-    ground, carrying its values unchanged -- nearest-neighbour, because it is
-    the only option that invents nothing.
+    ground. The top-left cell keeps the TFL height; the other three take the
+    average of the TFL heights at their corners, so slopes stay slopes instead
+    of becoming 2x2 steps. Every other field is copied unchanged.
 
-    Interpolating heights instead would look smoother, but the two fields after
-    the height are surface normals, and interpolated heights would no longer
-    match them: the lighting would be computed for a surface that is not the one
-    being drawn. Recomputing normals is possible but is a second layer of
-    invention on top of the first. Real hand-made ports sidestep the question
-    entirely by re-importing the original displacement image at Myth II's
-    resolution, which is not available to a tool reading only the tag.
+    This matches Project Magma's hand port of Crow's Bridge (*The Fallen Levels
+    v2*): their heights equal TFL's at the original points and sit halfway
+    between them elsewhere, while their normals are copied, not blended or
+    recomputed. Blending brought our mean height gap to their port from 48 to
+    21 (NOTES.md section 20).
 
     ``media_height`` is a Myth II-only per-cell field with no TFL source. It is
     the height of the water *surface*, and is a single constant across nearly
@@ -712,17 +711,34 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
     # built once.
     suffix = struct.pack(">hH", media_height, NO_MODEL_INDEX)
 
+    def cell(x, y):
+        start = (y * columns + x) * TFL_CELL_SIZE
+        return terrain[start : start + TFL_CELL_SIZE]
+
+    heights = [
+        [struct.unpack_from(">h", terrain, (y * columns + x) * TFL_CELL_SIZE)[0] for x in range(columns)]
+        for y in range(rows)
+    ]
+
+    def with_height(source, height):
+        return struct.pack(">h", height) + source[2:] + suffix
+
     out = bytearray()
     for y in range(rows):
-        row_start = y * columns * TFL_CELL_SIZE
-        doubled = bytearray()
+        below = min(y + 1, rows - 1)  # the last row has nothing below to blend with
+        top = bytearray()
+        bottom = bytearray()
         for x in range(columns):
-            start = row_start + x * TFL_CELL_SIZE
-            cell = terrain[start : start + TFL_CELL_SIZE] + suffix
-            doubled += cell  # left half of the 2x2 block
-            doubled += cell  # right half
-        out += doubled  # top row of the 2x2 blocks
-        out += doubled  # bottom row
+            right = min(x + 1, columns - 1)
+            source = cell(x, y)
+            here, east = heights[y][x], heights[y][right]
+            south, southeast = heights[below][x], heights[below][right]
+            top += source + suffix
+            top += with_height(source, (here + east) // 2)
+            bottom += with_height(source, (here + south) // 2)
+            bottom += with_height(source, (here + east + south + southeast) // 4)
+        out += top
+        out += bottom
 
     return bytes(out)
 
