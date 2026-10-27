@@ -25,6 +25,12 @@ class TestChanges(unittest.TestCase):
     def test_the_newest_change_is_the_current_version(self):
         self.assertEqual(__version__, self.changes[0]["version"])
 
+    def test_the_newest_version_says_what_to_test_next(self):
+        tests = self.changes[0].get("test", [])
+        self.assertTrue(tests)
+        for t in tests:
+            self.assertTrue(t.strip())
+
     def test_newest_first_with_distinct_versions_and_dates(self):
         import datetime
 

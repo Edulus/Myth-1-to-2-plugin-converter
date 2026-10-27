@@ -224,8 +224,10 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
 details{margin:1rem 0}
-.version{margin:0}
-details.changes{margin:.2rem 0 1rem}
+.release{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blood);border-radius:8px;padding:.9rem 1.2rem;margin:0 0 1.5rem}
+.release h2{margin:0 0 .4rem}
+.release h3{margin:.9rem 0 .3rem}
+.release ul{margin:.2rem 0}
 summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
@@ -560,15 +562,26 @@ def _long_date(iso):
 
 
 def changes_html():
-    """The version line and the list of changes, newest first."""
+    """The release panel: version and build date, what to test next, and the
+    list of changes, newest first."""
     newest = CHANGES[0]
+    tests = "\n".join(f"<li>{html.escape(t)}</li>" for t in newest["test"])
     items = "\n".join(
         f'<li><strong>{html.escape(c["version"])}</strong> ({_long_date(c["date"])}): {html.escape(c["change"])}</li>'
         for c in CHANGES
     )
-    return (f'<p class="meta version">Version {html.escape(newest["version"])} &middot; '
-            f'updated {_long_date(newest["date"])}</p>\n'
-            f'<details class="changes"><summary>What\'s new</summary>\n<ul>\n{items}\n</ul>\n</details>')
+    return f"""<section class="release" aria-labelledby="release">
+<h2 id="release">Version {html.escape(newest["version"])} &middot; built {_long_date(newest["date"])}</h2>
+<h3>Please test next</h3>
+<ul>
+{tests}
+</ul>
+<p>Report what you find in <a href="../q/7.html">Q7: feature and bug reports</a>, with the version number.</p>
+<h3>What changed</h3>
+<ul class="changes">
+{items}
+</ul>
+</section>"""
 
 
 CONVERT_BODY = """
