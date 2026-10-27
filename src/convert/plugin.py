@@ -476,9 +476,12 @@ def bundle_stock(mono, stock_paths, only_used=True, id_map=None):
     return combined, len(added)
 
 
-# Tag types that hold pixel or sample data and no tag references. Scanning them
-# only finds false matches: random image bytes that happen to spell a tag ID.
-_NO_REFERENCES = {b".256", b"soun"}
+# Tag types that hold sample data and no tag references. Scanning them only
+# finds false matches: random sound bytes that happen to spell a tag ID.
+# Collections (.256) are scanned even though most of their bytes are pixels:
+# their sequences name sounds. Skipping them left out the myrmidon's
+# celebration sound, and Myth II refused to start "On the road to Strand".
+_NO_REFERENCES = {b"soun"}
 
 
 def _reachable_stock(own_tags, stock_tags, extra_ids=()):

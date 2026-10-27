@@ -92,17 +92,20 @@ class TestBundleStock(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.dir = pathlib.Path(self.tmp.name)
         self.plugin = self.dir / "plugin.gor"
-        # The plugin points at stk1, and only stk1; a picture "mentions" stk4.
+        # The plugin points at stk1; a collection's sequence names the sound
+        # stk4; sample data "mentions" stk5 by chance.
         self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS + [
             (b"refers", b"text", b"refs", b"..stk1.."),
             (b"a picture", b".256", b"pict", b"pixels stk4 pixels"),
+            (b"a sound", b"soun", b"snd1", b"samples stk5 samples"),
         ]))
         self.stock = self.dir / "TAGS.GOR"
         self.stock.write_bytes(fixtures.build_tfl_mono([
             (b"stock text", b"text", b"stk1", b"from the stock set, see stk2"),
             (b"reached via stk1", b"stli", b"stk2", b"chained\0"),
             (b"never mentioned", b"text", b"stk3", b"unused"),
-            (b"only in pixels", b"text", b"stk4", b"unused"),
+            (b"named by a sequence", b"soun", b"stk4", b"a celebration"),
+            (b"only in samples", b"text", b"stk5", b"unused"),
             (b"clash", b"stli", b"30cc", b"the stock version"),
             (b"a stock level", b"mesh", b"stlv", fixtures.MESH_TAGS[0][3]),
             (b"internal solo postgame", b"stli", b"in03", b"%d killed\0"),
@@ -125,20 +128,24 @@ class TestBundleStock(unittest.TestCase):
         report, result = self.bundle()
         self.assertIn((b"text", b"stk1"), self.ids(result))
         self.assertIn((b"stli", b"stk2"), self.ids(result), "reached through stk1")
-        self.assertEqual(2, report.bundled_stock)
+        self.assertEqual(3, report.bundled_stock)
 
     def test_stock_tags_nothing_points_at_are_left_out(self):
         _report, result = self.bundle()
         self.assertNotIn((b"text", b"stk3"), self.ids(result))
 
-    def test_picture_data_is_not_searched_for_references(self):
+    def test_sounds_named_by_a_collection_are_carried_in(self):
         _report, result = self.bundle()
-        self.assertNotIn((b"text", b"stk4"), self.ids(result))
+        self.assertIn((b"soun", b"stk4"), self.ids(result))
+
+    def test_sound_data_is_not_searched_for_references(self):
+        _report, result = self.bundle()
+        self.assertNotIn((b"text", b"stk5"), self.ids(result))
 
     def test_all_stock_carries_everything(self):
         report, result = self.bundle(all_stock=True)
         self.assertIn((b"text", b"stk3"), self.ids(result))
-        self.assertEqual(4, report.bundled_stock)
+        self.assertEqual(5, report.bundled_stock)
 
     def test_a_decisions_mapping_target_is_carried_in(self):
         id_map = idmap.IdMap()

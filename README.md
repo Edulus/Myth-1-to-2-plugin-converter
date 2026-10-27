@@ -225,7 +225,7 @@ tags.
 
 Or skip the tagset: `convert --stock "TFL/tags/TAGS.GOR" --stock "TFL/tags/ARTSOUND.GOR"`
 builds the stock tags into the plugin itself, so it needs nothing else installed.
-Only the stock tags the plugin uses go in (*Sir Mauriac's Tale*: 245 MB instead of
+Only the stock tags the plugin uses go in (*Sir Mauriac's Tale*: 293 MB instead of
 419 MB, verified in-engine); add `--all-stock` to carry every one.
 
 ### Plan, then convert
