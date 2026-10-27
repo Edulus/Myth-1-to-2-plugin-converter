@@ -1238,6 +1238,30 @@ So converting a `mode` is: split each footprint cell 2x2, and grow
 size in all 152; `scen` is the same size in all 61 common IDs but never
 identical. Both are worth the same treatment next.
 
+### Converted (2026-10-27), checked against *The Fallen Levels v2*
+
+KEEP asked for buildings after testing Crow's Bridge (§20), and
+`src/convert/tags/mode.py` and `geom.py` now convert them. Against the 91
+stock models and geometries in Magma's *The Fallen Levels v2* (porter
+signatures after the data ignored):
+
+- **`mode`: 72 of 91 byte-identical.** Each footprint cell splits 2x2 in rows,
+  and the source cells are sorted by (x, y) first, as Magma's are. Of the other
+  19, 9 differ only in cell order and 10 are hand-edited shapes or flags.
+- **`geom`: 43 of 91 byte-identical.** The other 48 differ only in the material
+  tails and surface bits below, plus `enst`'s garbled box in Magma's copy.
+- The six bytes after `center_z`, padding to mythextract, are not padding:
+  TFL and Magma hold the same values there, so they are kept.
+
+Myth II-only defaults, agreed with the user on 2026-10-27:
+
+| Field | Default | Agreement | Note |
+|---|---|---|---|
+| `geom` bounds min/max x, y, z | the vertices' extent | 90 of 91 | vertices are (x, y, z) int16 triples; derived, not invented |
+| `geom` `center_z` | 0 | 90 of 91 | TFL holds half the model's height here |
+| `geom` material record bytes 58..63 | TFL's bytes, unchanged | 85 records (0,0,0) | Magma sometimes sets (1, 0, k); meaning unknown |
+| `geom` surface byte 1 extra bits | none added | 43 geometries identical | Magma adds 0x10, 0x20, 0x02 to some; meaning unknown |
+
 ### Still needed
 
 - One in-engine test of a converted level with buildings — for the
