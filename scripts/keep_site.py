@@ -214,6 +214,9 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .comment{border-top:1px solid var(--line);padding:.8rem 0}
 .comment .who{margin:0;color:var(--muted);font-size:.9rem}
 .comment .who strong{color:var(--fg)}
+.comment .state{margin-left:.6rem;font-size:.85rem;padding:.05rem .45rem;border-radius:4px;border:1px solid var(--line)}
+.comment .state.done{color:var(--fg);background:var(--tint)}
+.comment .state.open{color:var(--muted)}
 .comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
 .comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
 .drop{display:block;margin:1.2rem 0;padding:2rem 1rem;text-align:center;background:var(--panel);border:2px dashed var(--blood);border-radius:8px;cursor:pointer}
@@ -278,7 +281,10 @@ COMMENTS_JS = """
     x.onclick=function(){replyTo=null; replying.hidden=true;}; replying.append(x);
     form.message.focus(); form.scrollIntoView({behavior:"smooth",block:"start"});}
   function item(c,top){var a=el("article","comment"+(top?"":" sub"));
-    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" \u00b7 "+when(c.at)); a.append(h);
+    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" \u00b7 "+when(c.at));
+    if(c.status==="addressed") h.append(el("span","state done","\u2611 Addressed"));
+    else if(c.status==="waiting") h.append(el("span","state open","\u2610 Waiting for a reply"));
+    a.append(h);
     a.append(el("p","text",c.text));
     if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
     return a;}

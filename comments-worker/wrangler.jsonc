@@ -16,6 +16,8 @@
     "SITE_URL": "https://edulus.github.io/Myth-1-to-2-plugin-converter/",
     "ALLOWED_ORIGINS": "https://edulus.github.io",
     // The check under the box: any of ANSWERS, compared on letters only.
+    // Names we post under; their comments get no addressed/waiting box.
+    "STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5",
     "QUESTION": "In Myth, what do dwarves throw? (one word)",
     "ANSWERS": "bottle,bottles,molotov,molotovs,molotovcocktail,molotovcocktails,cocktail,cocktails,satchel,satchels,satchelcharge,satchelcharges,bomb,bombs,explosive,explosives,grenade,grenades"
   },

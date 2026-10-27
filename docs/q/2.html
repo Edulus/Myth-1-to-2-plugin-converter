@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="../style.css?v=5f61ed51">
+<link rel="stylesheet" href="../style.css?v=167ae901">
 </head>
 <body>
 <header class="hero compact">
@@ -75,7 +75,10 @@
     x.onclick=function(){replyTo=null; replying.hidden=true;}; replying.append(x);
     form.message.focus(); form.scrollIntoView({behavior:"smooth",block:"start"});}
   function item(c,top){var a=el("article","comment"+(top?"":" sub"));
-    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" · "+when(c.at)); a.append(h);
+    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" · "+when(c.at));
+    if(c.status==="addressed") h.append(el("span","state done","☑ Addressed"));
+    else if(c.status==="waiting") h.append(el("span","state open","☐ Waiting for a reply"));
+    a.append(h);
     a.append(el("p","text",c.text));
     if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
     return a;}

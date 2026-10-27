@@ -61,11 +61,31 @@ export function parseComment(node) {
   return { id: node.id, name: node.author?.login ?? "someone", text: body, at: node.createdAt, viaSite: false };
 }
 
-export function shapeThread(discussion) {
+// Names we post under (compared on letters only, like the Myth answer).
+// Our own posts are answers, so they get no addressed/waiting box.
+export function isStaff(shown, owner, staff) {
+  if (!shown.viaSite) return shown.name.toLowerCase() === owner.toLowerCase();
+  return staff.map(normalizeAnswer).includes(normalizeAnswer(shown.name));
+}
+
+// A visitor's comment is "addressed" once the repository owner gives it a
+// rocket reaction on GitHub, "waiting" until then; our own posts get null.
+// Only the owner's reaction counts, so visitors cannot tick their own.
+export function statusOf(node, shown, owner, staff) {
+  if (isStaff(shown, owner, staff)) return null;
+  const marked = (node.reactions?.nodes ?? []).some((r) => r.user?.login?.toLowerCase() === owner.toLowerCase());
+  return marked ? "addressed" : "waiting";
+}
+
+export function shapeThread(discussion, { owner = "", staff = [] } = {}) {
   if (!discussion) return [];
+  const shape = (node) => {
+    const shown = parseComment(node);
+    return { ...shown, status: statusOf(node, shown, owner, staff) };
+  };
   return (discussion.comments?.nodes ?? []).map((c) => ({
-    ...parseComment(c),
-    replies: (c.replies?.nodes ?? []).map(parseComment),
+    ...shape(c),
+    replies: (c.replies?.nodes ?? []).map(shape),
   }));
 }
 

@@ -7,6 +7,10 @@
 //   GET  /comments?term=  -> { comments: [...] }     a page's thread
 //   POST /comments        -> { comments: [...] }     add a comment or reply
 //
+// Each comment carries a status: "addressed" once the repo owner reacts with
+// a rocket on GitHub, "waiting" before that, null for our own posts
+// (STAFF_NAMES).
+//
 // Secrets: GITHUB_TOKEN (fine-grained, Discussions read/write on the repo);
 //          NTFY_TOPIC (optional) -- an unguessable ntfy.sh topic. Each new
 //          comment is pushed there, since posts made through the site go out
@@ -52,14 +56,20 @@ async function github(env, query, variables) {
   return data.data;
 }
 
+// ROCKET is the "addressed" mark (see core.js statusOf).
+const COMMENT_FIELDS = `id body createdAt author { login } reactions(content: ROCKET, first: 20) { nodes { user { login } } }`;
 const THREAD_FIELDS = `
   id
   comments(first: 100) {
     nodes {
-      id body createdAt author { login }
-      replies(first: 100) { nodes { id body createdAt author { login } } }
+      ${COMMENT_FIELDS}
+      replies(first: 100) { nodes { ${COMMENT_FIELDS} } }
     }
   }`;
+
+function threadOptions(env) {
+  return { owner: env.REPO.split("/")[0], staff: (env.STAFF_NAMES ?? "").split(",") };
+}
 
 // Two queries, not one: GitHub refuses a query that could reach more than
 // 500,000 nodes, and discussions x comments x replies at 100 each is 1,000,000.
@@ -140,7 +150,7 @@ export default {
       if (url.pathname === "/comments" && request.method === "GET") {
         const term = url.searchParams.get("term") ?? "";
         if (!term) return json({ error: "missing term" }, 400, headers);
-        return json({ comments: shapeThread(await findDiscussion(env, term)) }, 200, headers);
+        return json({ comments: shapeThread(await findDiscussion(env, term), threadOptions(env)) }, 200, headers);
       }
 
       if (url.pathname === "/comments" && request.method === "POST") {
@@ -161,7 +171,7 @@ export default {
         const discussion = (await findDiscussion(env, term)) ?? (await createDiscussion(env, term));
         await addComment(env, discussion.id, formatComment(name, message), replyTo);
         if (env.NTFY_TOPIC) ctx.waitUntil(notify(env, alertFor(checked.value, input.page, env.SITE_URL)));
-        return json({ comments: shapeThread(await findDiscussion(env, term)) }, 200, headers);
+        return json({ comments: shapeThread(await findDiscussion(env, term), threadOptions(env)) }, 200, headers);
       }
 
       return json({ error: "not found" }, 404, headers);

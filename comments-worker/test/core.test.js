@@ -61,6 +61,26 @@ test("a thread nests replies under their comment", () => {
   assert.deepEqual(shapeThread(null), []);
 });
 
+test("a visitor's comment waits until the owner gives it a rocket", () => {
+  const opts = { owner: "Edulus", staff: ["Edward", "Claude Opus 5.5"] };
+  const rocket = (login) => ({ nodes: [{ user: { login } }] });
+  const thread = shapeThread({
+    comments: { nodes: [
+      { id: "a", body: formatComment("KEEP", "bug"), replies: { nodes: [
+        { id: "b", body: formatComment("Claude  Opus 5.5", "fixed") },
+      ] } },
+      { id: "c", body: formatComment("KEEP", "idea"), reactions: rocket("edulus") },
+      { id: "d", body: formatComment("KEEP", "self-tick"), reactions: rocket("keep-gh") },
+      { id: "e", body: "on GitHub", author: { login: "Edulus" } },
+    ] },
+  }, opts);
+  assert.equal(thread[0].status, "waiting");
+  assert.equal(thread[0].replies[0].status, null, "our own reply gets no box");
+  assert.equal(thread[1].status, "addressed");
+  assert.equal(thread[2].status, "waiting", "only the owner's rocket counts");
+  assert.equal(thread[3].status, null, "the owner writing on GitHub is staff");
+});
+
 test("the phone alert says who, where, and opens the page", () => {
   const site = "https://edulus.github.io/Myth-1-to-2-plugin-converter/";
   const a = alertFor({ name: "KEEP", term: "Q2: Terrain", message: "smooth please", replyTo: null }, site + "q/2.html", site);
