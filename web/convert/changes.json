@@ -1,10 +1,12 @@
 [
- {"version": "0.4", "date": "2026-10-27", "change": "Fixed missing unit sounds that stopped some levels from loading, such as On the road to Strand in Sir Mauriac's Tale.",
+ {"version": "0.5", "date": "2026-10-27", "change": "Plants, bushes and units sit on the ground instead of floating above it or sinking into it.",
   "test": [
+   "Plants: does any plant or bush float above the ground? Name the map and the spot. A side view helps tell a floating bush from a long shadow on a steep slope.",
    "Levels: does every level start? Name any that won't load.",
    "Hills and slopes: do they look smooth, not stepped? Name the map and the spot.",
    "Water: do units wade and slow down in rivers and lakes? Name any map where water acts like dry ground."
   ]},
+ {"version": "0.4", "date": "2026-10-27", "change": "Fixed missing unit sounds that stopped some levels from loading, such as On the road to Strand in Sir Mauriac's Tale."},
  {"version": "0.3", "date": "2026-10-27", "change": "Hills and slopes are smooth, not stepped."},
  {"version": "0.2", "date": "2026-10-27", "change": "Water now acts as water: units wade and slow down instead of walking on it."},
  {"version": "0.1", "date": "2026-10-26", "change": "First beta: convert a plugin in your browser."}

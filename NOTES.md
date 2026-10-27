@@ -1567,9 +1567,31 @@ copies every other field. Crow's Bridge against the port:
 What is left is mostly hand work in the port: 785 cells still differ by more
 than 64.
 
+### Scenery and units sit on the ground
+
+With blended heights, plants floated on *On the road to Strand*. A marker's
+`pos_z` is an absolute height that Myth II draws at; TFL seems to have
+ignored it for scenery and units. Ours kept TFL's values, within 4 of our
+ground for only 71 of 274 scenery markers on Crow's Bridge. The port's sit on
+its ground: 240 of 273 scenery and 96 of 108 units, and both observers.
+Ambient sounds, models and projectile groups are not re-seated.
+
+The port's heights reveal how Myth II reads its ground: each cell is two
+triangles, split from top-left to bottom-right where column + row is even and
+the other way where it is odd. That rule puts 99.2% of the port's scenery and
+units at their stored height within 1, and all within 3. A single split
+direction misses by up to 45, a bilinear blend by up to 21.
+
+So `place_markers_on_ground` (`src/mesh.py`) now sets every observer, scenery
+and unit marker to the ground under it. In-engine, the floating plants on
+*On the road to Strand* came down. One bush on the lip of a steep trench still
+looked raised, possibly its shadow falling down the wall; not yet checked from
+the side.
+
 ### Open
 
 - **Heights**: check the blended ground in the game.
+- **The trench-edge bush** on *On the road to Strand*: floating, or a shadow?
 - **3D models**: the port stamps model indexes into 916 cells (§17).
 - **Units**: KEEP asks that the port's units be used to correct ours
   (walking in place, giants not attacking, sizes), with some licence to adopt
