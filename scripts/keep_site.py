@@ -242,6 +242,11 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .drop:hover,.drop.over,.drop:focus-within{background:var(--tint);border-color:var(--blood-hi)}
 .drop input{position:absolute;opacity:0;width:1px;height:1px}
 .drop-big{display:block;font-size:1.15rem;margin-bottom:.3rem}
+.share{display:block;margin:-.4rem 0 1rem;font-size:.95rem}
+.share input{margin-right:.4rem}
+#log table{width:100%;border-collapse:collapse;font-size:.92rem}
+#log th,#log td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line)}
+#log td.num{text-align:right}
 .btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
@@ -676,8 +681,9 @@ def changes_html():
 
 CONVERT_BODY = """
 {changes}
-<div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}">
-<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong></p>
+<div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}" data-api="{api}" data-version="{version}">
+<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> If you tick the box below, only the plugin's name, its number of levels, the converter version and the date are added to the public list further down.</p>
+<label class="share"><input type="checkbox" id="share"> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
 <span class="drop-big">Drop the plugin's <code>.gor</code> file here</span>
 <span class="meta">or click to choose it. Unzip it first if it came as a zip.</span></label>
@@ -685,6 +691,11 @@ CONVERT_BODY = """
 <div id="problem" class="problem" role="alert" hidden></div>
 <div id="result" hidden></div>
 </div>
+<section aria-labelledby="log-heading">
+<h2 id="log-heading">Maps converted so far</h2>
+<p class="meta">Plugins visitors chose to list after converting them here, newest first.</p>
+<div id="log"><p class="meta">Loading&hellip;</p></div>
+</section>
 <h2>Good to know</h2>
 <ul>
 <li><strong>Use a computer, not a phone.</strong> Converting needs a lot of memory; close other tabs if it fails.</li>
@@ -719,7 +730,10 @@ def build_converter_page(stock_dir=None):
         print("warning: no stock files in docs/convert/stock; run with --stock-dir")
         versions["stock_v"], stock_mb = "none", "about 320"
     (out / "index.html").write_text(
-        page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(stock_mb=stock_mb, changes=changes_html(), **versions), 1,
+        page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(
+            stock_mb=stock_mb, changes=changes_html(), api=html.escape(COMMENTS_API),
+            version=html.escape(CHANGES[0]["version"]), **versions,
+        ), 1,
              kicker="In your browser &middot; beta"),
         encoding="utf-8",
     )

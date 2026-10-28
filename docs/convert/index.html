@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="../style.css?v=f9e566c0">
+<link rel="stylesheet" href="../style.css?v=5857d841">
 </head>
 <body>
 <header class="hero compact">
@@ -49,8 +49,9 @@
 <li><strong>0.1</strong> (26 October 2026): First beta: convert a plugin in your browser.</li>
 </ul>
 </section>
-<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=29185b7e77b2" data-manifest="stock/manifest.json?v=d37fb8c0bb01">
-<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong></p>
+<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=29185b7e77b2" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.6">
+<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> If you tick the box below, only the plugin's name, its number of levels, the converter version and the date are added to the public list further down.</p>
+<label class="share"><input type="checkbox" id="share"> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
 <span class="drop-big">Drop the plugin's <code>.gor</code> file here</span>
 <span class="meta">or click to choose it. Unzip it first if it came as a zip.</span></label>
@@ -58,6 +59,11 @@
 <div id="problem" class="problem" role="alert" hidden></div>
 <div id="result" hidden></div>
 </div>
+<section aria-labelledby="log-heading">
+<h2 id="log-heading">Maps converted so far</h2>
+<p class="meta">Plugins visitors chose to list after converting them here, newest first.</p>
+<div id="log"><p class="meta">Loading&hellip;</p></div>
+</section>
 <h2>Good to know</h2>
 <ul>
 <li><strong>Use a computer, not a phone.</strong> Converting needs a lot of memory; close other tabs if it fails.</li>
@@ -68,7 +74,7 @@
 <li>Found a bug, or want a feature? Tell us in <a href="../q/7.html">Q7: feature and bug reports</a>.</li>
 </ul>
 <div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
-<script src="page.js?v=6eb53b78c59a"></script>
+<script src="page.js?v=b54254b8887d"></script>
 
 </main>
 <footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>

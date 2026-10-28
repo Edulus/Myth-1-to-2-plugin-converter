@@ -14,13 +14,22 @@
 //
 //   POST /vote  { term, id, vote, previous }  -> { votes: { up, down } }
 //
+// The web converter's public log, for visitors who tick the box (kept in
+// the same KV store, under the key "conversions"):
+//
+//   GET  /conversions                              -> { conversions: [...] }
+//   POST /conversions  { plugin, levels, version } -> { conversions: [...] }
+//
 // Secrets: GITHUB_TOKEN (fine-grained, Discussions read/write on the repo);
 //          NTFY_TOPIC (optional) -- an unguessable ntfy.sh topic. Each new
 //          comment is pushed there, since posts made through the site go out
 //          under the token owner's account and GitHub does not notify you
 //          of your own activity.
 
-import { shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments } from "./core.js";
+import {
+  shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments,
+  validateConversion, addConversion,
+} from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
 
@@ -168,6 +177,30 @@ export default {
         const term = url.searchParams.get("term") ?? "";
         if (!term) return json({ error: "missing term" }, 400, headers);
         return json({ comments: await loadThread(env, term) }, 200, headers);
+      }
+
+      if (url.pathname === "/conversions" && request.method === "GET") {
+        return json({ conversions: (await env.VOTES.get("conversions", "json")) ?? [] }, 200, headers);
+      }
+
+      if (url.pathname === "/conversions" && request.method === "POST") {
+        const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+        const { success } = await env.CONVERT_LIMIT.limit({ key: ip });
+        if (!success) return json({ error: "Easy there -- please wait a minute." }, 429, headers);
+        let input;
+        try {
+          input = await request.json();
+        } catch {
+          return json({ error: "Sorry, that didn't go through." }, 400, headers);
+        }
+        const checked = validateConversion(input);
+        if (!checked.ok) return json({ error: checked.error }, 400, headers);
+        const log = addConversion(await env.VOTES.get("conversions", "json"), {
+          ...checked.value,
+          at: new Date().toISOString(),
+        });
+        await env.VOTES.put("conversions", JSON.stringify(log));
+        return json({ conversions: log }, 200, headers);
       }
 
       if (url.pathname === "/vote" && request.method === "POST") {

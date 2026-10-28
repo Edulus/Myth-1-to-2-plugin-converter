@@ -1,6 +1,7 @@
 // The "Convert a plugin" page: takes the visitor's file, hands it to the worker
 // (worker.js), shows progress in plain words, and offers the result to save.
-// Nothing is uploaded anywhere.
+// The file is never uploaded. If the visitor ticks "share", the plugin's name,
+// its level count and the converter version go to the public conversion log.
 (function () {
   var box = document.getElementById("converter");
   var pick = document.getElementById("pick");
@@ -10,7 +11,9 @@
   var bar = document.getElementById("bar");
   var problem = document.getElementById("problem");
   var result = document.getElementById("result");
-  var worker = null, busy = false, lastUrl = null;
+  var share = document.getElementById("share");
+  var log = document.getElementById("log");
+  var worker = null, busy = false, lastUrl = null, uploadName = "";
 
   function el(tag, text, cls) {
     var e = document.createElement(tag);
@@ -19,6 +22,43 @@
     return e;
   }
   function mb(n) { return Math.round(n / 1048576) + " MB"; }
+
+  function showLog(entries) {
+    log.textContent = "";
+    if (!entries.length) { log.append(el("p", "None listed yet.", "meta")); return; }
+    var table = el("table"), head = el("tr");
+    ["Date", "Plugin", "Levels", "Version"].forEach(function (h) { head.append(el("th", h)); });
+    table.append(head);
+    entries.forEach(function (e) {
+      var row = el("tr");
+      var when = "";
+      try { when = new Date(e.at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (err) {}
+      row.append(el("td", when), el("td", e.plugin), el("td", String(e.levels), "num"), el("td", e.version));
+      table.append(row);
+    });
+    log.append(table);
+  }
+
+  function loadLog() {
+    fetch(box.dataset.api + "/conversions")
+      .then(function (r) { return r.json(); })
+      .then(function (d) { showLog(d.conversions || []); })
+      .catch(function () { log.textContent = ""; log.append(el("p", "The list couldn't be loaded just now.", "meta")); });
+  }
+
+  function addToLog(res) {
+    if (!share || !share.checked) return;
+    fetch(box.dataset.api + "/conversions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plugin: uploadName, levels: res.levels.length, version: box.dataset.version }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d.conversions) showLog(d.conversions); })
+      .catch(function () {});
+  }
+
+  if (log) loadLog();
 
   if (!window.Worker || !window.WebAssembly) {
     show(problem, [el("p", "This browser can't run the converter. Try a recent Chrome, Edge or Firefox on a computer.")]);
@@ -104,11 +144,13 @@
     parts.push(tell);
     parts.push(details(res.details));
     show(result, parts);
+    addToLog(res);
   }
 
   function start(file) {
     if (busy || !file) return;
     busy = true;
+    uploadName = file.name;
     pick.disabled = true;
     problem.hidden = true;
     result.hidden = true;

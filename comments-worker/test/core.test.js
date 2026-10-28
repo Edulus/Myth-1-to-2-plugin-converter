@@ -1,7 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { alertFor, answerAccepted, applyVote, formatComment, parseComment, shapeThread, validate, validateVote } from "../src/core.js";
+import {
+  addConversion, alertFor, answerAccepted, applyVote, formatComment, parseComment, shapeThread, validate,
+  validateConversion, validateVote,
+} from "../src/core.js";
 
 const ANSWERS = ["bottle", "satchel", "satchel charges", "molotov"];
 const good = { term: "Q2: Terrain - faithful or smooth?", name: "KEEP", message: "smooth please", answer: "Satchel" };
@@ -98,6 +101,21 @@ test("only up, down or nothing is a vote", () => {
   assert.ok(!validateVote({ term: "Q7", id: "DC_abc123", vote: "sideways" }).ok);
   assert.ok(!validateVote({ term: "Q7", id: "../x", vote: "up" }).ok);
   assert.ok(!validateVote({ id: "DC_abc123", vote: "up" }).ok);
+});
+
+test("a conversion log entry keeps just a short name, a level count and a version", () => {
+  const r = validateConversion({ plugin: " cbc.TFL.mauriac.gor\n", levels: 73, version: "0.6", extra: "ignored" });
+  assert.deepEqual(r.value, { plugin: "cbc.TFL.mauriac.gor", levels: 73, version: "0.6" });
+  assert.ok(!validateConversion({ plugin: "x".repeat(65), levels: 1, version: "0.6" }).ok);
+  assert.ok(!validateConversion({ plugin: "a.gor", levels: -1, version: "0.6" }).ok);
+  assert.ok(!validateConversion({ plugin: "a.gor", levels: 1, version: "<b>" }).ok);
+  assert.ok(!validateConversion({ plugin: "\n", levels: 1, version: "0.6" }).ok);
+});
+
+test("the conversion log is newest first and capped", () => {
+  let log = null;
+  for (let i = 0; i < 5; i++) log = addConversion(log, { plugin: `p${i}` }, 3);
+  assert.deepEqual(log.map((e) => e.plugin), ["p4", "p3", "p2"]);
 });
 
 test("the phone alert says who, where, and opens the page", () => {

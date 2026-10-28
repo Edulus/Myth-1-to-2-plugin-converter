@@ -115,6 +115,25 @@ export function applyVote(counts, previous, vote) {
   return next;
 }
 
+// The public log of conversions made on the web converter, for visitors who
+// tick "add this plugin's name". Only these four facts are kept.
+export const CONVERSION_LOG_SIZE = 500;
+
+export function validateConversion(input) {
+  const body = input && typeof input === "object" ? input : {};
+  const plugin = String(body.plugin ?? "").replace(/[\x00-\x1f\x7f]/g, "").trim();
+  const levels = Number(body.levels);
+  const version = String(body.version ?? "");
+  if (!plugin || plugin.length > 64) return { ok: false, error: "That plugin name can't be listed." };
+  if (!Number.isInteger(levels) || levels < 0 || levels > 9999) return { ok: false, error: "Sorry, that didn't go through." };
+  if (!/^\d{1,3}\.\d{1,3}$/.test(version)) return { ok: false, error: "Sorry, that didn't go through." };
+  return { ok: true, value: { plugin, levels, version } };
+}
+
+export function addConversion(log, entry, size = CONVERSION_LOG_SIZE) {
+  return [entry, ...(Array.isArray(log) ? log : [])].slice(0, size);
+}
+
 // Every comment in a thread, replies included, flattened.
 export function allComments(thread) {
   return thread.flatMap((c) => [c, ...(c.replies ?? [])]);
