@@ -394,6 +394,41 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
 """
 
 
+# What we are working on, shown near the top of the home page. Update it as
+# items move along; finished work goes into web/convert/changes.json instead.
+DOCKET_UPDATED = "2026-10-27"
+DOCKET = {
+    "Working on now": [
+        "Units jogging in place after they stop moving (the \"moonwalking\"). Pressing the space bar stops it for now.",
+    ],
+    "Up next": [
+        "Comparing our units with the ones in Project Magma's The Fallen Levels v2: giants that won't attack, missing walking frames, odd pieces after explosive deaths, and units drawn too large (for example thrall showing above the water).",
+        "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
+    ],
+    "Later": [
+        "The outer edge of some maps (the south and east edges of Crow's Bridge) sits higher than in Magma's port.",
+        "One bush on the edge of a trench on Crow's Bridge may still float.",
+    ],
+}
+
+
+def docket_html():
+    groups = "\n".join(
+        f"<h3>{html.escape(title)}</h3>\n<ul>\n"
+        + "\n".join(f"<li>{html.escape(item)}</li>" for item in items)
+        + "\n</ul>"
+        for title, items in DOCKET.items()
+    )
+    year, month, day = (int(p) for p in DOCKET_UPDATED.split("-"))
+    months = ("January February March April May June July August September "
+              "October November December").split()
+    return f"""<section class="release docket" aria-labelledby="docket">
+<h2 id="docket">What we're working on</h2>
+<p class="meta">Updated {day} {months[month - 1]} {year}. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
+{groups}
+</section>"""
+
+
 def build(stock_dir=None):
     OUT.mkdir(exist_ok=True)
     (OUT / "updates").mkdir(exist_ok=True)
@@ -414,7 +449,8 @@ def build(stock_dir=None):
         for u in UPDATES
     )
     questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
-    index = f"""<section aria-labelledby="news">
+    index = f"""{docket_html()}
+<section aria-labelledby="news">
 <h2 id="news" style="margin-top:0">News</h2>
 <h3>New: convert a plugin in your browser (beta)</h3>
 <p>No Python, no command line, no setup. Drop a <em>Fallen Lords</em> plugin on the new page and it converts right there in your browser tab. Your file is not uploaded anywhere. You get back a Myth II plugin with the original game files it needs already inside, ready to put in your <code>plugins</code> folder.</p>
