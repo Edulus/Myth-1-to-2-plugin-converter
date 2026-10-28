@@ -97,6 +97,7 @@ QUESTIONS = [
         "n": 2,
         "term": "Q2: Terrain - faithful or smooth?",
         "title": "Terrain: faithful or smooth?",
+        "closed": "Answered by testing against Project Magma's faithful port of Crow's Bridge (The Fallen Levels v2): since version 0.3 the converter keeps every original height and blends the new points in between, as Magma's port does. Hills are smooth, not stepped.",
         "body": """<p>TFL's terrain is a quarter of Myth II's resolution. We copy each TFL cell into a 2&times;2 block, which invents nothing but looks blockier than Myth II maps. Smoothing it would look closer to a native map, but means inventing detail.</p>
 <p>Which would players rather have?</p>""",
     },
@@ -122,6 +123,7 @@ QUESTIONS = [
         "n": 6,
         "term": "Q6: What does done look like?",
         "title": "What should a successful conversion preserve?",
+        "closed": "Answered in practice by testers' reports in Q3, Q5 and Q7: water, terrain heights, buildings and units that behave as in The Fallen Lords. Please keep reporting in Q7.",
         "body": "<p>Which behaviours must match TFL before a conversion feels complete: movement, combat balance, scenery, scripted objectives or something else? Describe a specific level and a way to check it.</p>",
     },
     {
@@ -130,6 +132,20 @@ QUESTIONS = [
         "title": "Feature and bug reports for the web converter",
         "body": """<p>Please enter any feature or bug reports here about the <a href="../convert/index.html">webtool for converting TFL to M2 plugins</a>.</p>
 <p>This question is only for the web converter. It helps to include the converter's version number (shown at the top of its page), the plugin you converted, your browser, and what happened. For a problem in a converted plugin, also paste the start of the <strong>Technical details</strong> shown after converting.</p>""",
+    },
+    {
+        "n": 8,
+        "term": "Q8: Which units behave wrongly?",
+        "title": "Which units behave wrongly, and where?",
+        "body": """<p>Converted units still misbehave in Myth II: some jog in place after they stop, some giants won't attack, some look too large. We are working on units next.</p>
+<p>Which units behave wrongly for you, on which map, and what do they do? Compared with how they behaved in <em>The Fallen Lords</em> is most useful.</p>""",
+    },
+    {
+        "n": 9,
+        "term": "Q9: Tried converting a map of your own?",
+        "title": "Tried converting a Fallen Lords map of your own?",
+        "body": """<p>The <a href="../convert/index.html">web converter</a> takes any <em>Fallen Lords</em> plugin. In our own check, all 263 plugins in a large community archive converted without an error, but only a few have been played.</p>
+<p>Which plugin did you try? Did it load, and did it play? Tell us the converter's version number too.</p>""",
     },
 ]
 
@@ -229,6 +245,7 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
+.cards.closed .card{opacity:.75}
 details{margin:1rem 0}
 .release{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blood);border-radius:8px;padding:.9rem 1.2rem;margin:0 0 1.5rem}
 .release h2{margin:0 0 .4rem}
@@ -448,7 +465,11 @@ def build(stock_dir=None):
         card(f'updates/{u["slug"]}.html', u["date"], u["title"], html.escape(u["summary"]))
         for u in UPDATES
     )
-    questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS)
+    questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS if "closed" not in q)
+    closed = "\n".join(
+        card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"], "Closed: " + html.escape(q["closed"]))
+        for q in QUESTIONS if "closed" in q
+    )
     index = f"""{docket_html()}
 <section aria-labelledby="news">
 <h2 id="news" style="margin-top:0">News</h2>
@@ -520,6 +541,8 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p>Code contributions are welcome through <a href="{REPO_URL}">GitHub</a>; the <a href="{REPO_URL}/blob/main/README.md">README</a> and <a href="{REPO_URL}/blob/main/NOTES.md">format notes</a> describe current support and research.</p>
 <h2>Open questions for testers</h2>
 <ul class="cards">{questions}</ul>
+<h3>Closed questions</h3>
+<ul class="cards closed">{closed}</ul>
 <h2>Progress log</h2>
 <ul class="cards">{updates}</ul>
 <h2>About, credits and licence</h2>
@@ -546,7 +569,10 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
             f'<a href="{QUESTIONS[i + 1]["n"]}.html">Q{QUESTIONS[i + 1]["n"]} &rarr;</a>'
             if i + 1 < len(QUESTIONS) else '<a href="../index.html">All updates and questions &rarr;</a>'
         )
-        body = f"""{q["body"]}
+        closed_note = (
+            f'<p class="problem"><strong>Closed.</strong> {html.escape(q["closed"])}</p>\n' if "closed" in q else ""
+        )
+        body = f"""{closed_note}{q["body"]}
 <p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
 <div class="nav">{prev}{nxt}</div>"""
         (OUT / "q" / f'{q["n"]}.html').write_text(

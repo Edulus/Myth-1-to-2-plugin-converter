@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Q9 &middot; Myth Plugin Converter</title>
+<script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
+<link rel="stylesheet" href="../style.css?v=f9e566c0">
+</head>
+<body>
+<header class="hero compact">
+<button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button>
+<div class="panes" aria-hidden="true">
+<div class="pane one"><span class="num">I</span><span class="cap">The Fallen Lords</span></div>
+<div class="arrow">&rarr;</div>
+<div class="pane two"><span class="num">II</span><span class="cap">Soulblighter</span></div>
+</div>
+<div class="band"><div class="inner">
+<a class="brand" href="../index.html">Myth Plugin Converter &middot; The Fallen Lords &rarr; Soulblighter</a>
+<p class="meta">Question 9 of 9</p>
+<h1>Q9. Tried converting a Fallen Lords map of your own?</h1>
+
+</div></div>
+</header>
+<main class="wrap">
+<p>The <a href="../convert/index.html">web converter</a> takes any <em>Fallen Lords</em> plugin. In our own check, all 263 plugins in a large community archive converted without an error, but only a few have been played.</p>
+<p>Which plugin did you try? Did it load, and did it play? Tell us the converter's version number too.</p>
+<p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
+<div class="nav"><a href="8.html">&larr; Q8</a><a href="../index.html">All updates and questions &rarr;</a></div>
+
+<section class="reply" id="answer" data-term="Q9: Tried converting a map of your own?" data-api="https://keep-comments.edyersh.workers.dev">
+<h2>&#9998; Your answer</h2>
+<p class="meta">No sign-up, no account &mdash; just type and press <strong>Send</strong>.</p>
+<form class="say" novalidate>
+<p class="replying" hidden></p>
+<label>Your name<input name="name" autocomplete="nickname" maxlength="40" required></label>
+<label>Your message<textarea name="message" rows="6" maxlength="4000" required placeholder="Type here..."></textarea></label>
+<label><span class="q">A quick Myth question, so we know you're not a robot:</span><input name="answer" autocomplete="off" required></label>
+<label class="trap" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
+<p><button class="btn send" type="submit">Send &rarr;</button> <span class="status" role="status"></span></p>
+</form>
+<h2 class="convo">The conversation so far</h2>
+<div class="thread"><p class="meta">Loading&hellip;</p></div>
+</section>
+</main>
+<footer>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</footer>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.querySelector(".theme");
+  function paint(){btn.textContent=root.dataset.theme==="dark"?"☀ Light":"☾ Dark";}
+  btn.addEventListener("click",function(){
+    if(root.dataset.theme==="dark"){delete root.dataset.theme;}else{root.dataset.theme="dark";}
+    try{localStorage.setItem("theme",root.dataset.theme||"light")}catch(e){}
+    paint();
+  });
+  paint();
+})();
+</script>
+<script>
+(function(){
+  var box=document.getElementById("answer"); if(!box) return;
+  var api=box.dataset.api, term=box.dataset.term, form=box.querySelector("form");
+  var list=box.querySelector(".thread"), status=form.querySelector(".status");
+  var replying=form.querySelector(".replying"), replyTo=null, send=form.querySelector(".send");
+  try{var saved=localStorage.getItem("name"); if(saved) form.name.value=saved;}catch(e){}
+  function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+  function when(at){try{return new Date(at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}catch(e){return "";}}
+  function reply(c){replyTo=c.id; replying.hidden=false; replying.textContent="";
+    replying.append("Replying to "+c.name+" ");
+    var x=el("button","link","(cancel)"); x.type="button";
+    x.onclick=function(){replyTo=null; replying.hidden=true;}; replying.append(x);
+    form.message.focus(); form.scrollIntoView({behavior:"smooth",block:"start"});}
+  function votes(c){var row=el("p","votes"), mine=null, buttons={};
+    try{mine=localStorage.getItem("vote:"+c.id);}catch(e){}
+    function paint(){["up","down"].forEach(function(k){
+      buttons[k].textContent=(k==="up"?"👍 ":"👎 ")+c.votes[k];
+      buttons[k].className="vote"+(mine===k?" on":"");
+      buttons[k].setAttribute("aria-pressed",mine===k?"true":"false");});}
+    ["up","down"].forEach(function(k){var b=el("button"); b.type="button";
+      b.title=k==="up"?"This answer helped":"This answer didn't help";
+      b.onclick=function(){var next=mine===k?null:k;
+        fetch(api+"/vote",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({term:term,id:c.id,vote:next,previous:mine})})
+        .then(function(r){return r.json();})
+        .then(function(d){if(!d.votes)return; mine=next; c.votes=d.votes;
+          try{if(next)localStorage.setItem("vote:"+c.id,next);else localStorage.removeItem("vote:"+c.id);}catch(e){}
+          paint();}).catch(function(){});};
+      buttons[k]=b; row.append(b);});
+    paint(); return row;}
+  function item(c,top){var a=el("article","comment"+(top?"":" sub"));
+    var h=el("p","who"); h.append(el("strong",null,c.name)); h.append(" · "+when(c.at));
+    if(c.status==="addressed") h.append(el("span","state done","☑ Addressed"));
+    else if(c.status==="waiting") h.append(el("span","state open","☐ Waiting for a reply"));
+    a.append(h);
+    a.append(el("p","text",c.text));
+    if(c.votes) a.append(votes(c));
+    if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
+    return a;}
+  function render(cs){list.textContent="";
+    if(!cs.length){list.append(el("p","meta","Nothing here yet — yours will be the first."));return;}
+    cs.forEach(function(c){var a=item(c,true); (c.replies||[]).forEach(function(r){a.append(item(r,false));}); list.append(a);});}
+  fetch(api+"/config").then(function(r){return r.json();}).then(function(d){
+    if(d.question) form.querySelector(".q").textContent=d.question;}).catch(function(){});
+  fetch(api+"/comments?term="+encodeURIComponent(term)).then(function(r){return r.json();})
+    .then(function(d){render(d.comments||[]);})
+    .catch(function(){list.textContent=""; list.append(el("p","meta","The conversation couldn't be loaded just now — try reloading the page."));});
+  form.addEventListener("submit",function(ev){ev.preventDefault();
+    status.textContent="Sending…"; send.disabled=true;
+    try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
+    fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({term:term,page:location.href.split("#")[0],name:form.name.value,message:form.message.value,
+        answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through — please try again.";return;}
+      render(x.d.comments||[]); form.message.value=""; replyTo=null; replying.hidden=true;
+      status.textContent="Sent — thank you!";})
+    .catch(function(){status.textContent="That didn't go through — please try again.";})
+    .then(function(){send.disabled=false;});
+  });
+})();
+</script>
+</body>
+</html>
