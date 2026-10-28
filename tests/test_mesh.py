@@ -842,5 +842,55 @@ class TestGroundHeight(unittest.TestCase):
         self.assertEqual(2, moved)
 
 
+class TestModelsByCentre(unittest.TestCase):
+    """TFL anchors a model by a corner, Myth II by its centre."""
+
+    def marker(self, kind, palette_index, x, y):
+        return mesh.MarkerHead.build(
+            flags=0, type=kind, palette_index=palette_index, id=0, min_difficulty=0,
+            pos_x=x, pos_y=y, pos_z=7, yaw=16384,
+        ).encode()
+
+    def palette(self, *entries):
+        return b"".join(
+            mesh.MarkerPaletteEntry.build(type=kind, flags=0, marker_tag=tag, team_index=0, netgame_flags=0).encode()
+            for kind, tag in entries
+        )
+
+    def test_a_model_moves_by_its_centre_rounded_to_whole_cells(self):
+        palette = self.palette((mesh.MarkerType.SCENERY, b"tree"), (mesh.MarkerType.MODEL, b"barn"))
+        block = self.marker(mesh.MarkerType.MODEL, 0, 1000, 2000) + self.marker(mesh.MarkerType.SCENERY, 0, 1000, 2000)
+        out, moved, missing = mesh.place_models_by_centre(block, 2, palette, 2, {b"barn": (3072, 1000)})
+        model, tree = mesh.MarkerHead.unpack_many(out, 0, 2)
+        self.assertEqual((1000 + 3072, 2000 + 1024, 7), (model.pos_x, model.pos_y, model.pos_z))
+        self.assertEqual((1000, 2000), (tree.pos_x, tree.pos_y), "scenery is not a model")
+        self.assertEqual((1, []), (moved, missing))
+
+    def test_a_model_with_no_known_centre_stays_and_is_reported(self):
+        palette = self.palette((mesh.MarkerType.MODEL, b"gone"))
+        block = self.marker(mesh.MarkerType.MODEL, 0, 1000, 2000)
+        out, moved, missing = mesh.place_models_by_centre(block, 1, palette, 1, {})
+        self.assertEqual(block, out)
+        self.assertEqual((0, [b"gone"]), (moved, missing))
+
+    def test_centres_come_from_each_models_geometry(self):
+        import struct
+
+        from tests.test_models import tfl_geom, tfl_mode
+
+        geometry = bytearray(tfl_geom([(0, 0, 0), (10, 10, 10)]))
+        struct.pack_into(">hh", geometry, 16, 2048, 1536)  # center_x, center_y
+        tags = [
+            fixtures_tag(b"mode", b"inn1", tfl_mode([(0, 0, 0)])),  # names geometry gm01
+            fixtures_tag(b"geom", b"gm01", bytes(geometry)),
+            fixtures_tag(b"mode", b"lost", tfl_mode([(0, 0, 0)]).replace(b"gm01", b"none", 1)),
+        ]
+        self.assertEqual({b"inn1": (2048, 1536)}, convert_plugin.model_centres(tags))
+
+
+def fixtures_tag(tag_type, tag_id, body):
+    return reader.Tag(header=codec.Struct("H", [("4s", "tag_type"), ("4s", "tag_id")]).build(tag_type=tag_type, tag_id=tag_id), body=body)
+
+
 if __name__ == "__main__":
     unittest.main()

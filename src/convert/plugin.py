@@ -33,7 +33,7 @@ from .. import (
     writer,
 )
 from . import entrypoints, headers, tags as tag_converters
-from .tags import obje as obje_converter
+from .tags import geom as geom_converter, mode as mode_converter, obje as obje_converter
 
 
 class ConversionError(ValueError):
@@ -97,6 +97,27 @@ class ConversionContext:
         self.use_vtfl = use_vtfl
         self.mesh_defaults = mesh_defaults or {}
         self.id_map = id_map
+        # TFL model id -> its geometry's (center_x, center_y), for re-placing
+        # model markers (see src.mesh.place_models_by_centre). Filled in by
+        # convert_container from the container being converted.
+        self.model_centres = {}
+
+
+def model_centres(tags):
+    """``{mode tag id: (center_x, center_y)}`` for every TFL model in ``tags``
+    whose geometry is there too."""
+    geometries = {t.tag_id: t.body for t in tags if t.tag_type == b"geom"}
+    centres = {}
+    for tag in tags:
+        if tag.tag_type != b"mode":
+            continue
+        try:
+            model = mode_converter.Model.unpack(tag.body)
+            geometry = geom_converter.TFLGeom.unpack(geometries[model.geometry_tag])
+        except (KeyError, ValueError):
+            continue
+        centres[tag.tag_id] = (geometry.center_x, geometry.center_y)
+    return centres
 
 
 def unresolved_references(mono, id_map=None):
@@ -203,6 +224,7 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
     # per-tag-type converters see too, regardless of what a caller-supplied
     # context happened to be constructed with.
     context.id_map = id_map
+    context.model_centres = model_centres(mono.tags)
     report = ConversionReport(source_tags=len(mono.tags))
 
     if len(mono.tags) > headers.INT16_MAX:

@@ -1262,10 +1262,27 @@ Myth II-only defaults, agreed with the user on 2026-10-27:
 | `geom` material record bytes 58..63 | TFL's bytes, unchanged | 85 records (0,0,0) | Magma sometimes sets (1, 0, k); meaning unknown |
 | `geom` surface byte 1 extra bits | none added | 43 geometries identical | Magma adds 0x10, 0x20, 0x02 to some; meaning unknown |
 
-### Still needed
+### In-engine, and where Myth II anchors a model
 
-- One in-engine test of a converted level with buildings — for the
-  `model_index` question above.
+On a clean 1.8.5 install, *On the road to Strand* (Crow's Bridge) showed its
+two converted ambush inns, and units ordered across them walked around. So the
+engine builds a model's obstruction from its footprint at load, and the
+`model_index` stamp above is not needed: cells stay `NO_MODEL_INDEX`.
+
+But one unit started inside an inn. Every model marker sits somewhere else in
+Magma's port, by an amount fixed per model and independent of its facing
+(Crow's Bridge: barn +3072/+1024, inn +3072/+3072, town house +2048/+2048).
+Iron's 2011 converter has the same idea commented out (`marker[i].distancex
++= 2048`). Across the 17 levels of *The Fallen Levels v2* that pair with
+stock TFL levels, the amount is the model geometry's (`center_x`,
+`center_y`) rounded to a whole Myth II cell, whatever the facing: TFL anchors
+a model by a corner, Myth II by its centre. `place_models_by_centre`
+(`src/mesh.py`) applies that; afterwards 287 of 328 model markers sit exactly
+where Magma's do. The rest are Magma's own: the farm one cell further east
+(15, with a re-drawn footprint), 18 cave stalagmites not moved at all, 4 night
+farmhouses placed by hand, and 3 world-knot stones nudged a fraction of a cell.
+
+### Still needed
 - The meaning of the geometry material tail and the added surface bits, if
   converted buildings render or light wrongly without them.
 

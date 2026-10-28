@@ -802,6 +802,46 @@ def place_markers_on_ground(markers, count, terrain, submesh_width, submesh_heig
     return bytes(out), moved
 
 
+def place_models_by_centre(markers, count, palette, palette_entries, centres):
+    """Move each model marker from where TFL anchors a model to where Myth II
+    does.
+
+    TFL places a model by a corner, Myth II by its geometry's centre. Across
+    the 17 levels of *The Fallen Levels v2* that pair with stock TFL levels,
+    Magma moved every copy of a model by the same amount, and for nearly every
+    model that amount is the geometry's (center_x, center_y) rounded to a whole
+    Myth II cell, whatever way the model faces (NOTES.md section 17).
+
+    ``palette`` is the mesh's marker palette, whose model entries are indexed
+    by a model marker's ``palette_index``; ``centres`` maps a TFL model id to
+    its geometry's centre. Returns ``(markers, moved, missing)``, ``missing``
+    being the model ids with no known centre, whose markers are left alone.
+    """
+    entries = MarkerPaletteEntry.unpack_many(palette, 0, palette_entries)
+    models = [e.marker_tag for e in entries if e.type == MarkerType.MODEL]
+    out = bytearray(markers)
+    moved, missing = 0, set()
+    for i, marker in enumerate(MarkerHead.unpack_many(markers, 0, count)):
+        if marker.type != MarkerType.MODEL or marker.palette_index >= len(models):
+            continue
+        model = models[marker.palette_index]
+        if model not in centres:
+            missing.add(model)
+            continue
+        dx, dy = (_whole_cells(c) for c in centres[model])
+        if dx or dy:
+            start = i * MARKER_HEAD_SIZE
+            shifted = marker.replace(pos_x=marker.pos_x + dx, pos_y=marker.pos_y + dy)
+            out[start : start + MARKER_HEAD_SIZE] = shifted.encode()
+            moved += 1
+    return bytes(out), moved, sorted(missing)
+
+
+def _whole_cells(distance):
+    """``distance`` rounded to the nearest whole Myth II cell, halves up."""
+    return (distance + SB_CELL_WORLD_SIZE // 2) // SB_CELL_WORLD_SIZE * SB_CELL_WORLD_SIZE
+
+
 def build_lod_data(submesh_width, submesh_height):
     """A Myth II mesh level-of-detail block, sized to the cell count.
 

@@ -290,6 +290,20 @@ def _convert_blocks(tfl, trailing, id_map, context):
     else:
         blocks["markers"] = markers
 
+    # Models are anchored by a corner in TFL and by their centre in Myth II.
+    centres = getattr(context, "model_centres", None) if context else None
+    if centres and palette and tfl.marker_count and tfl.marker_palette_entries:
+        try:
+            blocks["markers"], _moved, missing = mesh_module.place_models_by_centre(
+                blocks["markers"], tfl.marker_count, palette,
+                tfl.marker_palette_entries, centres,
+            )
+            if missing:
+                listed = ", ".join(codec.decode_string(m) for m in missing)
+                warnings.append(f"models with no geometry in this plugin left at their TFL anchor: {listed}")
+        except (struct.error, ValueError) as exc:
+            warnings.append(f"models left at their TFL anchor: {exc}")
+
     # -- map actions: parameter type codes need correcting -------------------
     actions = _slice(trailing, tfl.map_actions_offset, tfl.map_action_buffer_size)
     if actions is None:
