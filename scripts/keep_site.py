@@ -245,9 +245,7 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .share{display:block;margin:-.4rem 0 1rem;font-size:.95rem}
 .share input{margin-right:.4rem}
 #log table{width:100%;border-collapse:collapse;font-size:.92rem}
-#log th,#log td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line)}
-#log td.num{text-align:right}
-.btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
+#log th,#log td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line)}.btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
 .cards.closed .card{opacity:.75}

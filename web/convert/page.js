@@ -34,7 +34,7 @@
       var row = el("tr");
       var when = "";
       try { when = new Date(e.at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (err) {}
-      row.append(el("td", when), el("td", e.plugin), el("td", String(e.levels), "num"), el("td", e.version));
+      row.append(el("td", when), el("td", e.plugin), el("td", String(e.levels), "levels"), el("td", e.version));
       table.append(row);
     });
     log.append(table);
