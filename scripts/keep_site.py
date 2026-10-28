@@ -474,7 +474,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
 <ul>
 <li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
-<li>Building models (<code>mode</code>/<code>geom</code>) are measured but not converted. Lighting uses standard values for every map. Terrain is redrawn on Myth II's finer grid, with heights blended between the original points.</li>
+<li>Buildings and other 3D models are converted and placed. Lighting uses standard values for every map. Terrain is redrawn on Myth II's finer grid, with heights blended between the original points.</li>
 <li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
 </ul>
 <h2>Help test or report a problem</h2>

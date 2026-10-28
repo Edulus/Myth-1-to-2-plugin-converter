@@ -23,9 +23,9 @@ unverified. See [NOTES.md](NOTES.md) sections 17-18.
 
 The converter handles terrain, markers, map actions, monsters/units and their
 objects, projectiles, artifacts, scenery, weather, mesh effects, lighting,
-sprite collections and text. Building models are measured but not converted;
-lighting uses standard values for every map, terrain uses duplicated cells,
-and some tag bodies (including sounds and projectile groups) pass through
+sprite collections, text and building models (`mode`/`geom`). Lighting uses
+standard values for every map, terrain heights are blended onto Myth II's finer
+grid, and some tag bodies (including sounds and projectile groups) pass through
 unchanged. The support matrix below records those limits.
 
 **Convert in your browser:** the project website has a *Convert a plugin* page.
@@ -316,7 +316,7 @@ run that is meant to be the real gate.
 | `part` | **converts** | none -- first 92 bytes shared | splash box (`box_width` etc.) from Magma's majority; a zero width crashed the engine -- see [NOTES.md](NOTES.md) section 18 |
 | `arti` | **converts** | 128 zero padding bytes after the declared 128 dropped | 4 extra effect-modifier slots; all-zero TFL modifiers become 1.0 (Magma's untuned default) rather than immune -- see [NOTES.md](NOTES.md) section 18 |
 | `mesh` | **header + terrain + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are); terrain is upsampled to a 2x2 block per TFL cell, with heights blended between neighbouring points and every other field copied, as in Project Magma's hand port of *The Fallen Levels v2*; the media coverage region is copied verbatim (its values are already on Myth II's scale) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; per-cell `model_index` (none) and `media_height` (the "Water level" decision); `mesh_LOD_data` **zero-filled** at the new size -- its encoding is not understood |
-| `mode` `geom` | pass-through -- **measured, converter not yet written** | `mode`: footprint cells must be split 2x2 (cells halve in size); `geom`: header grows 96B to 128B. Separately, the mesh's per-cell `model_index` (which cells a building covers) is written as "none" -- see [NOTES.md](NOTES.md) section 17 | `geom`: bounding box (derived from vertices); material tail and some surface flag bits unknown |
+| `mode` `geom` | **convert** | `mode`: footprint cells split 2x2; `geom`: header grows 96B to 128B; model markers move from TFL's corner anchor to Myth II's centre anchor. The mesh's per-cell `model_index` stays "none" (the engine builds obstruction from the footprint, verified in-engine) -- see [NOTES.md](NOTES.md) section 17 | `geom`: bounding box (derived from vertices), `center_z` 0; material tail and extra surface flag bits left as TFL has them |
 | `prgr` `lpgr` `core` `soun` `amso` `phys` `medi` | pass-through | unverified whether these differ at all (`core` matches Magma's layout; Tandem loads and plays with the rest unconverted) | -- |
 | *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
 | *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
@@ -388,8 +388,8 @@ NOTES.md           research notes on the reference implementation and the format
 ## Honest limitations
 
 Only two single-player levels have been tested through to the end-game screen.
-Building models (`mode`/`geom`) are not converted, lighting uses standard values,
-and terrain is upsampled by duplication. Mesh LOD data is zero-filled because
+Lighting uses standard values, and terrain heights are blended between the
+original points (no hand detail as in Magma's ports). Mesh LOD data is zero-filled because
 its encoding is not understood. References inside map-action parameter data
 are not yet remapped. Sounds, projectile groups, collection references and
 other unsupported bodies are copied unchanged. Expect manual finishing work
