@@ -37,8 +37,8 @@ It runs this converter unchanged under [Pyodide](https://pyodide.org)
 Mauriac's Tale*: about 5 seconds to convert, roughly 1.1 GB of browser memory,
 and the result played *Tandem* on a clean Myth II 1.8.5 install.
 
-Visitors who tick a box add the plugin's name, level count and converter
-version to a public "Maps converted so far" list on that page. The list lives
+Unless visitors untick a box (ticked by default), the plugin's name, level count
+and converter version go on a public "Maps converted so far" list on that page. The list lives
 in the comments service (`comments-worker/`, Cloudflare KV key `conversions`).
 To remove an entry, from `comments-worker/`:
 

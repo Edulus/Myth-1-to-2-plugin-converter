@@ -1,7 +1,8 @@
 // The "Convert a plugin" page: takes the visitor's file, hands it to the worker
 // (worker.js), shows progress in plain words, and offers the result to save.
-// The file is never uploaded. If the visitor ticks "share", the plugin's name,
-// its level count and the converter version go to the public conversion log.
+// The file is never uploaded. Unless the visitor unticks "share" (ticked by
+// default), the plugin's name, its level count and the converter version go to
+// the public conversion log.
 (function () {
   var box = document.getElementById("converter");
   var pick = document.getElementById("pick");

@@ -682,8 +682,8 @@ def changes_html():
 CONVERT_BODY = """
 {changes}
 <div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}" data-api="{api}" data-version="{version}">
-<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> If you tick the box below, only the plugin's name, its number of levels, the converter version and the date are added to the public list further down.</p>
-<label class="share"><input type="checkbox" id="share"> Add this plugin's name to the public list of converted maps</label>
+<p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> Only the plugin's name, its number of levels, the converter version and the date are added to the public list further down, and only while the box below stays ticked. Untick it to keep your conversion off the list.</p>
+<label class="share"><input type="checkbox" id="share" checked> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
 <span class="drop-big">Drop the plugin's <code>.gor</code> file here</span>
 <span class="meta">or click to choose it. Unzip it first if it came as a zip.</span></label>
