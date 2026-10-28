@@ -481,6 +481,7 @@ def build(stock_dir=None):
 <h2 id="get-started">Get started &mdash; public beta</h2>
 <p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. The command-line steps below are for those who want more control; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
+<p>Bought the discs but lost or damaged them? The game's files can be found at <a href="https://www.myabandonware.com/game/myth-the-fallen-lords-3no">My Abandonware</a>. (The in-browser converter doesn't need them: it brings its own.)</p>
 <ol>
 <li><strong>Download and unzip.</strong> Open <a href="{REPO_URL}">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
 <pre><code>git clone {REPO_URL}.git
