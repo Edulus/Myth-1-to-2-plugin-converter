@@ -1,12 +1,12 @@
 [
- {"version": "0.6", "date": "2026-10-27", "change": "Buildings and other 3D models now appear, such as houses, barns, inns and bridges, and units walk around them.",
+ {"version": "0.7", "date": "2026-10-30", "change": "Fixed a crash when scrolling to the edge of some maps, such as Crow's Bridge and crazyglue's Along the way to... The border at each map edge is also as wide as in The Fallen Lords again.",
   "test": [
+   "Map edges: scroll all the way round the edge of each map. Name any map that crashes, with the crash log.",
    "Buildings: does every building appear, in the right place? Name any that are missing, float, sink or stand on top of something.",
-   "Buildings: do units walk around them, not through them?",
-   "Plants: does any plant or bush float above the ground? Name the map and the spot.",
    "Levels: does every level start? Name any that won't load.",
    "Hills, slopes and water: anything still look wrong? Name the map and the spot."
   ]},
+ {"version": "0.6", "date": "2026-10-27", "change": "Buildings and other 3D models now appear, such as houses, barns, inns and bridges, and units walk around them."},
  {"version": "0.5", "date": "2026-10-27", "change": "Plants, bushes and units sit on the ground instead of floating above it or sinking into it."},
  {"version": "0.4", "date": "2026-10-27", "change": "Fixed missing unit sounds that stopped some levels from loading, such as On the road to Strand in Sir Mauriac's Tale."},
  {"version": "0.3", "date": "2026-10-27", "change": "Hills and slopes are smooth, not stepped."},

@@ -181,6 +181,8 @@ def convert(body, context=None):
     values["flags"], flag_warnings = _convert_flags(tfl.flags, use_vtfl)
     warnings.extend(flag_warnings)
 
+    values["edge_of_mesh_buffer_zones"] = _double_edge_zones(tfl.edge_of_mesh_buffer_zones)
+
     # The header's own tag references (media, lighting, string lists...) follow
     # the ID map too -- otherwise a decisions-file mapping fixes the report but
     # not the file, and the engine still asks for the TFL id.
@@ -369,6 +371,17 @@ def _lay_out_body(blocks):
         "mesh_LOD_data_offset": at["lod"],
         "mesh_LOD_data_size": len(blocks["lod"]),
     }
+
+
+def _double_edge_zones(zones):
+    """The four edge-of-mesh buffer widths, from TFL cells to Myth II cells.
+
+    They count cells, and a Myth II cell is half a TFL cell each way. In *The
+    Fallen Levels v2*, Magma's widths are about twice the stock TFL level's (Crow's Bridge 16/16/13/18 becomes 32/36/26/32, Marsh 2's
+    74 becomes 150); copied unchanged, the border is half as wide, and narrower
+    than the 16 cells every native Myth II mesh keeps at least.
+    """
+    return struct.pack(">4h", *(min(2 * w, 0x7FFF) for w in struct.unpack(">4h", zones)))
 
 
 def _override(context, field, default):

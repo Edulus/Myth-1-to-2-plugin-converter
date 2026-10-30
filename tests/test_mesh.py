@@ -442,6 +442,16 @@ class TestMeshBodyConversion(unittest.TestCase):
             )
         self.assertGreater(checked, 20, "should still be checking most fields")
 
+    def test_edge_buffer_zones_double_to_myth_ii_cells(self):
+        import struct
+
+        tfl = mesh.TFLMeshHeader.unpack(fixtures.mesh_body())
+        zones = struct.pack(">4h", 16, 16, 13, 18)  # Crow's Bridge
+        body = tfl.replace(edge_of_mesh_buffer_zones=zones).encode()
+        converted, _ = self._convert(body)
+        header = mesh.parse_header(converted, formats.SB)
+        self.assertEqual((32, 32, 26, 36), struct.unpack(">4h", header.edge_of_mesh_buffer_zones))
+
     def test_myth_ii_only_fields_get_the_measured_defaults(self):
         """Values measured across the 40 meshes of Magma - The Fallen Lords v1.9,
         rather than invented."""

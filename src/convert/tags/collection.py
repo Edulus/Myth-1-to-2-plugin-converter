@@ -21,6 +21,15 @@ Pixels, colour tables, sequences and shadow maps are otherwise untouched. With
 these rules, 48 of the 79 shared collections Magma left unedited reproduce
 byte-for-byte and the rest agree in 99.989% of bytes. In-engine, unconverted
 collections drew units' and scenery's shadows but not the sprites themselves.
+
+**A landscape -- a level's ground texture -- keeps only its tiles.** It is the
+one kind of collection with no sequences, and is two 256x256 tiles per
+submesh. Seven of TFL's 34 landscapes (Crow's Bridge, Traitor, Bagrada in
+Winter, ...) end with one more, smaller bitmap; *The Fallen Levels v2* drops it
+from every one it ports. A converted Crow's Bridge that still had it crashed Myth II
+while building ground tiles at the map's edge, which this is meant to fix. The
+reference is dropped from the count; its bytes stay, unreferenced, so no other
+offset moves.
 """
 
 import struct
@@ -41,6 +50,8 @@ REFERENCE_OFFSET_AT = 64
 BITMAP_META_SIZE = 52
 BITMAP_META_RUNTIME = slice(18, 52)
 NO_ROW_ADDRESS_TABLE = 1 << 5
+
+LANDSCAPE_TILE = (256, 256)
 
 
 def _u32(buf, at):
@@ -97,4 +108,32 @@ def convert(body, context=None):
                 table = meta + BITMAP_META_SIZE
                 out[table : table + 4 * (height - 1)] = bytes(4 * (height - 1))
 
-    return bytes(out), []
+    warnings = _trim_landscape(out, sections)
+    return bytes(out), warnings
+
+
+def _trim_landscape(out, sections):
+    """Drop the bitmaps after a landscape's tiles, in place. Returns warnings."""
+    count, offset, _size = sections[BITMAP_REFS]
+    if sections[SEQUENCE_REFS][0] or not count:
+        return []
+    data = HEADER_SIZE + INSERTED
+    sizes = []
+    for r in range(count):
+        at = data + offset + REFERENCE_SIZE * r
+        if at + REFERENCE_SIZE > len(out):
+            return []
+        meta = HEADER_SIZE + _u32(out, at + REFERENCE_OFFSET_AT)  # already moved by INSERTED
+        if meta + 4 > len(out):
+            return []
+        sizes.append(struct.unpack_from(">HH", out, meta))
+    tiles = 0
+    while tiles < count and sizes[tiles] == LANDSCAPE_TILE:
+        tiles += 1
+    if not tiles or tiles == count or LANDSCAPE_TILE in sizes[tiles:]:
+        return []
+    at = SECTION_AT + 16 * BITMAP_REFS
+    struct.pack_into(">I", out, at, tiles)
+    struct.pack_into(">I", out, at + 8, tiles * REFERENCE_SIZE)
+    shown = ", ".join(f"{w}x{h}" for w, h in sizes[tiles:])
+    return [f"landscape: dropped {count - tiles} bitmap(s) after its {tiles} tiles ({shown})"]

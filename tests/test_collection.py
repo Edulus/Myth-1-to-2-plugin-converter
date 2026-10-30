@@ -44,6 +44,58 @@ def tfl_collection(bitmap_height=3, row_table=True):
     return bytes(header) + data
 
 
+def tfl_landscape(sizes):
+    """A TFL collection with no sequences and one bitmap per ``(width, height)``.
+    Pixels are left out: only each bitmap's metadata is read."""
+    refs_off = 32
+    bitmaps_off = refs_off + 128 * len(sizes)
+    refs, bitmaps = bytearray(), bytearray()
+    for w, h in sizes:
+        meta = bytearray(52)
+        struct.pack_into(">HHhH", meta, 0, w, h, w, collection.NO_ROW_ADDRESS_TABLE)
+        ref = bytearray(128)
+        struct.pack_into(">II", ref, 64, bitmaps_off + len(bitmaps), len(meta))
+        refs += ref
+        bitmaps += meta
+    data = bytes(32) + bytes(refs) + bytes(bitmaps)
+    header = bytearray(DATA)
+    sections = {0: (1, 0, 32), 2: (len(sizes), refs_off, len(refs))}
+    for k in range(8):
+        count, offset, size = sections.get(k, (0, 0, 0))
+        struct.pack_into(">4I", header, 64 + 16 * k, count, offset, size, 0)
+    struct.pack_into(">III", header, 248, DATA, len(data), 0)
+    return bytes(header) + data
+
+
+class TestLandscape(unittest.TestCase):
+    def bitmap_refs(self, out):
+        return struct.unpack_from(">3I", out, 64 + 16 * 2)
+
+    def test_a_bitmap_after_the_tiles_is_dropped(self):
+        """Crow's Bridge's ``ambu``: 60 tiles, then one 153x128 bitmap."""
+        body = tfl_landscape([(256, 256)] * 4 + [(153, 128)])
+        out, warnings = collection.convert(body)
+        self.assertEqual((4, 64, 4 * 128), self.bitmap_refs(out))
+        self.assertEqual(len(body) + 32, len(out), "the dropped bytes stay")
+        self.assertEqual(1, len(warnings))
+        self.assertIn("153x128", warnings[0])
+
+    def test_a_landscape_of_only_tiles_is_left_alone(self):
+        out, warnings = collection.convert(tfl_landscape([(256, 256)] * 4))
+        self.assertEqual((4, 64, 4 * 128), self.bitmap_refs(out))
+        self.assertEqual([], warnings)
+
+    def test_a_tile_after_an_odd_bitmap_keeps_everything(self):
+        out, warnings = collection.convert(tfl_landscape([(256, 256), (64, 64), (256, 256)]))
+        self.assertEqual(3, self.bitmap_refs(out)[0])
+        self.assertEqual([], warnings)
+
+    def test_a_collection_with_sequences_is_never_trimmed(self):
+        out, warnings = collection.convert(tfl_collection())
+        self.assertEqual(1, self.bitmap_refs(out)[0])
+        self.assertEqual([], warnings)
+
+
 class TestCollection(unittest.TestCase):
     def setUp(self):
         self.body = tfl_collection()

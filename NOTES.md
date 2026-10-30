@@ -1637,3 +1637,41 @@ the side.
 - **Units**: KEEP asks that the port's units be used to correct ours
   (walking in place, giants not attacking, sizes), with some licence to adopt
   the port's proven units, including for vTFL mode.
+
+## 21. A crash at the map's edge -- ground tiles and edge borders
+
+KEEP reported a hard crash on crazyglue's *Along the way to...* (Crow's Bridge)
+when scrolling along its south-west edge, in `_build_mesh_tile_texture`
+(`render_maps.c`). Reproduced on the clean 1.8.5 copy (build 471b, DirectX 11)
+with the 0.6 converter; with the two changes below, the same scroll does not
+crash. Which of the two stops it was not isolated.
+
+### A landscape keeps only its tiles
+
+A level's landscape (`.256` named by the mesh's `landscape_collection_tag`) is
+the only kind of collection with no sequences: all 34 in the stock TFL tags.
+Each is two 256x256 tiles per submesh, in TFL and in *The Fallen Levels v2*
+alike (Crow's Bridge, 6x5 submeshes: 60). Seven TFL landscapes end with one
+more, smaller bitmap: `ambu` 153x128, `rend`/`de#1`/`mutr` 149x128, `balo`
+256x128, `dehc`/`fore` 256x116. Magma's port drops it from every one it ports.
+It is not the minimap: that is its own collection (`01om` for Crow's Bridge).
+
+`src/convert/tags/collection.py` now drops bitmaps after a no-sequence
+collection's run of 256x256 tiles, if none of them is a tile. Only the
+reference count and section size change; the bytes stay, unreferenced, so no
+offset moves. Of the 307 stock collections, exactly those seven change.
+
+### Edge-of-mesh buffer zones count cells
+
+`edge_of_mesh_buffer_zones` is four 16-bit widths in cells. Magma's are about
+twice TFL's (Crow's Bridge 16/16/13/18 becomes 32/36/26/32; Marsh 2's 74
+becomes 150); all 47 native Myth II meshes keep at least 16. Copied unchanged,
+converted borders were half as wide, as narrow as 5 cells. The mesh converter
+now doubles them.
+
+### The detail map warning is unrelated
+
+KEEP's log had "Detail map not applied because its dimensions do not match
+mesh" before the crash. The clean copy's log does not: a detail map (`dmap`)
+shares its id with the landscape, and KEEP's install loads detail-texture
+plugins that supply one. Harmless; the converter writes no `dmap`.
