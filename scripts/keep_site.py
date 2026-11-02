@@ -40,6 +40,44 @@ DOWNLOAD_MB = 223
 
 UPDATES = [
     {
+        "slug": "2026-11-02",
+        "term": "Update 2026-11-02: water, hills, buildings and a crash fixed",
+        "date": "2 November 2026",
+        "title": "Water, hills, buildings, and a crash fixed",
+        "summary": "Convert any Fallen Lords plugin in your browser. Since 26 October: water that acts as water, smooth hills, buildings, and no crash at the map's edge.",
+        "body": """
+<p><strong>You can now convert any Fallen Lords plugin yourself, in your browser, on the <a href="../convert/index.html">converter page</a>.</strong> Nothing to install. It has had seven versions since 26 October, each fixing something testers found.</p>
+
+<h2>What changed</h2>
+<table>
+<tr><th>0.1 &middot; 26 Oct</th><td>The converter runs in your browser.</td></tr>
+<tr><th>0.2 &middot; 27 Oct</th><td>Water acts as water: units wade and slow down instead of walking on top of it.</td></tr>
+<tr><th>0.3 &middot; 27 Oct</th><td>Hills and slopes are smooth, not stepped.</td></tr>
+<tr><th>0.4 &middot; 27 Oct</th><td>Missing unit sounds no longer stop some levels from loading.</td></tr>
+<tr><th>0.5 &middot; 27 Oct</th><td>Plants, bushes and units sit on the ground instead of floating or sinking.</td></tr>
+<tr><th>0.6 &middot; 27 Oct</th><td>Buildings and bridges appear, and units walk around them.</td></tr>
+<tr><th>0.7 &middot; 30 Oct</th><td>No more crash when scrolling to the edge of some maps, such as Crow's Bridge.</td></tr>
+</table>
+
+<h2>How we found them</h2>
+<p>Keep, who first proposed this converter, has been playing the converted levels and reporting what looks wrong. He also gave us a yardstick: Crow's Bridge, which Project Magma rebuilt by hand for Myth II in <em>The Fallen Levels v2</em>. Comparing our Crow's Bridge with theirs, piece by piece, showed where the water, the hills, the buildings and the map's edges went wrong, and how Magma had solved each one.</p>
+
+<h2>Sir Mauriac's Tale, rebuilt</h2>
+<p>The ready-made <em>Sir Mauriac's Tale</em> on the <a href="../index.html">front page</a> is rebuilt with version 0.7, so it has all of the fixes above. If you downloaded it before 2 November, download it again.</p>
+
+<h2>What's still rough</h2>
+<ul>
+<li><strong>Units</strong> still misbehave: they jog on the spot when they stop, Forest Giants and Trow won't attack, and some are drawn too large. This is the next big job. Tell us what you see in <a href="../q/8.html">Q8</a>.</li>
+<li><strong>Crow's Bridge</strong>: the ground at both ends of the bridge sags instead of meeting it.</li>
+<li><strong>Tandem</strong>: two houses sit slightly above the ground.</li>
+<li>Most levels have not been played yet.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Convert a plugin you like on the <a href="../convert/index.html">converter page</a> and tell us how it went in <a href="../q/9.html">Q9</a>. Report problems in <a href="../q/7.html">Q7</a>, with the version number shown at the top of the converter page. Or leave a comment below. No account is needed.</p>
+""",
+    },
+    {
         "slug": "2026-10-21",
         "term": "Update 2026-10-21: TFL levels now play in Myth II",
         "date": "21 October 2026",
@@ -474,12 +512,14 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-10-27"
+DOCKET_UPDATED = "2026-11-02"
 DOCKET = {
     "Working on now": [
-        "Units jogging in place after they stop moving (the \"moonwalking\"). Pressing the space bar stops it for now.",
+        "On Crow's Bridge, the ground at both ends of the bridge sags instead of rising to meet it.",
+        "On Tandem, two houses at the north end of the village sit slightly above the ground.",
     ],
     "Up next": [
+        "Units jogging in place after they stop moving (the \"moonwalking\"). Pressing the space bar stops it for now.",
         "Comparing our units with the ones in Project Magma's The Fallen Levels v2: giants that won't attack, missing walking frames, odd pieces after explosive deaths, and units drawn too large (for example thrall showing above the water).",
         "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
     ],
