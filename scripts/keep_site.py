@@ -515,9 +515,10 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 DOCKET_UPDATED = "2026-11-02"
 DOCKET = {
     "Working on now": [
-        "On Tandem, two houses at the north end of the village sit slightly above the ground.",
+        "On Tandem, two houses at the north end of the village sit slightly above the ground. First we measure each house against the ground under its corners, to see whether the ground dips under it or the house is set too high. Then we compare with the houses in Project Magma's ports, fix the converter, and check the result in the game.",
     ],
     "Up next": [
+        "Under the arch of Crow's Bridge's bridge, the bank shows in daylight where Magma's port shows shadow. Magma marks the ground under the bridge's walls in a way we think tells the game not to draw it; we will try the same.",
         "Units jogging in place after they stop moving (the \"moonwalking\"). Pressing the space bar stops it for now.",
         "Comparing our units with the ones in Project Magma's The Fallen Levels v2: giants that won't attack, missing walking frames, odd pieces after explosive deaths, and units drawn too large (for example thrall showing above the water).",
         "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
@@ -525,7 +526,6 @@ DOCKET = {
     "Later": [
         "The outer edge of some maps (the south and east edges of Crow's Bridge) sits higher than in Magma's port.",
         "One bush on the edge of a trench on Crow's Bridge may still float.",
-        "Under the arch of Crow's Bridge's bridge, the bank shows in daylight where Magma's port shows shadow.",
     ],
 }
 
