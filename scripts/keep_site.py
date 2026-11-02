@@ -627,7 +627,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 
     (OUT / "keep").mkdir(exist_ok=True)
     (OUT / "keep" / "index.html").write_text(
-        page("Talk to Claude", "Keep &amp; Claude", KEEP_BODY, 1, KEEP_PAGE["term"], lock=KEEP_PAGE)
+        page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"], lock=KEEP_PAGE)
         .replace("&#9998; Your answer", "&#9998; Your message"),
         encoding="utf-8",
     )
