@@ -149,6 +149,22 @@ QUESTIONS = [
     },
 ]
 
+# A one-paragraph, plain-words summary at the top of each question page, for
+# Myth players who don't follow the technical back-and-forth. Rewrite one when
+# its conversation moves on, and move the date.
+GISTS_UPDATED = "2026-11-02"
+QUESTION_GISTS = {
+    1: "Nobody has answered this one yet. It asks which Fallen Lords maps and plugins you most want to see working in Myth II: the original campaign, a favourite community plugin, solo or multiplayer. That way the ones players care about get tested first. So far, testing has mostly used Crow's Bridge and Sir Mauriac's Tale.",
+    2: "This asked whether converted hills should copy The Fallen Lords' coarser ground exactly, or be smoothed to look like a Myth II map. It was settled by comparing with Project Magma's hand-made Myth II version of Crow's Bridge. The converter now keeps every original height and smooths only the points in between, so hills are smooth instead of stepped.",
+    3: "Keep suggested a yardstick: Crow's Bridge, the first Fallen Lords level, which Project Magma had already rebuilt by hand for Myth II in The Fallen Levels v2. By comparing our converted Crow's Bridge with theirs, piece by piece, we found and fixed water that units walked across, stepped hills, floating plants and missing buildings. Keep also asked us to learn from Magma's versions of the units, which is the next big job.",
+    4: "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on.",
+    5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now. The unit problems are still to do. New test reports go in Q7.",
+    6: "This asked what a conversion must get right before it feels finished. Testers answered it through their reports in Q3, Q5 and Q7: water, hills, buildings, and units that behave as they did in The Fallen Lords.",
+    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, and to a crash at the edge of Crow's Bridge being fixed in 0.7. Still open: the ground sags at both ends of Crow's Bridge's bridge instead of meeting it, two houses on Tandem float slightly, and units still moonwalk.",
+    8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units are the next big job.",
+    9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played.",
+}
+
 STYLE = """
 :root{--bg:#f3eee3;--panel:#fbf8f1;--panel2:#fffdf8;--fg:#1f1b15;--muted:#6c6457;--line:#d6ccb9;--blood:#9b2a17;--blood-hi:#b5351f;--code:#e9e1d1;--tint:rgba(155,42,23,.08);color-scheme:light}
 :root[data-theme=dark]{--bg:#0d0c0b;--panel:#171513;--panel2:#1f1c19;--fg:#e9e2d6;--muted:#a39b8e;--line:#3a352f;--blood:#a8321f;--blood-hi:#d0452c;--code:#24211d;--tint:rgba(168,50,31,.18);color-scheme:dark}
@@ -248,6 +264,7 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 #log th,#log td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line)}.btn.save{text-transform:none;font-size:.9rem;letter-spacing:.04em}
 #progress progress{width:100%;height:.8rem;accent-color:var(--blood)}
 .problem{background:var(--tint);border-left:4px solid var(--blood);padding:.6rem .9rem;margin:1rem 0}
+.gist{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.8rem 1rem;margin:1rem 0 1.4rem}
 .cards.closed .card{opacity:.75}
 details{margin:1rem 0}
 .release{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blood);border-radius:8px;padding:.9rem 1.2rem;margin:0 0 1.5rem}
@@ -616,7 +633,11 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
         closed_note = (
             f'<p class="problem"><strong>Closed.</strong> {html.escape(q["closed"])}</p>\n' if "closed" in q else ""
         )
-        body = f"""{closed_note}{q["body"]}
+        gist = (
+            f'<p class="gist"><strong>In short</strong> <span class="meta">(as of {_long_date(GISTS_UPDATED)})</span> '
+            f'{html.escape(QUESTION_GISTS[q["n"]])}</p>\n'
+        )
+        body = f"""{gist}{closed_note}{q["body"]}
 <p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
 <div class="nav">{prev}{nxt}</div>"""
         (OUT / "q" / f'{q["n"]}.html').write_text(
