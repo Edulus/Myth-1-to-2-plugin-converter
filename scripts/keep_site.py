@@ -353,6 +353,43 @@ COMMENTS_JS = """
 })();
 """
 
+# A riddle in front of a page. Only the SHA-256 of the answer (lowercased,
+# letters only) is in the page, so it is not readable from the source -- a
+# courtesy lock, not security: the thread behind it is a public Discussion.
+LOCK_HTML = """<section class="wrap lock" id="lock">
+<form class="say" novalidate>
+<label><span>{question}</span><input name="riddle" autocomplete="off" required></label>
+<p><button class="btn" type="submit">Enter &rarr;</button> <span class="status" role="status"></span></p>
+</form>
+</section>"""
+
+LOCK_JS = """
+(function(){
+  var gate=document.getElementById("lock"), main=document.querySelector("main"), form=gate.querySelector("form");
+  function open(){gate.hidden=true; main.hidden=false;}
+  try{if(localStorage.getItem("unlocked:"+location.pathname)==="{hash}"){open();return;}}catch(e){}
+  form.addEventListener("submit",function(ev){ev.preventDefault();
+    var said=form.riddle.value.toLowerCase().replace(/[^a-z]/g,"");
+    crypto.subtle.digest("SHA-256",new TextEncoder().encode(said)).then(function(d){
+      var hex=Array.from(new Uint8Array(d)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+      if(hex!=="{hash}"){form.querySelector(".status").textContent="That isn't it.";return;}
+      try{localStorage.setItem("unlocked:"+location.pathname,hex);}catch(e){}
+      open();});
+  });
+})();
+"""
+
+# Keep's own page: an open-ended conversation with Claude about the project.
+KEEP_PAGE = {
+    "term": "Keep: open conversation with Claude",
+    "question": "Whose Power is the purest?",
+    "hash": hashlib.sha256(b"edulus").hexdigest(),
+}
+
+KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
+<p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here.</p>
+<p class="meta">The riddle only keeps this page out of casual view. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>"""
+
 CREDIT = (
     "Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> "
     "box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. "
@@ -365,12 +402,15 @@ CREDIT = (
 STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 
 
-def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
+def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None):
     up = "../" * depth
-    answer = scripts = ""
+    answer = scripts = gate = ""
     if term:
         answer = GIVE_ANSWER.format(term=html.escape(term), api=html.escape(COMMENTS_API))
         scripts = f"<script>{COMMENTS_JS}</script>"
+    if lock:
+        gate = LOCK_HTML.format(question=html.escape(lock["question"]))
+        scripts += f"<script>{LOCK_JS.replace('{hash}', lock['hash'])}</script>"
     kicker_html = f'<p class="meta">{kicker}</p>' if kicker else ""
     subtitle_html = f'<p class="subtitle">{subtitle}</p>' if subtitle else ""
     brand = "" if depth == 0 else f'<a class="brand" href="{up}index.html">{SITE_NAME} &middot; {SITE_TAGLINE}</a>'
@@ -402,7 +442,8 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle=""):
 {subtitle_html}
 </div></div>
 </header>
-<main class="wrap">
+{gate}
+<main class="wrap"{' hidden' if lock else ''}>
 {body}
 {answer}
 </main>
@@ -583,6 +624,13 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
                  kicker=f'Question {q["n"]} of {len(QUESTIONS)}'),
             encoding="utf-8",
         )
+
+    (OUT / "keep").mkdir(exist_ok=True)
+    (OUT / "keep" / "index.html").write_text(
+        page("Talk to Claude", "Keep &amp; Claude", KEEP_BODY, 1, KEEP_PAGE["term"], lock=KEEP_PAGE)
+        .replace("&#9998; Your answer", "&#9998; Your message"),
+        encoding="utf-8",
+    )
 
     build_converter_page(stock_dir)
     print(f"built {len(UPDATES)} update(s) and {len(QUESTIONS)} question(s) into {OUT}")
