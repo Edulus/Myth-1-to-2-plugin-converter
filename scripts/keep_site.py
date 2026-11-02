@@ -35,7 +35,7 @@ COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 # A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
 DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
 DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
-DOWNLOAD_SHA256 = "633cbebaf60616e7262c2369bb98cedf9672552ea71913d29f36ebdad0644285"
+DOWNLOAD_SHA256 = "b91c135b522783b4ef464d2b825ba4fb15fd86fd7c77d9393c5e1deb6c44d67e"
 DOWNLOAD_MB = 223
 
 UPDATES = [
@@ -198,7 +198,7 @@ QUESTION_GISTS = {
     4: "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on.",
     5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now. The unit problems are still to do. New test reports go in Q7.",
     6: "This asked what a conversion must get right before it feels finished. Testers answered it through their reports in Q3, Q5 and Q7: water, hills, buildings, and units that behave as they did in The Fallen Lords.",
-    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, and to a crash at the edge of Crow's Bridge being fixed in 0.7. Still open: the ground sags at both ends of Crow's Bridge's bridge instead of meeting it, two houses on Tandem float slightly, and units still moonwalk.",
+    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, to a crash at the edge of Crow's Bridge being fixed in 0.7, and to the ground meeting the walls of Crow's Bridge's bridge in 0.8. Still open: two houses on Tandem float slightly, and units still moonwalk.",
     8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units are the next big job.",
     9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played.",
 }
@@ -515,7 +515,6 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 DOCKET_UPDATED = "2026-11-02"
 DOCKET = {
     "Working on now": [
-        "On Crow's Bridge, the ground at both ends of the bridge sags instead of rising to meet it.",
         "On Tandem, two houses at the north end of the village sit slightly above the ground.",
     ],
     "Up next": [
@@ -526,6 +525,7 @@ DOCKET = {
     "Later": [
         "The outer edge of some maps (the south and east edges of Crow's Bridge) sits higher than in Magma's port.",
         "One bush on the edge of a trench on Crow's Bridge may still float.",
+        "Under the arch of Crow's Bridge's bridge, the bank shows in daylight where Magma's port shows shadow.",
     ],
 }
 

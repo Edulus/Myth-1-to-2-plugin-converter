@@ -837,6 +837,75 @@ def place_models_by_centre(markers, count, palette, palette_entries, centres):
     return bytes(out), moved, sorted(missing)
 
 
+MODEL_WALL_STEP = 400
+MODEL_BASE_TOLERANCE = 32
+
+
+def lower_ground_beside_models(
+    terrain, submesh_width, submesh_height, markers, count, palette, palette_entries, reaches
+):
+    """Drop the blended ground off a model's walls to the model's base.
+
+    TFL drew a model over its ground, so a slope running up the side of a
+    model left the model's wall in view. Myth II hides whatever is below the
+    ground, and the points `upsample_terrain` blends in between TFL's put a
+    slope a little higher than the wall: Crow's Bridge's bridge showed only
+    its railings, the ground sagging away from them (Keep, Q7). Magma's port
+    drops those points to the foot of the wall.
+
+    So an in-between point inside a model's reach, whose TFL corners step at
+    least `MODEL_WALL_STEP` and whose lowest corner is the model's base (its
+    marker height, within `MODEL_BASE_TOLERANCE`), takes that lowest height.
+    Across the 17 levels of *The Fallen Levels v2* that pair with stock TFL
+    levels, this brings Crow's Bridge's 14 such points from a mean of 351
+    off Magma's to 48 and Forest Heart's ent bridge's 44 from 2,339 to 1,885;
+    under the other five models it touches it is a little nearer on the
+    whole (NOTES.md section 22). Without the base condition, or with a
+    gentler step, it is further off on most of them.
+
+    ``markers`` must already be placed by centre; ``reaches`` maps a TFL
+    model id to how far its geometry reaches from its centre, either way, in
+    world units (`src.convert.plugin.model_reaches`). Returns
+    ``(terrain, lowered)``.
+    """
+    columns, rows = cell_counts(submesh_width, submesh_height, formats.SB)
+
+    def height(x, y):
+        return struct.unpack_from(">h", terrain, (y * columns + x) * SB_CELL_SIZE)[0]
+
+    def corners(i, size):
+        # An odd index lies between two TFL points; at the far edge
+        # `upsample_terrain` blended the last point with itself.
+        return (i,) if i % 2 == 0 else (i - 1, min(i + 1, size - 2))
+
+    entries = MarkerPaletteEntry.unpack_many(palette, 0, palette_entries)
+    models = [e.marker_tag for e in entries if e.type == MarkerType.MODEL]
+    out = bytearray(terrain)
+    lowered = set()
+    for marker in MarkerHead.unpack_many(markers, 0, count):
+        if marker.type != MarkerType.MODEL or marker.palette_index >= len(models):
+            continue
+        reach = reaches.get(models[marker.palette_index])
+        if not reach:
+            continue
+        # Strictly inside the reach: a point on its edge is the model's rim.
+        x0 = max(int((marker.pos_x - reach) // SB_CELL_WORLD_SIZE) + 1, 0)
+        x1 = min(-int(-(marker.pos_x + reach) // SB_CELL_WORLD_SIZE), columns)
+        y0 = max(int((marker.pos_y - reach) // SB_CELL_WORLD_SIZE) + 1, 0)
+        y1 = min(-int(-(marker.pos_y + reach) // SB_CELL_WORLD_SIZE), rows)
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if x % 2 == 0 and y % 2 == 0:
+                    continue  # a TFL point, kept as it is
+                around = [height(cx, cy) for cy in corners(y, rows) for cx in corners(x, columns)]
+                low = min(around)
+                if max(around) - low < MODEL_WALL_STEP or abs(low - marker.pos_z) > MODEL_BASE_TOLERANCE:
+                    continue
+                struct.pack_into(">h", out, (y * columns + x) * SB_CELL_SIZE, low)
+                lowered.add((x, y))
+    return bytes(out), len(lowered)
+
+
 def _whole_cells(distance):
     """``distance`` rounded to the nearest whole Myth II cell, halves up."""
     return (distance + SB_CELL_WORLD_SIZE // 2) // SB_CELL_WORLD_SIZE * SB_CELL_WORLD_SIZE

@@ -1675,3 +1675,62 @@ KEEP's log had "Detail map not applied because its dimensions do not match
 mesh" before the crash. The clean copy's log does not: a detail map (`dmap`)
 shares its id with the landscape, and KEEP's install loads detail-texture
 plugins that supply one. Harmless; the converter writes no `dmap`.
+
+## 22. The ground beside Crow's Bridge's bridge
+
+KEEP (Q7): along the east and west sides of the bridge "the mesh height slopes
+sag downward instead of raising up" to the model's walls.
+
+### What was wrong
+
+The bridge model (`crow`, byte-identical in TFL and Magma's port) is 4096
+square. Its railings stand over Myth II columns 102 and 106, on a causeway of
+TFL ground (678 to 830) crossing the river, and from each railing a sloping
+stone wall runs down to the model's base, height 0, at columns 100 and 108.
+The in-between column `upsample_terrain` blends between the riverbank (0) and
+the causeway (101 and 107: 339 to 385) lies a little above that wall, so the
+ground hid it: in game only the railings showed, the ground falling away from
+them. TFL drew a model over its ground, so the same slope never hid it there.
+Magma's port has those 14 points at the foot of the wall (0, or -140).
+
+The first in-game look misled: a plugin converted on its own, without the
+stock tags, has no model geometry, so its bridge stays at its TFL corner
+anchor, 4 cells off its causeway. The web converter bundles the stock tags,
+so Keep's bridge was placed right; convert with `--stock` to test.
+
+### The rule, and how far it carries
+
+`lower_ground_beside_models` (`src/mesh.py`): an in-between point inside a
+model's reach (its vertices' furthest x or y from its centre, a square that
+holds it whichever way it faces), whose TFL corners step 400 or more and whose
+lowest corner is the model's base (marker height, within 32), takes that
+lowest height. Measured against the 17 paired levels of *The Fallen Levels
+v2*, in mean distance from Magma's height over the points it changes:
+
+| Model | Points | Blended | Lowered |
+|---|---|---|---|
+| crows bridge (Crow's Bridge) | 14 | 351 | 48 |
+| ent small bridge (Forest Heart) | 44 | 2,339 | 1,885 |
+| hanging bridge model (Five Champions) | 52 | 1,294 | 1,077 |
+| desert arch model (Five Champions) | 34 | 858 | 807 |
+| cave at covenant (Flight) | 16 | 733 | 498 |
+| Knot Waterfall (Force Ten) | 2 | 475 | 490 |
+| waterfall rocks model (Great Devoid) | 17 | 1,424 | 1,615 |
+
+Every Crow's Bridge and ent-bridge point moves nearer. The large distances
+elsewhere are Magma reshaping the ground under those models by hand, which no
+rule from TFL's heights reproduces. Dropping the base condition, taking the
+lowest corner under any model on a 400 step, is further off on five of those
+seven models (Five Champions: 118 of 167 points further).
+
+In game (clean 1.8.5 copy, crazyglue's *Along the way to...*), the bridge's
+walls now run down to the bank and the water, as in Magma's port.
+
+### Still different: the ground under the arch
+
+Through the arch ours shows the bank, lit; Magma's shows black. Magma stamps
+the bridge's model index on the cells under it (`0x0009`, ours `0xFFFF`) and
+sets bit 0x40 of the cell flags on the wall cells (columns 100, 101, 106, 107)
+but not the road. Across Crow's Bridge bit 0x40 is set on 456 cells, every one
+of them carrying a model index. Most likely the engine leaves such cells
+undrawn. Not yet tried.

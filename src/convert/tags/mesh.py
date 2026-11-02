@@ -273,24 +273,13 @@ def _convert_blocks(tfl, trailing, id_map, context):
     else:
         blocks["palette"] = palette
 
-    # -- markers: same layout in both games; scenery and units re-seated -----
-    # Myth II draws a marker at its stored height, which TFL seems to have
-    # ignored for scenery and units; set them on the converted ground.
+    # -- markers: same layout in both games; models re-anchored, scenery and
+    # units re-seated ----------------------------------------------------------
     markers = _slice(trailing, tfl.markers_offset, tfl.markers_size)
     if markers is None:
-        blocks["markers"] = b""
+        markers = b""
         warnings.append("markers lie outside the mesh body; dropped")
-    elif tfl.marker_count and blocks["terrain"]:
-        try:
-            blocks["markers"], _moved = mesh_module.place_markers_on_ground(
-                markers, tfl.marker_count, blocks["terrain"],
-                tfl.submesh_width, tfl.submesh_height,
-            )
-        except (struct.error, ValueError) as exc:
-            blocks["markers"] = markers
-            warnings.append(f"markers left at their TFL heights: {exc}")
-    else:
-        blocks["markers"] = markers
+    blocks["markers"] = markers
 
     # Models are anchored by a corner in TFL and by their centre in Myth II.
     centres = getattr(context, "model_centres", None) if context else None
@@ -305,6 +294,28 @@ def _convert_blocks(tfl, trailing, id_map, context):
                 warnings.append(f"models with no geometry in this plugin left at their TFL anchor: {listed}")
         except (struct.error, ValueError) as exc:
             warnings.append(f"models left at their TFL anchor: {exc}")
+
+    # Ground blended up a model's wall would hide it; drop it to the model's base.
+    reaches = getattr(context, "model_reaches", None) if context else None
+    if reaches and palette and blocks["terrain"] and tfl.marker_count and tfl.marker_palette_entries:
+        try:
+            blocks["terrain"], _lowered = mesh_module.lower_ground_beside_models(
+                blocks["terrain"], tfl.submesh_width, tfl.submesh_height,
+                blocks["markers"], tfl.marker_count, palette, tfl.marker_palette_entries, reaches,
+            )
+        except (struct.error, ValueError) as exc:
+            warnings.append(f"ground beside models left as blended: {exc}")
+
+    # Myth II draws a marker at its stored height, which TFL seems to have
+    # ignored for scenery and units; set them on the converted ground.
+    if tfl.marker_count and blocks["markers"] and blocks["terrain"]:
+        try:
+            blocks["markers"], _moved = mesh_module.place_markers_on_ground(
+                blocks["markers"], tfl.marker_count, blocks["terrain"],
+                tfl.submesh_width, tfl.submesh_height,
+            )
+        except (struct.error, ValueError) as exc:
+            warnings.append(f"markers left at their TFL heights: {exc}")
 
     # -- map actions: parameter type codes need correcting -------------------
     actions = _slice(trailing, tfl.map_actions_offset, tfl.map_action_buffer_size)

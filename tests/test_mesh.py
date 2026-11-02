@@ -897,6 +897,79 @@ class TestModelsByCentre(unittest.TestCase):
         ]
         self.assertEqual({b"inn1": (2048, 1536)}, convert_plugin.model_centres(tags))
 
+    def test_reaches_come_from_each_models_vertices(self):
+        import struct
+
+        from tests.test_models import tfl_geom, tfl_mode
+
+        geometry = bytearray(tfl_geom([(0, 0, 0), (4096, 1000, 10), (1000, -900, 5)]))
+        struct.pack_into(">hh", geometry, 16, 2048, 500)  # center_x, center_y
+        tags = [
+            fixtures_tag(b"mode", b"crow", tfl_mode([(0, 0, 0)])),
+            fixtures_tag(b"geom", b"gm01", bytes(geometry)),
+        ]
+        # Furthest along x or y from the centre: 2048 along x beats 1400 along y.
+        self.assertEqual({b"crow": 2048}, convert_plugin.model_reaches(tags))
+
+
+class TestGroundBesideModels(unittest.TestCase):
+    """Blended ground on a model's walls drops to the model's base."""
+
+    CELL = mesh.SB_CELL_WORLD_SIZE
+
+    def terrain(self, heights):
+        import struct
+
+        return b"".join(struct.pack(">hbbBBHhH", h, 0, 0, 0, 0, 0xFFFF, 0, 0xFFFF) for row in heights for h in row)
+
+    def heights(self, terrain):
+        import struct
+
+        return [struct.unpack_from(">h", terrain, i * mesh.SB_CELL_SIZE)[0] for i in range(32 * 32)]
+
+    def lower(self, terrain, pos_z=0, reach=2048, kind=mesh.MarkerType.MODEL):
+        palette = mesh.MarkerPaletteEntry.build(
+            type=mesh.MarkerType.MODEL, flags=0, marker_tag=b"crow", team_index=0, netgame_flags=0
+        ).encode()
+        marker = mesh.MarkerHead.build(
+            flags=0, type=kind, palette_index=0, id=0, min_difficulty=0,
+            pos_x=8 * self.CELL, pos_y=8 * self.CELL, pos_z=pos_z, yaw=0,
+        ).encode()
+        return mesh.lower_ground_beside_models(terrain, 1, 1, marker, 1, palette, 1, {b"crow": reach})
+
+    def bank(self):
+        # A 1x1-submesh mesh is 32x32 Myth II cells. TFL points sit at even
+        # cells: ground at 0 up to column 6, a causeway at 700 from column 8.
+        rows = []
+        for y in range(32):
+            row = []
+            for x in range(32):
+                row.append(0 if x <= 6 else 700 if x >= 8 else 350)
+            rows.append(row)
+        return self.terrain(rows)
+
+    def test_a_steep_blend_inside_the_reach_drops_to_the_model_base(self):
+        out, lowered = self.lower(self.bank())
+        h = self.heights(out)
+        # The reach is cells 4..12 either way, strictly inside 5..11; column 7
+        # is the only in-between column on the step.
+        self.assertEqual([0] * 7, [h[y * 32 + 7] for y in range(5, 12)])
+        self.assertEqual(7, lowered)
+        self.assertEqual(350, h[4 * 32 + 7], "the rim of the reach is left alone")
+        self.assertEqual(350, h[12 * 32 + 7])
+        self.assertEqual(700, h[8 * 32 + 8], "TFL's own points are kept")
+
+    def test_not_when_the_low_side_is_not_the_model_base(self):
+        out, lowered = self.lower(self.bank(), pos_z=300)
+        self.assertEqual((self.bank(), 0), (out, lowered))
+
+    def test_not_on_a_gentle_step(self):
+        gentle = self.terrain([[0 if x <= 6 else 300 if x >= 8 else 150 for x in range(32)] for _ in range(32)])
+        self.assertEqual((gentle, 0), self.lower(gentle))
+
+    def test_only_models_count(self):
+        self.assertEqual((self.bank(), 0), self.lower(self.bank(), kind=mesh.MarkerType.SCENERY))
+
 
 def fixtures_tag(tag_type, tag_id, body):
     return reader.Tag(header=codec.Struct("H", [("4s", "tag_type"), ("4s", "tag_id")]).build(tag_type=tag_type, tag_id=tag_id), body=body)

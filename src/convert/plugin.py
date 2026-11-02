@@ -101,6 +101,9 @@ class ConversionContext:
         # model markers (see src.mesh.place_models_by_centre). Filled in by
         # convert_container from the container being converted.
         self.model_centres = {}
+        # TFL model id -> how far its geometry reaches from that centre, for
+        # the ground beside it (see src.mesh.lower_ground_beside_models).
+        self.model_reaches = {}
 
 
 def model_centres(tags):
@@ -118,6 +121,34 @@ def model_centres(tags):
             continue
         centres[tag.tag_id] = (geometry.center_x, geometry.center_y)
     return centres
+
+
+def model_reaches(tags):
+    """``{mode tag id: reach}`` for every TFL model in ``tags`` whose geometry
+    is there too: the furthest its vertices lie from the geometry's centre,
+    along x or y, in world units. Facing is not known here, so this is the
+    half-width of a square that holds the model whichever way it faces."""
+    geometries = {t.tag_id: t.body for t in tags if t.tag_type == b"geom"}
+    reaches = {}
+    for tag in tags:
+        if tag.tag_type != b"mode":
+            continue
+        try:
+            model = mode_converter.Model.unpack(tag.body)
+            body = geometries[model.geometry_tag]
+            geometry = geom_converter.TFLGeom.unpack(body)
+            start = geometry.data_offset + geometry.vertex_offset
+            points = [
+                struct.unpack_from(">hh", body, start + i * geom_converter.VERTEX_SIZE)
+                for i in range(geometry.vertex_count)
+            ]
+        except (KeyError, ValueError, struct.error):
+            continue
+        if points:
+            reaches[tag.tag_id] = max(
+                max(abs(x - geometry.center_x), abs(y - geometry.center_y)) for x, y in points
+            )
+    return reaches
 
 
 def unresolved_references(mono, id_map=None):
@@ -225,6 +256,7 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
     # context happened to be constructed with.
     context.id_map = id_map
     context.model_centres = model_centres(mono.tags)
+    context.model_reaches = model_reaches(mono.tags)
     report = ConversionReport(source_tags=len(mono.tags))
 
     if len(mono.tags) > headers.INT16_MAX:
