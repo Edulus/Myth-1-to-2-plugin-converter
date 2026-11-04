@@ -22,6 +22,11 @@
     if (cls) e.className = cls;
     return e;
   }
+  function link(text, href) {
+    var a = el("a", text);
+    a.href = href;
+    return a;
+  }
   function mb(n) { return Math.round(n / 1048576) + " MB"; }
 
   function showLog(entries) {
@@ -138,10 +143,13 @@
       "Start Myth II, choose New Game, pick the campaign \u201c" + res.filename + "\u201d, then a level, then OK. Leave Tagsets empty: the original game files it needs are already inside.",
     ].forEach(function (s) { steps.append(el("li", s)); });
     parts.push(steps);
-    var tell = el("p", "This is a beta. If a level doesn't load or looks wrong, please tell us in ", "meta");
-    var q7 = el("a", "Q7: feature and bug reports");
-    q7.href = "../q/7.html";
-    tell.append(q7, " and include the technical details below.");
+    parts.push(el("h3", "Then tell us how it went"));
+    var ask = el("p", "Once you've tried it in Myth II, please leave a short report in ");
+    ask.append(link("Q9: Tried converting a map of your own?", "../q/9.html"),
+      ": the plugin's name, whether it loaded, and whether the levels played. A line or two is plenty, and a report that it worked helps us as much as one that it didn't.");
+    parts.push(ask);
+    var tell = el("p", "If a level doesn't load or looks wrong, the details go in ", "meta");
+    tell.append(link("Q7: feature and bug reports", "../q/7.html"), ", with the technical details below.");
     parts.push(tell);
     parts.push(details(res.details));
     show(result, parts);
@@ -167,6 +175,10 @@
         if (msg.type === "done") finished(msg.result, msg.data);
         else {
           var parts = [el("p", msg.message)];
+          var ask = el("p", "Please tell us about it in ");
+          ask.append(link("Q9: Tried converting a map of your own?", "../q/9.html"),
+            ": the plugin's name and this message. It shows us which plugins the converter can't handle yet.");
+          parts.push(ask);
           if (msg.details) parts.push(details(msg.details));
           show(problem, parts);
         }

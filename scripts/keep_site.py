@@ -810,6 +810,7 @@ CONVERT_BODY = """
 <li>The converted plugin carries the original game files it needs, so you don't need anything else installed.</li>
 <li><strong>Beta.</strong> Tested with <em>Sir Mauriac's Tale</em> on Windows. Other plugins may convert with parts missing, and the report tells you what it could not convert.</li>
 <li>Only share a converted plugin if its author agrees.</li>
+<li>After you try a converted plugin, please tell us how it went in <a href="../q/9.html">Q9: Tried converting a map of your own?</a>, even if it worked.</li>
 <li>Found a bug, or want a feature? Tell us in <a href="../q/7.html">Q7: feature and bug reports</a>.</li>
 </ul>
 <div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
