@@ -6,6 +6,13 @@
 //   GET  /config          -> { question }            the Myth check question
 //   GET  /comments?term=  -> { comments: [...] }     a page's thread
 //   POST /comments        -> { comments: [...] }     add a comment or reply
+//   GET  /images/<id>.<ext>                          a picture sent with one
+//
+// A comment may carry one picture, image: { name, type, data (base64) }: PNG,
+// JPEG, GIF or WebP (judged by its first bytes), up to 8 MB. It is kept in the
+// VOTES KV store under "img:<id>" and linked from the end of the comment on
+// GitHub (core.js formatComment), so the Discussion shows it too. Pictures
+// are public and served to any origin.
 //
 // Each comment carries a status: "addressed" once the repo owner reacts with
 // a rocket on GitHub, "waiting" before that, null for our own posts
@@ -28,7 +35,7 @@
 
 import {
   shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments,
-  validateConversion, addConversion,
+  validateConversion, addConversion, BODY_LIMIT, IMAGE_ERRORS, imageId, imageUrl, parseImagePath,
 } from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
@@ -79,13 +86,18 @@ const THREAD_FIELDS = `
     }
   }`;
 
-function threadOptions(env) {
-  return { owner: env.REPO.split("/")[0], staff: (env.STAFF_NAMES ?? "").split(",") };
+// Where pictures are served from: IMAGE_BASE, else this worker's own address.
+function imageBase(env, url) {
+  return env.IMAGE_BASE || url.origin;
+}
+
+function threadOptions(env, url) {
+  return { owner: env.REPO.split("/")[0], staff: (env.STAFF_NAMES ?? "").split(","), imageBase: imageBase(env, url) };
 }
 
 // A page's thread, with the vote counts on our own posts (status null).
-async function loadThread(env, term) {
-  const thread = shapeThread(await findDiscussion(env, term), threadOptions(env));
+async function loadThread(env, term, url) {
+  const thread = shapeThread(await findDiscussion(env, term), threadOptions(env, url));
   if (!env.VOTES) return thread;
   await Promise.all(
     allComments(thread)
@@ -150,6 +162,66 @@ async function addComment(env, discussionId, body, replyTo) {
   );
 }
 
+// The request body as text, or null if it is over max bytes. Read in pieces,
+// so an oversized upload is turned away without being held whole.
+async function readCapped(request, max) {
+  if (Number(request.headers.get("Content-Length")) > max) return null;
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const parts = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return null;
+    }
+    parts.push(value);
+  }
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const part of parts) {
+    all.set(part, at);
+    at += part.byteLength;
+  }
+  return new TextDecoder().decode(all);
+}
+
+// A stored picture. The headers keep a browser from treating it as anything
+// but an image (no sniffing, no script, no same-origin powers), and let the
+// site and GitHub's image proxy load it from elsewhere.
+async function serveImage(env, pathname) {
+  const wanted = parseImagePath(pathname);
+  const found = wanted ? await env.VOTES.getWithMetadata(`img:${wanted.id}`, "stream") : null;
+  if (!found?.value || found.metadata?.type !== wanted.type) {
+    await found?.value?.cancel();
+    return new Response("Not found", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+    });
+  }
+  return new Response(found.value, {
+    headers: {
+      "Content-Type": wanted.type,
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'; sandbox",
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Disposition": "inline",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+    },
+  });
+}
+
+// Store a checked picture (core.js validateImage); returns its KV key and URL.
+async function storeImage(env, image, base) {
+  const id = imageId(crypto.getRandomValues(new Uint8Array(16)));
+  const key = `img:${id}`;
+  await env.VOTES.put(key, image.bytes, { metadata: { type: image.type } });
+  return { key, url: imageUrl(base, id, image.ext) };
+}
+
 async function notify(env, alert) {
   try {
     await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
@@ -169,6 +241,11 @@ export default {
     const url = new URL(request.url);
 
     try {
+      // Pictures are public: any origin may load them.
+      if (url.pathname.startsWith("/images/") && request.method === "GET") {
+        return await serveImage(env, url.pathname);
+      }
+
       if (url.pathname === "/config" && request.method === "GET") {
         return json({ question: env.QUESTION }, 200, headers);
       }
@@ -176,7 +253,7 @@ export default {
       if (url.pathname === "/comments" && request.method === "GET") {
         const term = url.searchParams.get("term") ?? "";
         if (!term) return json({ error: "missing term" }, 400, headers);
-        return json({ comments: await loadThread(env, term) }, 200, headers);
+        return json({ comments: await loadThread(env, term, url) }, 200, headers);
       }
 
       if (url.pathname === "/conversions" && request.method === "GET") {
@@ -217,7 +294,7 @@ export default {
         if (!checked.ok) return json({ error: checked.error }, 400, headers);
         const { term, id, vote, previous } = checked.value;
         // Only our own posts on this page can be voted on.
-        const target = allComments(await loadThread(env, term)).find((c) => c.id === id);
+        const target = allComments(await loadThread(env, term, url)).find((c) => c.id === id);
         if (!target || target.status !== null) return json({ error: "That reply can't be voted on." }, 400, headers);
         const votes = applyVote(target.votes, previous, vote);
         await env.VOTES.put(`votes:${id}`, JSON.stringify(votes));
@@ -229,20 +306,31 @@ export default {
         const { success } = await env.POST_LIMIT.limit({ key: ip });
         if (!success) return json({ error: "Easy there -- please wait a minute and send it again." }, 429, headers);
 
+        // A picture makes the body large; refuse one far over the limit unread.
+        const raw = await readCapped(request, BODY_LIMIT);
+        if (raw === null) return json({ error: IMAGE_ERRORS.big }, 413, headers);
         let input;
         try {
-          input = await request.json();
+          input = JSON.parse(raw);
         } catch {
           return json({ error: "Sorry, that didn't go through." }, 400, headers);
         }
         const checked = validate(input, env.ANSWERS.split(","));
         if (!checked.ok) return json({ error: checked.error }, 400, headers);
-        const { term, name, message, replyTo } = checked.value;
+        const { term, name, message, replyTo, image } = checked.value;
 
-        const discussion = (await findDiscussion(env, term)) ?? (await createDiscussion(env, term));
-        await addComment(env, discussion.id, formatComment(name, message), replyTo);
+        // The picture is stored first, so a comment never links to nothing;
+        // if the comment then fails, the picture is taken out again.
+        const picture = image ? await storeImage(env, image, imageBase(env, url)) : null;
+        try {
+          const discussion = (await findDiscussion(env, term)) ?? (await createDiscussion(env, term));
+          await addComment(env, discussion.id, formatComment(name, message, picture?.url), replyTo);
+        } catch (err) {
+          if (picture) await env.VOTES.delete(picture.key).catch((e) => console.error("picture cleanup", e));
+          throw err;
+        }
         if (env.NTFY_TOPIC) ctx.waitUntil(notify(env, alertFor(checked.value, input.page, env.SITE_URL)));
-        return json({ comments: await loadThread(env, term) }, 200, headers);
+        return json({ comments: await loadThread(env, term, url) }, 200, headers);
       }
 
       return json({ error: "not found" }, 404, headers);

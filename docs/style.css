@@ -85,6 +85,10 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .comment .vote{font:inherit;font-size:.85rem;background:none;border:1px solid var(--line);border-radius:4px;padding:.1rem .5rem;margin-right:.4rem;cursor:pointer;color:var(--fg)}
 .comment .vote.on{background:var(--tint);border-color:var(--blood)}
 .comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
+.comment .text a{color:var(--blood-hi);overflow-wrap:anywhere}
+.comment .pic{display:block;margin:.2rem 0 .6rem}
+.comment .pic img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:5px}
+.say .pick{margin:-.4rem 0 .7rem;font-size:.9rem}
 .comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
 .drop{display:block;margin:1.2rem 0;padding:2rem 1rem;text-align:center;background:var(--panel);border:2px dashed var(--blood);border-radius:8px;cursor:pointer}
 .drop:hover,.drop.over,.drop:focus-within{background:var(--tint);border-color:var(--blood-hi)}

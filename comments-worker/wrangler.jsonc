@@ -16,6 +16,10 @@
 		"CATEGORY_ID": "DIC_kwDOTmqt9s4DJWN2",
 		"SITE_URL": "https://edulus.github.io/Myth-1-to-2-plugin-converter/",
 		"ALLOWED_ORIGINS": "https://edulus.github.io",
+		// This worker's public address. Pictures sent with comments are linked
+		// as IMAGE_BASE/images/<id>.<ext>, and only links under it show as
+		// pictures on the site -- changing it hides the pictures already posted.
+		"IMAGE_BASE": "https://keep-comments.edyersh.workers.dev",
 		// Names we post under; their comments get no addressed/waiting box.
 		"STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5",
 		// The check under the box: any of ANSWERS, compared on letters only.

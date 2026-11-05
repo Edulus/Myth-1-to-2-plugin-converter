@@ -39,24 +39,117 @@ export function validate(input, accepted) {
     return { ok: false, error: "That answer to the Myth question doesn't look right -- try again." };
   }
   if (replyTo && !/^[A-Za-z0-9_=-]{4,100}$/.test(replyTo)) return { ok: false, error: "That reply link is broken." };
-  return { ok: true, value: { term, name, message, replyTo } };
+  const image = validateImage(body.image);
+  if (!image.ok) return image;
+  return { ok: true, value: { term, name, message, replyTo, image: image.value } };
 }
 
-export function formatComment(name, message) {
+// A picture sent with a comment. Its bytes are kept in the VOTES KV store
+// under "img:<id>" and served from GET /images/<id>.<ext>. What it is comes
+// from its first bytes, never from its name or the type the browser declared,
+// and only these four kinds are taken (no SVG: it can carry script).
+export const IMAGE_LIMIT = 8 * 1024 * 1024;
+export const IMAGE_TYPES = { png: "image/png", jpg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
+const BASE64_LIMIT = Math.ceil(IMAGE_LIMIT / 3) * 4;
+// A whole POST /comments body: the picture as base64 plus room for the rest.
+export const BODY_LIMIT = BASE64_LIMIT + 64 * 1024;
+
+export const IMAGE_ERRORS = {
+  big: "That picture is too big -- please keep it under 8 MB.",
+  kind: "That picture can't be used -- please send a PNG, JPEG, GIF or WebP.",
+  broken: "That picture didn't come through -- please choose it again.",
+};
+
+export function sniffImage(bytes) {
+  const has = (sig, at = 0) => [...sig].every((ch, i) => bytes[at + i] === ch.charCodeAt(0));
+  if (has("\x89PNG\r\n\x1a\n")) return { ext: "png", type: IMAGE_TYPES.png };
+  if (has("\xff\xd8\xff")) return { ext: "jpg", type: IMAGE_TYPES.jpg };
+  if (has("GIF87a") || has("GIF89a")) return { ext: "gif", type: IMAGE_TYPES.gif };
+  if (has("RIFF") && has("WEBP", 8)) return { ext: "webp", type: IMAGE_TYPES.webp };
+  return null;
+}
+
+export function decodeBase64(text) {
+  if (typeof Uint8Array.fromBase64 === "function") return Uint8Array.fromBase64(text);
+  const raw = atob(text);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes;
+}
+
+// { ok: true, value: null } when no picture was sent.
+export function validateImage(input) {
+  if (input === undefined || input === null) return { ok: true, value: null };
+  const data = typeof input === "object" ? input.data : null;
+  if (typeof data !== "string" || !data) return { ok: false, error: IMAGE_ERRORS.broken };
+  // Measured before decoding, so an oversized one costs no work.
+  if (data.length > BASE64_LIMIT) return { ok: false, error: IMAGE_ERRORS.big };
+  let bytes;
+  try {
+    bytes = decodeBase64(data);
+  } catch {
+    return { ok: false, error: IMAGE_ERRORS.broken };
+  }
+  if (bytes.length > IMAGE_LIMIT) return { ok: false, error: IMAGE_ERRORS.big };
+  const kind = sniffImage(bytes);
+  if (!kind) return { ok: false, error: IMAGE_ERRORS.kind };
+  return { ok: true, value: { bytes, ...kind } };
+}
+
+// 16 random bytes, URL-safe base64 without padding: 22 characters.
+export function imageId(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+const IMAGE_PATH = /^\/images\/([A-Za-z0-9_-]{22})\.(png|jpg|gif|webp)$/;
+
+// "/images/<id>.<ext>" -> { id, ext, type }, or null for anything else.
+export function parseImagePath(path) {
+  const match = typeof path === "string" ? path.match(IMAGE_PATH) : null;
+  return match ? { id: match[1], ext: match[2], type: IMAGE_TYPES[match[2]] } : null;
+}
+
+export function imageUrl(base, id, ext) {
+  return `${base.replace(/\/+$/, "")}/images/${id}.${ext}`;
+}
+
+// True only for exactly <base>/images/<id>.<ext>.
+export function isOurImage(url, base) {
+  const root = String(base ?? "").replace(/\/+$/, "");
+  return typeof url === "string" && root !== "" && url.startsWith(`${root}/images/`)
+    && parseImagePath(url.slice(root.length)) !== null;
+}
+
+// The picture line goes after a marker of its own. formatComment turns every
+// "<!--" in a message into "&lt;!--", so a visitor cannot type the marker, and
+// a picture line typed into a message stays part of its text.
+const IMAGE_MARK = "<!-- keep-site image -->";
+const IMAGE_TAIL = /\r?\n\r?\n<!-- keep-site image -->\r?\n!\[picture\]\(([^()\s]+)\)\s*$/;
+
+// ``image`` is a URL the worker made itself (imageUrl), never visitor input.
+export function formatComment(name, message, image = null) {
   const safeName = name.replace(/["<>\-]/g, "");
   // Neutralise anything that could forge the marker on a later line.
   const safeMessage = message.replace(/<!--/g, "&lt;!--");
-  return `<!-- keep-site name="${safeName}" -->\n**${safeName}** wrote:\n\n${safeMessage}`;
+  const picture = image ? `\n\n${IMAGE_MARK}\n![picture](${image})` : "";
+  return `<!-- keep-site name="${safeName}" -->\n**${safeName}** wrote:\n\n${safeMessage}${picture}`;
 }
 
-// A Discussion comment as the site shows it: who wrote it and what they said.
-export function parseComment(node) {
+// A Discussion comment as the site shows it: who wrote it and what they said,
+// plus its picture's address when it has one of ours (under imageBase).
+export function parseComment(node, imageBase = "") {
   const body = node.body ?? "";
   const match = body.match(MARKER);
   if (match) {
     const name = match[1];
     const text = body.slice(match[0].length).replace(/^\*\*[^*]*\*\* wrote:\n\n/, "");
-    return { id: node.id, name, text, at: node.createdAt, viaSite: true };
+    const shown = { id: node.id, name, text, at: node.createdAt, viaSite: true };
+    const tail = text.match(IMAGE_TAIL);
+    if (tail && isOurImage(tail[1], imageBase)) {
+      shown.text = text.slice(0, tail.index);
+      shown.image = tail[1];
+    }
+    return shown;
   }
   return { id: node.id, name: node.author?.login ?? "someone", text: body, at: node.createdAt, viaSite: false };
 }
@@ -77,10 +170,10 @@ export function statusOf(node, shown, owner, staff) {
   return marked ? "addressed" : "waiting";
 }
 
-export function shapeThread(discussion, { owner = "", staff = [] } = {}) {
+export function shapeThread(discussion, { owner = "", staff = [], imageBase = "" } = {}) {
   if (!discussion) return [];
   const shape = (node) => {
-    const shown = parseComment(node);
+    const shown = parseComment(node, imageBase);
     return { ...shown, status: statusOf(node, shown, owner, staff) };
   };
   return (discussion.comments?.nodes ?? []).map((c) => ({

@@ -291,6 +291,10 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .comment .vote{font:inherit;font-size:.85rem;background:none;border:1px solid var(--line);border-radius:4px;padding:.1rem .5rem;margin-right:.4rem;cursor:pointer;color:var(--fg)}
 .comment .vote.on{background:var(--tint);border-color:var(--blood)}
 .comment .text{margin:.3rem 0 .4rem;white-space:pre-wrap}
+.comment .text a{color:var(--blood-hi);overflow-wrap:anywhere}
+.comment .pic{display:block;margin:.2rem 0 .6rem}
+.comment .pic img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:5px}
+.say .pick{margin:-.4rem 0 .7rem;font-size:.9rem}
 .comment.sub{margin-left:1.4rem;padding:.6rem 0 .2rem;border-top:1px dashed var(--line)}
 .drop{display:block;margin:1.2rem 0;padding:2rem 1rem;text-align:center;background:var(--panel);border:2px dashed var(--blood);border-radius:8px;cursor:pointer}
 .drop:hover,.drop.over,.drop:focus-within{background:var(--tint);border-color:var(--blood-hi)}
@@ -336,6 +340,8 @@ GIVE_ANSWER = """
 <p class="replying" hidden></p>
 <label>Your name<input name="name" autocomplete="nickname" maxlength="40" required></label>
 <label>Your message<textarea name="message" rows="6" maxlength="4000" required placeholder="Type here..."></textarea></label>
+<label>Add a picture (screenshot), if you like<input name="picture" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>
+<p class="meta pick">PNG, JPEG, GIF or WebP, up to 8 MB. <button class="link unpick" type="button" hidden>Remove the picture</button></p>
 <label><span class="q">A quick Myth question, so we know you're not a robot:</span><input name="answer" autocomplete="off" required></label>
 <label class="trap" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
 <p><button class="btn send" type="submit">Send &rarr;</button> <span class="status" role="status"></span></p>
@@ -351,7 +357,46 @@ COMMENTS_JS = """
   var list=box.querySelector(".thread"), status=form.querySelector(".status");
   var replying=form.querySelector(".replying"), replyTo=null, send=form.querySelector(".send");
   try{var saved=localStorage.getItem("name"); if(saved) form.name.value=saved;}catch(e){}
+  var IMAGES=api+"/images/", LIMIT=8*1024*1024, KINDS=["image/png","image/jpeg","image/gif","image/webp"];
+  var pick=form.picture, unpick=form.querySelector(".unpick");
+  function unpicked(){pick.value=""; unpick.hidden=true;}
+  pick.addEventListener("change",function(){unpick.hidden=!(pick.files&&pick.files.length); status.textContent="";});
+  unpick.addEventListener("click",unpicked);
   function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+  // Web addresses in a message become links; everything else stays plain text.
+  function linked(cls,text){var p=el("p",cls), re=/https?:[/][/][^\\s<>"]+/g, at=0, m; text=String(text||"");
+    while((m=re.exec(text))){var u=m[0].replace(/[.,;:!?)'"\\]]+$/,""), href=null;
+      try{var x=new URL(u); if(x.protocol==="http:"||x.protocol==="https:") href=x.href;}catch(e){}
+      if(!href) continue;
+      p.append(text.slice(at,m.index)); var a=el("a",null,u); a.href=href; a.rel="nofollow ugc noopener"; a.target="_blank"; p.append(a);
+      at=m.index+u.length;}
+    p.append(text.slice(at)); return p;}
+  // Only pictures the comment box itself stored are shown.
+  function picture(c){if(typeof c.image!=="string"||c.image.indexOf(IMAGES)!==0
+      ||!/^[A-Za-z0-9_-]{22}[.](png|jpg|gif|webp)$/.test(c.image.slice(IMAGES.length))) return null;
+    var a=el("a","pic"); a.href=c.image; a.target="_blank"; a.rel="noopener";
+    var i=el("img"); i.src=c.image; i.alt="Picture from "+c.name; i.setAttribute("loading","lazy"); a.append(i); return a;}
+  function asBase64(blob){return new Promise(function(ok,no){var r=new FileReader();
+    r.onload=function(){var s=String(r.result); ok(s.slice(s.indexOf(",")+1));};
+    r.onerror=function(){no(r.error);}; r.readAsDataURL(blob);});}
+  // A picture too big (or of another kind) is redrawn as a JPEG, smaller on
+  // each try until it fits; null if the browser can't read it.
+  function asJpeg(file){return new Promise(function(ok){var img=new Image(), u=URL.createObjectURL(file);
+    img.onerror=function(){URL.revokeObjectURL(u); ok(null);};
+    img.onload=function(){URL.revokeObjectURL(u);
+      var w=img.naturalWidth, h=img.naturalHeight, s=Math.min(1,4096/Math.max(w,h,1));
+      (function draw(){try{var c=document.createElement("canvas"), g=c.getContext("2d");
+        c.width=Math.max(1,Math.round(w*s)); c.height=Math.max(1,Math.round(h*s));
+        g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+        c.toBlob(function(b){if(b&&b.size<=LIMIT) ok(b); else if(s>0.1){s*=0.75; draw();} else ok(null);},"image/jpeg",0.85);
+      }catch(e){ok(null);}})();};
+    img.src=u;});}
+  // The chosen picture, ready to send, or null when there is none.
+  function chosen(){var f=pick.files&&pick.files[0]; if(!f) return Promise.resolve(null);
+    var fits=KINDS.indexOf(f.type)>=0&&f.size<=LIMIT;
+    return (fits?Promise.resolve(f):asJpeg(f)).then(function(b){
+      if(!b) throw {say:"That picture is too big or can't be read — please choose a PNG, JPEG, GIF or WebP under 8 MB."};
+      return asBase64(b).then(function(data){return {name:f.name,type:b.type,data:data};});});}
   function when(at){try{return new Date(at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}catch(e){return "";}}
   function reply(c){replyTo=c.id; replying.hidden=false; replying.textContent="";
     replying.append("Replying to "+c.name+" ");
@@ -380,7 +425,8 @@ COMMENTS_JS = """
     if(c.status==="addressed") h.append(el("span","state done","\u2611 Addressed"));
     else if(c.status==="waiting") h.append(el("span","state open","\u2610 Waiting for a reply"));
     a.append(h);
-    a.append(el("p","text",c.text));
+    a.append(linked("text",c.text));
+    var pic=picture(c); if(pic) a.append(pic);
     if(c.votes) a.append(votes(c));
     if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
     return a;}
@@ -395,14 +441,15 @@ COMMENTS_JS = """
   form.addEventListener("submit",function(ev){ev.preventDefault();
     status.textContent="Sending\u2026"; send.disabled=true;
     try{localStorage.setItem("name",form.name.value.trim());}catch(e){}
-    fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({term:term,page:location.href.split("#")[0],name:form.name.value,message:form.message.value,
-        answer:form.answer.value,website:form.website.value,replyTo:replyTo})})
+    chosen().then(function(image){
+      return fetch(api+"/comments",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({term:term,page:location.href.split("#")[0],name:form.name.value,message:form.message.value,
+          answer:form.answer.value,website:form.website.value,replyTo:replyTo,image:image})});})
     .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
     .then(function(x){if(!x.ok){status.textContent=x.d.error||"That didn't go through \u2014 please try again.";return;}
-      render(x.d.comments||[]); form.message.value=""; replyTo=null; replying.hidden=true;
+      render(x.d.comments||[]); form.message.value=""; unpicked(); replyTo=null; replying.hidden=true;
       status.textContent="Sent \u2014 thank you!";})
-    .catch(function(){status.textContent="That didn't go through \u2014 please try again.";})
+    .catch(function(e){status.textContent=(e&&e.say)||"That didn't go through \u2014 please try again.";})
     .then(function(){send.disabled=false;});
   });
 })();
