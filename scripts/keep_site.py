@@ -317,10 +317,13 @@ summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 footer{text-align:center}
+body.white{background:#fff;color:#1a1a1a}
+body.white main,body.white footer,body.white .meta,body.white footer .made,body.white .sitemap a,body.white .sitemap .label{color:#1a1a1a}
+body.white a{color:#1a1a1a}
 .poem{margin:1.5rem 0}
 .poem .stanza{display:flow-root;margin:0 0 1.6rem}
 .poem .stanza p{font-size:1.15rem;line-height:1.7;margin:.4rem 0}
-.poem img{width:min(45%,293px);height:auto;filter:grayscale(1);border:1px solid var(--line);border-radius:4px}
+.poem img{width:min(45%,300px);height:auto;border:0;mix-blend-mode:multiply}
 .poem img.right{float:right;margin:0 0 .8rem 1.4rem}
 .poem img.left{float:left;margin:0 1.4rem .8rem 0}
 .poem .sign{font-style:italic;text-align:right;clear:both}
@@ -502,27 +505,28 @@ KEEP_PAGE = {
 }
 
 # The poem for Keep (also posted on his page, 9 November 2026), each stanza
-# beside an illustration from the games, alternating right and left. The
-# pictures are Bungie's, copied from the journals on Myth.Bungie.Org's Legends
-# & Lore (http only, so they can't be linked from this https site).
+# beside a pen-and-ink drawing on white, alternating right and left; Edward
+# chose each one. Bungie's concept art comes from the old bungie.net Myth
+# gallery (via the Internet Archive), the Soulblighter from the Myth II manual
+# (via Myth.Bungie.Org); both are http only, so the copies live in docs/img.
 POEM_TITLE = "For Keep, Who Raised the Banner"
 POEM = [
-    ("legion-gathers.jpg", "The Legion gathers before Crow's Bridge",
+    ("warrior.jpg", "A warrior of the Legion, sword raised",
      ["Before this tool could read a single map,", "Before we found the deck, the arch, the gap,",
       "You raised the banner for an old campaign:", "To bring the Fallen Lords to march again."]),
-    ("forest-scouts.jpg", "Dwarves in the forest at night",
+    ("journeyman.jpg", "A journeyman with his pack",
      ["Like scouts the Legion sends out far ahead,", "You brought back word of where our maps had bled:",
       "Where thrall stood dry, where bushes floated high,", "Where dwarves on Crow's Bridge strolled across the sky."]),
-    ("night-battle.jpg", "The night battle at Madrigal",
+    ("ghol.jpg", "A ghol",
      ["When crashes struck like ghols out of the night,", "You sent the log and helped us set it right;",
       "Through moonwalking men and houses perched too tall,", "You held the line, our one friend through it all."]),
-    ("soulblighter.gif", "Soulblighter, from the Myth II manual",
+    ("myrkridia.jpg", "A Myrkridian crouched over skulls",
      ["So stay safe in the Keep, behind its walls,", "Where no Myrkridian howls and no thrall crawls;",
       "Let Soulblighter's crows and Shiver's biting frost", "Break on your gates, and every siege be lost."]),
-    ("dwarves.jpg", "Dwarves at work",
+    ("cloaked-figure.jpg", "A cloaked figure on a hill above an army",
      ["May the Deceiver's whispers find no door,", "May Balor's shadow cross your land no more,",
       "May dwarven satchels light the dark for you,", "And every journeyman's warm hands hold you true."]),
-    ("army-marches.jpg", "The army marches on",
+    ("soulblighter.jpg", "Soulblighter, from the Myth II manual",
      ["We'll keep you, Keep, as long as Myth is played,", "Through every level that this tool has made;",
       "Together we will see the labour through,", "And make the converter whole, thanks to you."]),
 ]
@@ -535,14 +539,15 @@ def poem_html():
         verse = "<br>".join(html.escape(line) for line in lines)
         stanzas.append(
             f'<div class="stanza"><img class="{side}" src="../img/poem/{image}" alt="{html.escape(alt)}" '
-            f'width="293" height="265" loading="lazy"><p>{verse}</p></div>'
+            f'loading="lazy"><p>{verse}</p></div>'
         )
     return (
         '<div class="poem">' + "".join(stanzas)
         + '<p class="sign">With thanks from Edward and Claude</p></div>'
-        + '<p class="meta">Illustrations from <em>Myth: The Fallen Lords</em> and <em>Myth II: Soulblighter</em>, '
-        '&copy; Bungie, from the journals on <a href="http://myth.bungie.org/legends/journal/">Myth.Bungie.Org</a>, '
-        'shown in black and white.</p>'
+        + '<p class="meta">Drawings &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> and '
+        '<em>Myth II: Soulblighter</em> by Juan Ramirez, from Bungie&rsquo;s old Myth gallery, and Soulblighter '
+        'from the <em>Myth II</em> manual, via <a href="http://myth.bungie.org/legends/journal/">Myth.Bungie.Org</a>. '
+        'The cloaked figure&rsquo;s artist is unknown to us.</p>'
         '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
     )
 
@@ -586,7 +591,7 @@ def sitemap(up):
     return f'<nav class="sitemap" aria-label="Site map">{html_rows}</nav>'
 
 
-def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None):
+def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None, body_class=""):
     up = "../" * depth
     answer = scripts = gate = ""
     if term:
@@ -611,7 +616,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
 <link rel="stylesheet" href="{up}style.css?v={STYLE_VERSION}">
 </head>
-<body>
+<body{f' class="{body_class}"' if body_class else ''}>
 <header class="hero{' compact' if depth else ''}">
 <button class="theme" type="button" aria-label="Switch between light and dark" title="Light / dark"></button>
 <div class="panes" aria-hidden="true">
@@ -816,7 +821,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 
     (OUT / "keep").mkdir(exist_ok=True)
     (OUT / "keep" / "poem.html").write_text(
-        page(POEM_TITLE, POEM_TITLE, poem_html(), 1, kicker="For Keep"), encoding="utf-8"
+        page(POEM_TITLE, POEM_TITLE, poem_html(), 1, kicker="For Keep", body_class="white"), encoding="utf-8"
     )
     (OUT / "keep" / "index.html").write_text(
         page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"])

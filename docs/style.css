@@ -111,10 +111,13 @@ summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 footer{text-align:center}
+body.white{background:#fff;color:#1a1a1a}
+body.white main,body.white footer,body.white .meta,body.white footer .made,body.white .sitemap a,body.white .sitemap .label{color:#1a1a1a}
+body.white a{color:#1a1a1a}
 .poem{margin:1.5rem 0}
 .poem .stanza{display:flow-root;margin:0 0 1.6rem}
 .poem .stanza p{font-size:1.15rem;line-height:1.7;margin:.4rem 0}
-.poem img{width:min(45%,293px);height:auto;filter:grayscale(1);border:1px solid var(--line);border-radius:4px}
+.poem img{width:min(45%,300px);height:auto;border:0;mix-blend-mode:multiply}
 .poem img.right{float:right;margin:0 0 .8rem 1.4rem}
 .poem img.left{float:left;margin:0 1.4rem .8rem 0}
 .poem .sign{font-style:italic;text-align:right;clear:both}
