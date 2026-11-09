@@ -316,6 +316,8 @@ details{margin:1rem 0}
 summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+.sitemap ul{list-style:none;margin:0 0 1rem;padding:0;display:flex;flex-wrap:wrap;gap:.35rem 1.1rem;font-size:.9rem}
+.sitemap a{color:var(--fg)}
 """
 
 
@@ -490,7 +492,7 @@ KEEP_PAGE = {
 
 KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
 <p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here.</p>
-<p class="meta">The riddle only keeps this page out of casual view. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>"""
+<p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>"""
 
 CREDIT = (
     "Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> "
@@ -502,6 +504,17 @@ CREDIT = (
 # Browsers keep style.css for 10 minutes (GitHub Pages' max-age); a version
 # tag tied to its contents makes a changed stylesheet load at once.
 STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
+
+
+# A row of links at the foot of every page, so every page can be found from
+# any other -- Keep's conversation page included.
+def sitemap(up):
+    links = [("Home", "index.html"), ("Convert a plugin", "convert/index.html")]
+    links += [(f"Update {u['date']}", f"updates/{u['slug']}.html") for u in reversed(UPDATES)]
+    links += [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS]
+    links.append(("Keep &amp; Claude Conversation", "keep/index.html"))
+    items = "".join(f'<li><a href="{up}{href}">{label}</a></li>' for label, href in links)
+    return f'<nav class="sitemap" aria-label="Site map"><ul>{items}</ul></nav>'
 
 
 def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None):
@@ -549,7 +562,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 {body}
 {answer}
 </main>
-<footer>{CREDIT}</footer>
+<footer>{sitemap(up)}{CREDIT}</footer>
 <script>{THEME_JS}</script>
 {scripts}
 </body>
@@ -734,7 +747,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 
     (OUT / "keep").mkdir(exist_ok=True)
     (OUT / "keep" / "index.html").write_text(
-        page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"], lock=KEEP_PAGE)
+        page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"])
         .replace("&#9998; Your answer", "&#9998; Your message"),
         encoding="utf-8",
     )
