@@ -520,7 +520,7 @@ POEM = [
     ("ghol.jpg", "A ghol",
      ["When crashes struck like ghols out of the night,", "You sent the log and helped us set it right;",
       "Through moonwalking men and houses perched too tall,", "You held the line, our one friend through it all."]),
-    ("myrkridia.jpg", "A Myrkridian crouched over skulls",
+    ("thrall.jpg", "A thrall with his axe",
      ["So stay safe in the Keep, behind its walls,", "Where no Myrkridian howls and no thrall crawls;",
       "Let Soulblighter's crows and Shiver's biting frost", "Break on your gates, and every siege be lost."]),
     ("cloaked-figure.jpg", "A cloaked figure on a hill above an army",
@@ -547,7 +547,7 @@ def poem_html():
         + '<p class="meta">Drawings &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> and '
         '<em>Myth II: Soulblighter</em> by Juan Ramirez, from Bungie&rsquo;s old Myth gallery, and Soulblighter '
         'from the <em>Myth II</em> manual, via <a href="http://myth.bungie.org/legends/journal/">Myth.Bungie.Org</a>. '
-        'The cloaked figure&rsquo;s artist is unknown to us.</p>'
+        'The thrall&rsquo;s and the cloaked figure&rsquo;s artists are unknown to us.</p>'
         '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
     )
 
