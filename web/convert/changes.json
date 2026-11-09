@@ -1,11 +1,12 @@
 [
- {"version": "0.8", "date": "2026-11-02", "change": "The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it now meets the bridge's stone sides instead of sagging away below the railings.",
+ {"version": "0.9", "date": "2026-11-09", "change": "The deck of Crow's Bridge's bridge is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath as in The Fallen Levels v2. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords, on every map.",
   "test": [
-   "Bridges: look along the sides of every bridge. Does the ground meet its walls? Name any where it sags, or covers them.",
-   "Buildings: does every building appear, in the right place? Name any that are missing, float, sink or stand on top of something.",
-   "Map edges: scroll all the way round the edge of each map. Name any map that crashes, with the crash log.",
+   "Bridges: cross every bridge with a few units. Is the deck drawn under their feet? Name any bridge where they seem to walk on air.",
+   "Water and banks: walk units along rivers, into shallow water and up to deep water. Name any place where they now cross water they shouldn't, or are stopped where they could walk before.",
+   "Ground: name any ground that is missing, see-through or drawn oddly.",
    "Levels: does every level start? Name any that won't load."
   ]},
+ {"version": "0.8", "date": "2026-11-02", "change": "The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it now meets the bridge's stone sides instead of sagging away below the railings."},
  {"version": "0.7", "date": "2026-10-30", "change": "Fixed a crash when scrolling to the edge of some maps, such as Crow's Bridge and crazyglue's Along the way to... The border at each map edge is also as wide as in The Fallen Lords again."},
  {"version": "0.6", "date": "2026-10-27", "change": "Buildings and other 3D models now appear, such as houses, barns, inns and bridges, and units walk around them."},
  {"version": "0.5", "date": "2026-10-27", "change": "Plants, bushes and units sit on the ground instead of floating above it or sinking into it."},

@@ -557,6 +557,35 @@ class TestMeshBodyConversion(unittest.TestCase):
             for dy in (0, 1):
                 self.assertEqual(last, height_at(30 + dx, 30 + dy))
 
+    def test_cell_flags_are_translated_to_myth_ii(self):
+        """TFL's flag values mean something else to Myth II: Crow's Bridge's
+        deck value 0x21 becomes 0x20 in all four cells; unlisted values stay."""
+        import struct
+
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        terrain = bytearray()
+        for i in range(16 * 16):
+            terrain += struct.pack(">hbbBBH", 0, 0, 0, {0: 0x21, 1: 0x15, 2: 0x02}.get(i, 0), 0, 0xFFFF)
+        body = bytearray(fixtures.mesh_body(trailing=bytes(terrain)))
+        struct.pack_into(">H", body, offsets["submesh_width"], 1)
+        struct.pack_into(">H", body, offsets["submesh_height"], 1)
+        struct.pack_into(">L", body, offsets["mesh_offset"], 0)
+        struct.pack_into(">L", body, offsets["mesh_size"], len(terrain))
+
+        converted, _ = self._convert(bytes(body))
+        after = mesh.parse_header(converted, formats.SB)
+        out = converted[mesh.MESH_HEADER_SIZE + after.mesh_offset :]
+
+        def flags_at(x, y):
+            return out[(y * 32 + x) * 12 + 4]
+
+        for dx in (0, 1):
+            for dy in (0, 1):
+                self.assertEqual(0x20, flags_at(dx, dy))
+                self.assertEqual(0x3D, flags_at(2 + dx, dy))
+                self.assertEqual(0x02, flags_at(4 + dx, dy))
+                self.assertEqual(0x00, flags_at(6 + dx, dy))
+
     def test_media_height_is_written_into_every_cell(self):
         import struct
 

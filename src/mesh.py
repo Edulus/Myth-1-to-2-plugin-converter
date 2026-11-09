@@ -667,6 +667,30 @@ SB_CELL_SIZE = 12
 # Myth II's "no model here" sentinel, seen in ~99% of cells in every native mesh.
 NO_MODEL_INDEX = 0xFFFF
 
+# TFL cell flags -> Myth II cell flags. The byte sits at the same offset in
+# both games but does not mean the same: copied unchanged, TFL's 0x21 on
+# Crow's Bridge's deck made Myth II leave the deck undrawn, so units on it
+# walked on air (Keep, Q7). Each entry is the value Project Magma's ports
+# (*The Fallen Levels v2*) most often hold where TFL holds the key, over all
+# four Myth II cells of each TFL cell on the 11 levels they share with TFL.
+# It matches their flags on 95.5% of cells, against 84.2% copied (NOTES.md
+# section 23). Values not listed (0x00 among them) are kept.
+TFL_TO_SB_CELL_FLAGS = {
+    0x01: 0x00,
+    0x10: 0x38,
+    0x11: 0x3D,
+    0x15: 0x3D,
+    0x18: 0x00,
+    0x19: 0x00,
+    0x1D: 0x3D,
+    0x20: 0x00,
+    0x21: 0x20,
+    0x28: 0x20,
+    0x29: 0x20,
+    0x3D: 0x00,
+}
+CELL_FLAGS_OFFSET = 4
+
 
 def cell_counts(submesh_width, submesh_height, game_version):
     """``(columns, rows)`` of terrain cells for a mesh of this many submeshes."""
@@ -684,7 +708,8 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
     Each TFL cell becomes the 2x2 block of Myth II cells covering the same
     ground. The top-left cell keeps the TFL height; the other three take the
     average of the TFL heights at their corners, so slopes stay slopes instead
-    of becoming 2x2 steps. Every other field is copied unchanged.
+    of becoming 2x2 steps. The flags are translated through
+    `TFL_TO_SB_CELL_FLAGS`; every other field is copied unchanged.
 
     This matches Project Magma's hand port of Crow's Bridge (*The Fallen Levels
     v2*): their heights equal TFL's at the original points and sit halfway
@@ -713,7 +738,10 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
 
     def cell(x, y):
         start = (y * columns + x) * TFL_CELL_SIZE
-        return terrain[start : start + TFL_CELL_SIZE]
+        source = bytearray(terrain[start : start + TFL_CELL_SIZE])
+        flags = source[CELL_FLAGS_OFFSET]
+        source[CELL_FLAGS_OFFSET] = TFL_TO_SB_CELL_FLAGS.get(flags, flags)
+        return bytes(source)
 
     heights = [
         [struct.unpack_from(">h", terrain, (y * columns + x) * TFL_CELL_SIZE)[0] for x in range(columns)]

@@ -1734,3 +1734,50 @@ sets bit 0x40 of the cell flags on the wall cells (columns 100, 101, 106, 107)
 but not the road. Across Crow's Bridge bit 0x40 is set on 456 cells, every one
 of them carrying a model index. Most likely the engine leaves such cells
 undrawn. Not yet tried.
+
+
+## 23. Cell flags: Crow's Bridge's invisible deck
+
+Keep's 0.8 screenshot (Q7, 5 Nov) showed dwarves on Crow's Bridge walking on
+air. The bridge model is only railings, an arch underside and a water plane at
+height 0: the deck is the ground between the railings, and ours has the same
+heights as Magma's (680-830). Myth II simply did not draw it, and through the
+arch showed the bank where Magma's port shows black.
+
+Ruled out first: the model (byte for byte Magma's, plus their signature), its
+marker (same place, height 0), the ground heights, the lighting tag (Bungie's
+`gras` values but for incident I 1.0 against 0.95). Then, in game on a clean
+1.8.5 copy, crazyglue's Crow's Bridge with fields copied from Magma's:
+
+| Copied from Magma | Deck and arch |
+|---|---|
+| light bytes, flags, model index, LOD block | like Magma's |
+| LOD block | wrong |
+| light bytes (cell bytes 2-3) | wrong |
+| flags and model index | like Magma's |
+| flags byte (cell byte 4) | like Magma's |
+| bit 0x40 and model index only (5 Nov) | wrong |
+
+So the flags byte alone decides it. TFL and Myth II share the byte's offset,
+not its meaning. On the deck TFL has 0x21; Magma has 0x20 or 0x00.
+
+Across the 11 levels Magma's port shares with TFL's TAGS.GOR (paired by
+heights), each TFL value maps to one Myth II value most of the time:
+
+| TFL | Myth II (Magma's most common) |
+|---|---|
+| 0x00 | 0x00 |
+| 0x01, 0x18, 0x19, 0x20, 0x3d | 0x00 |
+| 0x10 | 0x38 |
+| 0x11, 0x15, 0x1d | 0x3d |
+| 0x21, 0x28, 0x29 | 0x20 |
+
+Applied to all four Myth II cells of each TFL cell, the table matches Magma's
+flags (ignoring 0x40) on 95.5% of 484,352 cells; copying matches 84.2%. Bit
+0x40 is left out: Bungie's own meshes set it only on cells carrying a model
+index, and the stored indexes follow no order a load could rely on (Magma's
+and Bungie's are shuffled against the marker list, and one stock mesh has them
+byte-swapped), so the engine probably rebuilds them. A crazyglue built with the
+table and nothing from Magma drew the deck and the dark arch in game. What
+each bit means is still unknown; in Bungie's meshes 0x3d is the usual value
+under water.
