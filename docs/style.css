@@ -111,6 +111,14 @@ summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
 footer{text-align:center}
+.poem{margin:1.5rem 0}
+.poem .stanza{display:flow-root;margin:0 0 1.6rem}
+.poem .stanza p{font-size:1.15rem;line-height:1.7;margin:.4rem 0}
+.poem img{width:min(45%,293px);height:auto;filter:grayscale(1);border:1px solid var(--line);border-radius:4px}
+.poem img.right{float:right;margin:0 0 .8rem 1.4rem}
+.poem img.left{float:left;margin:0 1.4rem .8rem 0}
+.poem .sign{font-style:italic;text-align:right;clear:both}
+@media (max-width:560px){.poem img.right,.poem img.left{float:none;width:100%;margin:0 0 .6rem}}
 .sitemap ul{list-style:none;margin:0 0 .5rem;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem 1.1rem;font-size:.9rem}
 .sitemap .label{color:var(--muted)}
 .sitemap a,footer .made a{color:var(--fg)}
