@@ -37,14 +37,21 @@
 </ul>
 <h3>Up next</h3>
 <ul>
-<li>Units jogging in place after they stop moving (the &quot;moonwalking&quot;). Pressing the space bar stops it for now.</li>
-<li>Comparing our units with the ones in Project Magma&#x27;s The Fallen Levels v2: giants that won&#x27;t attack, missing walking frames, odd pieces after explosive deaths, and units drawn too large (for example thrall showing above the water).</li>
-<li>The warning that appears whenever TFL Gameplay (vTFL) is ticked.</li>
+<li>Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit&#x27;s size in a place Myth II doesn&#x27;t have, and the converter drops it. We will find where Magma&#x27;s ports keep it, and carry it across.</li>
+<li>Unit animations: units jog on the spot after they stop moving (the &quot;moonwalking&quot;; the space bar stops it for now), and some walking frames are missing. The two games list each unit&#x27;s animations differently, and part of our mapping is a guess. We will check it against Magma&#x27;s units.</li>
+<li>Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords&#x27; format, not translated. We will translate it, starting with the effects Keep has seen fail.</li>
+<li>Unit behaviour: Forest Giants and Trow that won&#x27;t attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.</li>
+<li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map, and they may also decide where units can walk. We are watching for units that now cross water, or are stopped where they could walk before.</li>
 </ul>
 <h3>Later</h3>
 <ul>
+<li>The warning that appears whenever TFL Gameplay (vTFL) is ticked.</li>
 <li>The outer edge of some maps (the south and east edges of Crow&#x27;s Bridge) sits higher than in Magma&#x27;s port.</li>
 <li>One bush on the edge of a trench on Crow&#x27;s Bridge may still float.</li>
+</ul>
+<h3>How we work</h3>
+<ul>
+<li>One thing at a time. For each problem we compare our version with Project Magma&#x27;s hand-made Myth II ports, field by field, and turn what they did into a rule the converter applies to every map. Then we check the result in the game, with screenshots.</li>
 </ul>
 </section>
 <section aria-labelledby="news">

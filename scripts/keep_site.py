@@ -692,15 +692,22 @@ DOCKET = {
         "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels load but end at once, because no teams are present, and flags and balls are missing. Keep found it. First we compare how The Fallen Lords and Myth II store each team's units and the game pieces, then fix the converter and play one in the game.",
     ],
     "Up next": [
-        "Units jogging in place after they stop moving (the \"moonwalking\"). Pressing the space bar stops it for now.",
-        "Comparing our units with the ones in Project Magma's The Fallen Levels v2: giants that won't attack, missing walking frames, odd pieces after explosive deaths, and units drawn too large (for example thrall showing above the water).",
-        "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
+        "Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit's size in a place Myth II doesn't have, and the converter drops it. We will find where Magma's ports keep it, and carry it across.",
+        "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
+        "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
+        "Unit behaviour: Forest Giants and Trow that won't attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.",
+        "Water and banks: version 0.9 changed the ground's markings on every map, and they may also decide where units can walk. We are watching for units that now cross water, or are stopped where they could walk before.",
     ],
     "Later": [
+        "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
         "The outer edge of some maps (the south and east edges of Crow's Bridge) sits higher than in Magma's port.",
         "One bush on the edge of a trench on Crow's Bridge may still float.",
     ],
+    "How we work": [
+        "One thing at a time. For each problem we compare our version with Project Magma's hand-made Myth II ports, field by field, and turn what they did into a rule the converter applies to every map. Then we check the result in the game, with screenshots.",
+    ],
 }
+
 
 
 def docket_html():
