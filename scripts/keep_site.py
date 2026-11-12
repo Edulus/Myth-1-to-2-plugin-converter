@@ -40,6 +40,46 @@ DOWNLOAD_MB = 223
 
 UPDATES = [
     {
+        "slug": "2026-11-11",
+        "term": "Update 2026-11-11: Crow's Bridge fixed, and pictures in comments",
+        "date": "11 November 2026",
+        "title": "Crow's Bridge fixed, and pictures in comments",
+        "summary": "Versions 0.8 and 0.9 fix Crow's Bridge's bridge, on every map. You can now attach a screenshot to a comment.",
+        "body": """
+<p><strong>Crow's Bridge's bridge now looks and works as in The Fallen Levels v2: the ground meets its stone walls, and units walk on its deck instead of on air.</strong> Both fixes apply to every map the converter handles, not just Crow's Bridge.</p>
+
+<h2>What changed</h2>
+<table>
+<tr><th>0.8 &middot; 2 Nov</th><td>The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it meets the bridge's stone sides instead of sagging away below the railings.</td></tr>
+<tr><th>0.9 &middot; 9 Nov</th><td>The bridge deck is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords.</td></tr>
+</table>
+
+<h2>How we found it</h2>
+<p>Keep sent a screenshot of dwarves walking on air above the bridge. Its deck turned out to be the ground itself, at the right height, which Myth II simply wasn't drawing. We copied parts of Project Magma's version of the map onto ours, one at a time, and tested each in the game. The ground's markings alone made the difference: The Fallen Lords and Myth II store them in the same place but read them differently.</p>
+
+<h2>New on this site</h2>
+<ul>
+<li><strong>Pictures in comments.</strong> Attach a screenshot to any comment, up to 8 MB. Links in comments are clickable too.</li>
+<li><strong>Tell us how it went.</strong> After a conversion, the converter page asks for a short report in <a href="../q/9.html">Q9</a>: did the plugin load, and did its levels play?</li>
+<li><strong>A site map</strong> at the foot of every page, including the <a href="../keep/index.html">Keep &amp; Claude Conversation</a> and a <a href="../keep/poem.html">poem of thanks for Keep</a>, who proposed this converter and has tested every version.</li>
+</ul>
+
+<h2>Sir Mauriac's Tale, rebuilt</h2>
+<p>The ready-made <em>Sir Mauriac's Tale</em> on the <a href="../index.html">front page</a> is rebuilt with version 0.9. If you downloaded it before 9 November, download it again.</p>
+
+<h2>What's still rough</h2>
+<ul>
+<li><strong>Multiplayer levels</strong> load but end at once: their teams, flags and balls are not brought over yet. This is the next job.</li>
+<li><strong>Units</strong> still misbehave: they jog on the spot when they stop, Forest Giants and Trow won't attack, and some are drawn too large.</li>
+<li><strong>Water and banks</strong>: 0.9 changed the ground's markings on every map, and they may also decide where units can walk. Tell us if units now cross water they shouldn't, or are stopped where they could walk before.</li>
+<li>Most levels have not been played yet.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Convert a plugin you like on the <a href="../convert/index.html">converter page</a> and tell us how it went in <a href="../q/9.html">Q9</a>. Report problems in <a href="../q/7.html">Q7</a>, with a screenshot if you can. Or leave a comment below. No account is needed.</p>
+""",
+    },
+    {
         "slug": "2026-11-02",
         "term": "Update 2026-11-02: water, hills, buildings and a crash fixed",
         "date": "2 November 2026",
@@ -190,17 +230,17 @@ QUESTIONS = [
 # A one-paragraph, plain-words summary at the top of each question page, for
 # Myth players who don't follow the technical back-and-forth. Rewrite one when
 # its conversation moves on, and move the date.
-GISTS_UPDATED = "2026-11-10"
+GISTS_UPDATED = "2026-11-11"
 QUESTION_GISTS = {
     1: "Nobody has answered this one yet. It asks which Fallen Lords maps and plugins you most want to see working in Myth II: the original campaign, a favourite community plugin, solo or multiplayer. That way the ones players care about get tested first. So far, testing has mostly used Crow's Bridge and Sir Mauriac's Tale.",
     2: "This asked whether converted hills should copy The Fallen Lords' coarser ground exactly, or be smoothed to look like a Myth II map. It was settled by comparing with Project Magma's hand-made Myth II version of Crow's Bridge. The converter now keeps every original height and smooths only the points in between, so hills are smooth instead of stepped.",
-    3: "Keep suggested a yardstick: Crow's Bridge, the first Fallen Lords level, which Project Magma had already rebuilt by hand for Myth II in The Fallen Levels v2. By comparing our converted Crow's Bridge with theirs, piece by piece, we found and fixed water that units walked across, stepped hills, floating plants and missing buildings. Keep also asked us to learn from Magma's versions of the units, which is the next big job.",
+    3: "Keep suggested a yardstick: Crow's Bridge, the first Fallen Lords level, which Project Magma had already rebuilt by hand for Myth II in The Fallen Levels v2. By comparing our converted Crow's Bridge with theirs, piece by piece, we found and fixed water that units walked across, stepped hills, floating plants and missing buildings. Later comparisons fixed the ground at Crow's Bridge's bridge and its invisible deck. Keep also asked us to learn from Magma's versions of the units, which comes after the multiplayer fix.",
     4: "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on.",
-    5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now. The unit problems are still to do. New test reports go in Q7.",
+    5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now, and so is Crow's Bridge's bridge. The unit problems are still to do, and multiplayer levels don't work yet. New test reports go in Q7.",
     6: "This asked what a conversion must get right before it feels finished. Testers answered it through their reports in Q3, Q5 and Q7: water, hills, buildings, and units that behave as they did in The Fallen Lords.",
     7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, to a crash at the edge of Crow's Bridge being fixed in 0.7, and to the ground meeting the walls of Crow's Bridge's bridge in 0.8. The crash fix works for every map, not just Crow's Bridge. With a screenshot, Keep then showed that the game didn't draw the bridge's deck, so units seemed to walk on air; that is fixed in 0.9. He can no longer see the floating houses on Tandem. His latest report: multiplayer levels end at once because no teams are present, which is our next job. We have asked him to check water and riverbanks in 0.9, since the fix changed the ground's markings on every map. Units still moonwalk.",
-    8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units are the next big job.",
-    9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played.",
+    8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units come next, after the multiplayer fix.",
+    9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played. On 3 November someone converted Strling2, Mooon6 and nz40_v2; we have asked here how they went.",
 }
 
 STYLE = """
@@ -646,7 +686,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-09"
+DOCKET_UPDATED = "2026-11-11"
 DOCKET = {
     "Working on now": [
         "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels load but end at once, because no teams are present, and flags and balls are missing. Keep found it. First we compare how The Fallen Lords and Myth II store each team's units and the game pieces, then fix the converter and play one in the game.",
