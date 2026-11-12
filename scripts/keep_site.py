@@ -572,17 +572,24 @@ POEM = [
 ]
 
 
-def poem_html():
-    stanzas = []
-    for i, (image, alt, lines) in enumerate(POEM):
-        side = "right" if i % 2 == 0 else "left"
+def stanzas_html(poem):
+    """Each stanza as a block; a stanza with a picture has it beside the
+    verse, alternating right and left between pictured stanzas."""
+    out, pictured = [], 0
+    for image, alt, lines in poem:
         verse = "<br>".join(html.escape(line) for line in lines)
-        stanzas.append(
-            f'<div class="stanza"><img class="{side}" src="../img/poem/{image}" alt="{html.escape(alt)}" '
-            f'loading="lazy"><p>{verse}</p></div>'
-        )
+        picture = ""
+        if image:
+            side = "right" if pictured % 2 == 0 else "left"
+            pictured += 1
+            picture = f'<img class="{side}" src="../img/poem/{image}" alt="{html.escape(alt)}" loading="lazy">'
+        out.append(f'<div class="stanza">{picture}<p>{verse}</p></div>')
+    return "".join(out)
+
+
+def poem_html():
     return (
-        '<div class="poem">' + "".join(stanzas)
+        '<div class="poem">' + stanzas_html(POEM)
         + '<p class="sign">With thanks from Edward and Claude</p></div>'
         + '<p class="meta">Drawings &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> and '
         '<em>Myth II: Soulblighter</em> by Juan Ramirez, from Bungie&rsquo;s old Myth gallery, and Soulblighter '
@@ -592,8 +599,40 @@ def poem_html():
     )
 
 
+# For Walter Wight, who asked Keep about the converter in Bagrada's The Ermine
+# (posted on Keep's page, 12 November 2026). The wight is Juan Ramirez's
+# concept art for The Fallen Lords, from Bungie's old Myth gallery.
+WALTER_TITLE = "For Walter Wight"
+WALTER_POEM = [
+    ("wight.jpg", "A wight with its dagger",
+     ["In Myth a wight comes shambling through the fen,", "All bloat and blade, to burst among our men;",
+      "One stab, one blast, and every soldier near", "Stands rooted, frozen fast by gas and fear."]),
+    (None, "", ["But older far than Balor's darkest night,", "Our tongue once had a kinder use for “wight”:",
+                "A being, any creature, man or sprite;", "And Chaucer wrote of one, a “sweete wight”."]),
+    (None, "", ["The Norse had wights who guarded hill and land,", "And helping sprites who'd lend a needed hand;",
+                "So, Walter, be that kind of wight, and true:", "Not one who bursts, but one who sees us through."]),
+    (None, "", ["You've fetched Sir Mauriac's long Tale to play;", "Then march it out, and tell us, come what may,",
+                "Where thrall stand tall that ought to hide below,", "Where giants balk, and units moonwalk slow."]),
+    (None, "", ["So come and post your findings on our page,", "With screenshots, if you like, from every stage;",
+                "And every bug you find, we'll set aright,", "With thanks to you, our kind and helping wight."]),
+]
+
+
+def walter_html():
+    return (
+        '<div class="poem">' + stanzas_html(WALTER_POEM)
+        + '<p class="sign">From Edward and Claude</p></div>'
+        + '<p class="meta">The wight &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> by Juan Ramirez, '
+        'from Bungie&rsquo;s old Myth gallery. &ldquo;Sweete wight&rdquo; is Chaucer&rsquo;s, from '
+        '<em>The Reeve&rsquo;s Tale</em>. Walter, tell us how Sir Mauriac&rsquo;s Tale plays in '
+        '<a href="../q/7.html">Q7</a>, or how a plugin of your own converts in <a href="../q/9.html">Q9</a>.</p>'
+        '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
+    )
+
+
 KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
 <p>&#10022; <a href="poem.html">For Keep, Who Raised the Banner</a> &mdash; a poem of thanks from Edward and Claude.</p>
+<p>&#10022; <a href="walter.html">For Walter Wight</a> &mdash; a poem for Walter, after his chat with Keep on Bagrada.</p>
 <p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here.</p>
 <p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>"""
 
@@ -618,7 +657,8 @@ STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 def sitemap(up):
     rows = [
         ("", [("Home", "index.html"), ("Convert a plugin", "convert/index.html"),
-              ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html")]),
+              ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html"),
+              ("Poem for Walter", "keep/walter.html")]),
         ("Updates", [(u["date"], f"updates/{u['slug']}.html") for u in reversed(UPDATES)]),
         ("Questions", [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS]),
     ]
@@ -869,6 +909,9 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
     (OUT / "keep").mkdir(exist_ok=True)
     (OUT / "keep" / "poem.html").write_text(
         page(POEM_TITLE, POEM_TITLE, poem_html(), 1, kicker="For Keep", body_class="white"), encoding="utf-8"
+    )
+    (OUT / "keep" / "walter.html").write_text(
+        page(WALTER_TITLE, WALTER_TITLE, walter_html(), 1, kicker="For Walter", body_class="white"), encoding="utf-8"
     )
     (OUT / "keep" / "index.html").write_text(
         page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"])
