@@ -616,7 +616,7 @@ WALTER_POEM = [
     ("wight-crouching.jpg", "A crouching wight over a skull", ["You've fetched Sir Mauriac's long Tale to play;", "Then march it out, and tell us, come what may,",
                 "Where thrall stand tall that ought to hide below,", "Where giants balk, and units moonwalk slow."]),
     (None, "", ["So come and post your findings on our page,", "With screenshots, if you like, from every stage;",
-                "And every bug you find, we'll set aright,", "With thanks to you, our kind and helping wight."]),
+                "And every bug you find, we'll set aright,", "With thanks to you, our kind and helping Walter Wight."]),
 ]
 
 
