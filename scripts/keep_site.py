@@ -600,18 +600,19 @@ def poem_html():
 
 
 # For Walter Wight, who asked Keep about the converter in Bagrada's The Ermine
-# (posted on Keep's page, 12 November 2026). The wight is Juan Ramirez's
-# concept art for The Fallen Lords, from Bungie's old Myth gallery.
+# (posted on Keep's page, 12 November 2026). Each stanza has a different
+# wight, chosen by Edward; Myth's is Juan Ramirez's concept art for The Fallen
+# Lords, from Bungie's old Myth gallery.
 WALTER_TITLE = "For Walter Wight"
 WALTER_POEM = [
     ("wight.jpg", "A wight with its dagger",
      ["In Myth a wight comes shambling through the fen,", "All bloat and blade, to burst among our men;",
       "One stab, one blast, and every soldier near", "Stands rooted, frozen fast by gas and fear."]),
-    (None, "", ["But older far than Balor's darkest night,", "Our tongue once had a kinder use for “wight”:",
+    ("wight-grendel.jpg", "Grendel striding from the fen at sunset", ["But older far than Balor's darkest night,", "Our tongue once had a kinder use for “wight”:",
                 "A being, any creature, man or sprite;", "And Chaucer wrote of one, a “sweete wight”."]),
-    (None, "", ["The Norse had wights who guarded hill and land,", "And helping sprites who'd lend a needed hand;",
+    ("wight-cloaked.jpg", "A dark, cloaked wight by a mountain under the stars", ["The Norse had wights who guarded hill and land,", "And helping sprites who'd lend a needed hand;",
                 "So, Walter, be that kind of wight, and true:", "Not one who bursts, but one who sees us through."]),
-    (None, "", ["You've fetched Sir Mauriac's long Tale to play;", "Then march it out, and tell us, come what may,",
+    ("wight-crouching.jpg", "A crouching wight over a skull", ["You've fetched Sir Mauriac's long Tale to play;", "Then march it out, and tell us, come what may,",
                 "Where thrall stand tall that ought to hide below,", "Where giants balk, and units moonwalk slow."]),
     (None, "", ["So come and post your findings on our page,", "With screenshots, if you like, from every stage;",
                 "And every bug you find, we'll set aright,", "With thanks to you, our kind and helping wight."]),
@@ -622,8 +623,10 @@ def walter_html():
     return (
         '<div class="poem">' + stanzas_html(WALTER_POEM)
         + '<p class="sign">From Edward and Claude</p></div>'
-        + '<p class="meta">The wight &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> by Juan Ramirez, '
-        'from Bungie&rsquo;s old Myth gallery. &ldquo;Sweete wight&rdquo; is Chaucer&rsquo;s, from '
+        + '<p class="meta">Myth&rsquo;s wight &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> by '
+        'Juan Ramirez, from Bungie&rsquo;s old Myth gallery. Grendel, whom <em>Beowulf</em> calls a <em>wiht</em>: '
+        'painting by J. R. Skelton for <em>Stories of Beowulf</em> (1908). The other two wights are signed by their '
+        'artists, whom we have not yet identified. &ldquo;Sweete wight&rdquo; is Chaucer&rsquo;s, from '
         '<em>The Reeve&rsquo;s Tale</em>. Walter, tell us how Sir Mauriac&rsquo;s Tale plays in '
         '<a href="../q/7.html">Q7</a>, or how a plugin of your own converts in <a href="../q/9.html">Q9</a>.</p>'
         '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
