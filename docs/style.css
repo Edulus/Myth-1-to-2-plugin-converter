@@ -66,6 +66,7 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .theme{position:absolute;top:.8rem;right:.9rem;z-index:2;font:1rem/1 Georgia,serif;color:#f3ede2;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:.4rem .75rem;cursor:pointer}
 .theme:hover,.theme:focus-visible{background:rgba(0,0,0,.7);outline:none}
 .say label{display:block;margin:.7rem 0;font-size:.95rem;color:var(--muted)}
+.say .hint{font-size:.85rem;font-style:italic}
 .say input,.say textarea{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;font:inherit;font-size:1rem;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:5px}
 .say input:focus,.say textarea:focus{outline:2px solid var(--blood-hi);outline-offset:1px;border-color:var(--blood)}
 .say .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}

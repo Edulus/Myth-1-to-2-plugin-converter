@@ -312,6 +312,7 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .theme{position:absolute;top:.8rem;right:.9rem;z-index:2;font:1rem/1 Georgia,serif;color:#f3ede2;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:.4rem .75rem;cursor:pointer}
 .theme:hover,.theme:focus-visible{background:rgba(0,0,0,.7);outline:none}
 .say label{display:block;margin:.7rem 0;font-size:.95rem;color:var(--muted)}
+.say .hint{font-size:.85rem;font-style:italic}
 .say input,.say textarea{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;font:inherit;font-size:1rem;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:5px}
 .say input:focus,.say textarea:focus{outline:2px solid var(--blood-hi);outline-offset:1px;border-color:var(--blood)}
 .say .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
@@ -394,7 +395,7 @@ GIVE_ANSWER = """
 <p class="meta">No sign-up, no account &mdash; just type and press <strong>Send</strong>.</p>
 <form class="say" novalidate>
 <p class="replying" hidden></p>
-<label>Your name<input name="name" autocomplete="nickname" maxlength="40" required></label>
+<label>Your name <span class="hint">(any name you like; we never ask for an email or password)</span><input name="name" autocomplete="nickname" maxlength="40" required></label>
 <label>Your message<textarea name="message" rows="6" maxlength="4000" required placeholder="Type here..."></textarea></label>
 <label>Add a picture (screenshot), if you like<input name="picture" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>
 <p class="meta pick">PNG, JPEG, GIF or WebP, up to 8 MB. <button class="link unpick" type="button" hidden>Remove the picture</button></p>
@@ -643,6 +644,12 @@ MADE_BY = (
     f'Made by Edulus, with Keep and Claude Code. '
     f'The code is on <a href="https://github.com/{REPO}">GitHub</a>.'
 )
+# Said plainly on every page, for visitors and for anyone checking the site.
+HONEST = (
+    "An unofficial, non-commercial fan project for the 1990s games <em>Myth: The Fallen Lords</em> and "
+    "<em>Myth II</em>, not affiliated with Bungie. It never asks for an email address, a password or a payment. "
+    "Its downloads are Myth plugin data files for the game to read, not programs to install or run."
+)
 CREDIT = (
     "Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> "
     "box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. "
@@ -719,7 +726,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 {body}
 {answer}
 </main>
-<footer>{sitemap(up)}<p class="made">{MADE_BY}</p><p>{CREDIT}</p></footer>
+<footer>{sitemap(up)}<p class="made">{MADE_BY}</p><p class="made">{HONEST}</p><p>{CREDIT}</p></footer>
 <script>{THEME_JS}</script>
 {scripts}
 </body>
@@ -816,7 +823,7 @@ def build(stock_dir=None):
 <hr class="news-rule">
 <h3>Ready-made download: <em>Sir Mauriac's Tale</em></h3>
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude). Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
-<p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download ({DOWNLOAD_MB} MB)</a></p>
+<p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download Sir Mauriac&rsquo;s Tale ({DOWNLOAD_MB} MB zip of Myth II plugin files; no program to run)</a></p>
 <ul>
 <li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested. This exact download has been checked on a plain Myth II 1.8.5 install, with no other plugins, loading and playing <em>Tandem</em>.</li>
 <li>Quit Myth II and extract the zip <strong>straight into</strong> Myth II's <code>plugins</code> folder, not a subfolder (Myth II only finds plugins sitting directly in it). You get the plugin <code>ZZ Mauriac TFL2SB</code> plus a read-me and CbC's credits. Then choose <strong>New Game</strong> &rarr; the campaign <em>ZZ Mauriac TFL2SB</em> &rarr; a level. Leave Tagsets empty.</li>
