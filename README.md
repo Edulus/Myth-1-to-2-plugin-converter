@@ -170,7 +170,9 @@ You need the plugin that holds the **maps**, the **tagset** its units live in
 (both from the Civil War download, which this project does not supply), and
 your **Myth II folder**.
 
-In the app (`python -m src studio`), click **Swap units (Civil War)** at the top.
+**In your browser, with nothing to install:** the [Swap Civil War units](https://edulus.github.io/Myth-1-to-2-plugin-converter/swap/index.html) page does the same job. Choose the maps, the tagset and your Myth II folder; the page reads them in place (nothing is uploaded), you pick the replacements, and it writes the new plugin for you to save. It was built because Obelix asked for it.
+
+In the local app (`python -m src studio`), click **Swap units (Civil War)** at the top.
 Give it those three paths, press *Read the maps*, then pick a replacement for each
 unit -- or set the whole "yours" and "enemy" side at once -- and press *Write the
 new plugin*. It lands in your `plugins` folder.

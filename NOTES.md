@@ -1800,3 +1800,34 @@ with Loathing and saw them appear when "Single Player Map" was ticked in Fear;
 and explosions leave a mirrored, streaky patch on the ground, which goes away
 when the explosion's mesh effect is removed (Keep, on the advice of Point),
 although our wight explosion's `meef` body equals Bungie's own.
+
+
+## 25. The unit swapper in the browser
+
+The command-line swap (section 19) reads every container whole: the Civil War
+Reloaded 1.8.4 maps are 518 MB, its tagset 174 MB, Myth II's own archives about
+500 MB, and the output is as big as the maps again. A browser tab cannot hold
+that, so `swapstream.py` does the same job in pieces:
+
+* `LazyContainer` reads a file's header, entrypoints and directory and fetches
+  a tag's body from the file only when asked. Under Pyodide the page mounts the
+  visitor's files with WORKERFS, which reads them in place without copying.
+* A Myth II container is [header][entrypoints][directory][bodies]. Palette
+  swaps are same-size edits, and adding K restored tags grows the directory by
+  K x 64 bytes, so every body moves by exactly that. The output is the source
+  body region streamed in 8 MB chunks with the palette patches laid over it,
+  then the added bodies. Gaps and shared bodies in the source are kept.
+* `Restorer` finds which stock tags the tagset changed by comparing bodies
+  only when asked, once each, instead of indexing every archive.
+
+Checked on the real Civil War Reloaded 1.8.4 maps, tagset and Myth II archives:
+the same 275 placed units and the same 481 modified stock tags as `swap`; for
+the same swaps, the same 2,452 tags with identical bodies, the same entrypoints
+and name. It runs in about a second (`swap`: about 2.5 s) in under 100 MB.
+The output is 832 bytes larger than `swap`'s because it keeps the source's
+padding. The same code runs under Pyodide in Node, and the page runs in
+Chrome (WORKERFS, folder picker, Blob download): 121 side units swapped across
+77 maps and downloaded as a 519 MB plugin equal to `swap`'s. A Pyodide quirk
+found on the way: `py.toPy` of a JS object gives a Python dict, which has no
+`to_py`. Not yet played in Myth II; `swap`'s output was, and the contents are
+the same.

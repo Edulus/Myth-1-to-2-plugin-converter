@@ -40,6 +40,32 @@ DOWNLOAD_MB = 223
 
 UPDATES = [
     {
+        "slug": "2026-11-15",
+        "term": "Update 2026-11-15: swap Civil War units in your browser",
+        "date": "15 November 2026",
+        "title": "Swap the Civil War soldiers for regular units, in your browser",
+        "summary": "A new page lets you play the Civil War maps with regular Myth II units. Built because Obelix asked.",
+        "body": """
+<p><strong>You can now play the <em>Civil War</em> maps for Myth II with regular Myth II units, from a page in your browser.</strong> It was built because Obelix asked for it, and it has its own page: <a href="../swap/index.html">Swap the Civil War soldiers for regular units</a>.</p>
+
+<h2>What it does</h2>
+<p>You choose three things from your own computer: the Civil War maps, the Civil War tagset they need, and your Myth II folder. The page lists the units the maps place, and you pick a replacement for each, or for a whole side at once: warriors for the player's soldiers, ghols for the enemy's. Then it writes a new plugin for you to save. The original files are never changed, and nothing is uploaded.</p>
+
+<h2>How it got built</h2>
+<p>The tool itself existed already, and was checked in Myth II with <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> pack. The hard part was size: the maps alone are over 500 MB, and the new plugin is as big again. So the browser version reads each file in place, fetches only the few pieces it needs, and writes the result out in chunks. On the real Civil War files it gives exactly the same result as the original tool, in about a second.</p>
+
+<h2>What's still rough</h2>
+<ul>
+<li>The browser version has not yet been played in Myth II. The tool it copies has, and the contents are identical, but we want you to try it and tell us.</li>
+<li>Only two Civil War packs and a few replacement units have been tried.</li>
+<li>The new plugin is about 520 MB for Civil War Reloaded 1.8.4, so keep some disk space.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Open <a href="../swap/index.html">the page</a>, and tell us how it went in <a href="../q/9.html">Q9</a>, in <a href="../q/7.html">Q7</a>, or in the comments on the page itself. No account is needed.</p>
+""",
+    },
+    {
         "slug": "2026-11-11",
         "term": "Update 2026-11-11: Crow's Bridge fixed, and pictures in comments",
         "date": "11 November 2026",
@@ -357,6 +383,25 @@ details{margin:1rem 0}
 summary{cursor:pointer;color:var(--muted)}
 details pre{white-space:pre-wrap;max-height:24rem;overflow:auto}
 footer{max-width:50rem;margin:0 auto;padding:1.5rem 1.25rem 3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+.honour{margin:1.6rem 0;padding:1rem 1.25rem;border:1px solid var(--line);border-left:4px solid var(--blood);border-radius:6px;background:var(--panel)}
+.honour h2{margin-top:0}
+.stanza-one{margin:1rem 0 .2rem;padding:0 0 0 1rem;border-left:2px solid var(--line);font-style:italic}
+.stanza-one p{margin:0;line-height:1.8}
+.stanza-one footer{margin-top:.5rem;font-size:.9rem;font-style:normal;color:var(--muted);border:0;padding:0;text-align:left;max-width:none}
+.pickers{display:grid;gap:.9rem;margin:1rem 0}
+.pick{display:block;padding:.8rem 1rem;background:var(--panel);border:1px dashed var(--blood);border-radius:6px}
+.pick span{display:block;margin-bottom:.4rem}
+.pick em{display:block;margin-top:.3rem;font-size:.9rem;color:var(--muted)}
+.bulkbox{margin:1rem 0;padding:.8rem 1rem;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.bulkbox h3{margin:0 0 .5rem}
+.bulk{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
+.onlysides{display:block;margin:.8rem 0;font-size:.95rem}
+.tablewrap{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.swaptable{margin:0}
+.swaptable thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+.swaptable td select{max-width:100%;min-width:14rem}
+.swaptable tr.set td{background:var(--tint)}
+#swapper select,#swapper input[type=text]{font:inherit;font-size:.95rem;padding:.3rem .4rem;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:4px}
 footer{text-align:center}
 body.white{background:#fff;color:#1a1a1a}
 body.white main,body.white footer,body.white .meta,body.white footer .made,body.white .sitemap a,body.white .sitemap .label{color:#1a1a1a}
@@ -667,7 +712,7 @@ STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 def sitemap(up):
     rows = [
         ("", [("Home", "index.html"), ("Convert a plugin", "convert/index.html"),
-              ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html"),
+              ("Swap Civil War units", "swap/index.html"), ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html"),
               ("Poem for Walter", "keep/walter.html")]),
         ("Updates", [(u["date"], f"updates/{u['slug']}.html") for u in reversed(UPDATES)]),
         ("Questions", [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS]),
@@ -742,6 +787,7 @@ DOCKET = {
         "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels load but end at once, with no teams, flags, balls or assassins. Keep found that all of them are present in the converted maps, and appear when a map is marked as a single-player map, so the game has them but won't use them in a hosted game. Version 0.10 makes converted maps declare themselves Myth II maps, which may be the cause; Keep is testing it. If not, we compare with one of Magma's working free-for-all maps.",
     ],
     "Up next": [
+        "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
         "Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit's size in a place Myth II doesn't have, and the converter drops it. We will find where Magma's ports keep it, and carry it across.",
         "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
         "Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black, streaky or mirrored for a moment. Keep traced it to the ripple each explosion sends through the ground: with the ripple switched off, the glitch is gone. Our wight ripple matches Bungie's own exactly, so we think the ripple exposes a fault in our maps rather than being one. Version 0.10's map change may fix it; Keep is testing.",
@@ -814,7 +860,8 @@ def build(stock_dir=None):
 </ul>
 <hr class="news-rule">
 <h3>New: swap the Civil War soldiers for regular units (beta)</h3>
-<p>A companion tool for the Civil War plugins. Pick which regular units, such as warriors or ghols, appear in place of the Civil War soldiers on its maps. It writes a new plugin and leaves the original alone. It is part of this project's app (<code>python -m src studio</code>, then <strong>Swap units (Civil War)</strong>) and also works from the command line.</p>
+<p>A companion tool for the Civil War plugins, built because Obelix asked for it. Pick which regular units, such as warriors or ghols, appear in place of the Civil War soldiers on its maps. It writes a new plugin and leaves the original alone. <strong>It now runs in your browser, with nothing uploaded</strong>; it is also part of this project's app (<code>python -m src studio</code>, then <strong>Swap units (Civil War)</strong>) and works from the command line.</p>
+<p><a class="btn" href="swap/index.html">Swap Civil War units &rarr;</a></p>
 <ul>
 <li><strong>Tested so far:</strong> <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> map pack (with its 1.7 tagset), on a clean Myth II 1.8.5 install. Real warriors and ghols appeared on <em>Fort Sumter</em> and <em>Little Flat Top</em>. Other maps, other units and other Civil War packs are untested.</li>
 <li><strong>You supply the Civil War files</strong> (its maps and its tagset) and your own Myth II folder. None of it is included here.</li>
@@ -931,6 +978,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
     )
 
     build_converter_page(stock_dir)
+    build_swap_page()
     print(f"built {len(UPDATES)} update(s) and {len(QUESTIONS)} question(s) into {OUT}")
 
 
@@ -1080,6 +1128,105 @@ def build_converter_page(stock_dir=None):
             version=html.escape(CHANGES[0]["version"]), **versions,
         ), 1,
              kicker="In your browser &middot; beta"),
+        encoding="utf-8",
+    )
+
+# --- The in-browser unit swapper (docs/swap/) --------------------------------
+# Built because Obelix asked for it. Its scripts live in web/swap/; it reuses the
+# converter's Python bundle (docs/convert/converter.zip), which carries swap.py,
+# swapstream.py and webswap.py.
+
+WEB_SWAP = ROOT / "web" / "swap"
+SWAP_TERM = "Civil War units swap: feedback"
+
+OBELIX_POEM = (
+    "Where Union blue met Rebel grey in war,",
+    "Obelix asked for Legion steel once more,",
+    "So warriors march where muskets used to sound,",
+    "And ghols come snarling up the battleground;",
+    "Let Alric's banner fly above the plain:",
+    "For Obelix, the Legion fights again.",
+)
+
+SWAP_BODY = """
+<p class="intro">Play the <em>Civil War</em> maps for <em>Myth II</em> with regular Myth II units. Choose which ordinary units, such as warriors or ghols, stand in place of the Civil War soldiers, and this page writes a new plugin. <strong>It runs entirely in this browser tab: your files are not uploaded anywhere</strong>, the new plugin is written on your own computer, and your original files are never changed.</p>
+
+<section class="honour" aria-labelledby="obelix">
+<h2 id="obelix">Thank you, Obelix</h2>
+<p>This page exists because <strong>Obelix asked for it</strong>: a way to play the Civil War maps with regular Myth II units, with the player choosing which unit replaces which. A request like that is how this project grows, and we are grateful for it.</p>
+<blockquote class="stanza-one"><p>{poem}</p><footer>For Obelix, who asked</footer></blockquote>
+</section>
+
+<div id="swapper" data-worker="worker.js?v={worker_v}" data-code="../convert/converter.zip?v={code_v}">
+<h2>1. Choose your files</h2>
+<p>You need three things, all from your own computer. The page reads them where they are; nothing is copied or sent anywhere.</p>
+<div class="pickers">
+<label class="pick"><span><strong>The maps</strong> &mdash; the plugin file that holds the Civil War maps, for example <code>CWR-Maps-184b</code> (no extension)</span>
+<input type="file" id="maps"><em id="maps-note"></em></label>
+<label class="pick"><span><strong>The tagset</strong> &mdash; the Civil War tagset those maps need, for example <code>CWR-Tagset-184b</code>. Use the one that matches your maps.</span>
+<input type="file" id="tagset" multiple><em id="tagset-note"></em></label>
+<label class="pick"><span><strong>Your Myth II folder</strong> &mdash; the one that holds the <code>tags</code> and <code>plugins</code> folders. Only Myth II&rsquo;s own game files are read from it, to bring the original units back. (Your browser will ask to let this page see the folder&rsquo;s files; it only reads the few it needs.)</span>
+<input type="file" id="myth" webkitdirectory><em id="myth-note"></em></label>
+</div>
+<p><button type="button" class="btn" id="read" disabled>Read the maps</button></p>
+<div id="progress" hidden><p id="stage" role="status"></p><progress id="bar"></progress></div>
+<div id="problem" class="problem" role="alert" hidden></div>
+
+<section id="choose" hidden>
+<h2>2. Choose replacements</h2>
+<p id="summary" class="meta"></p>
+<div class="bulkbox">
+<h3>Swap a whole side at once</h3>
+<p class="bulk"><label>Yours &rarr; <select id="bulk-@"></select></label>
+<label>Enemy &rarr; <select id="bulk-+"></select></label>
+<button type="button" class="btn" id="apply-bulk">Apply to the table</button>
+<button type="button" class="link" id="clear-all">Clear all</button></p>
+<p class="meta">Sides are read from the unit names (starting <code>@</code> or <code>+</code>). You can still change any single row below.</p>
+</div>
+<label class="onlysides"><input type="checkbox" id="only-sides" checked> Show only side units (<code>@</code> and <code>+</code>); untick to see every unit the maps place</label>
+<div class="tablewrap">
+<table class="swaptable">
+<thead><tr><th>Unit</th><th>Maps</th><th>Replace with</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p class="meta"><strong>Real Myth II units</strong> are the base game&rsquo;s own. The Civil War tagset redefines all of them, so when you choose one the original is restored inside your new plugin.</p>
+
+<h2>3. Write the new plugin</h2>
+<label class="field"><span>Name of the new plugin</span>
+<input type="text" id="outname" value="ZZ Swapped units" maxlength="32" spellcheck="false">
+<em>At most 32 characters, or Myth II will not list it.</em></label>
+<p><button type="button" class="btn" id="build" disabled>Write the new plugin</button></p>
+</section>
+<div id="result" hidden></div>
+</div>
+
+<h2>Good to know</h2>
+<ul>
+<li><strong>Beta.</strong> The swapping itself was checked by hand on a clean Myth II 1.8.5 with <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> map pack: real warriors and ghols appeared on <em>Fort Sumter</em> and <em>Little Flat Top</em>. Other maps, other units and other Civil War packs are untried, and this browser version is new. Tell us how it goes.</li>
+<li><strong>Use a computer, not a phone,</strong> with a recent Chrome, Edge or Firefox. The files are read in place rather than loaded whole, but the new plugin is about as big as the maps plugin (around 520 MB for Civil War Reloaded 1.8.4), so keep some disk space and close other tabs.</li>
+<li><strong>To play:</strong> in Myth II choose the new campaign first, then activate the tagset under <em>Tagsets</em>. The new plugin has to load after the tagset. The campaign list unlocks levels in order, so only the first ones are playable at first.</li>
+<li><strong>You supply the Civil War files.</strong> None of them, and no Myth II game files, are included or copied to this site.</li>
+<li>The swap was first checked against <em>Civil War Reloaded 1.8.4</em> by PoinT of ARMY Munitions Factory. That plugin builds on work by IronDuke (Project Magma), Cydonian, Thoran and others credited in its own readme. It is a third-party plugin.</li>
+<li>How did it go? Tell us in <a href="../q/9.html">Q9: Tried converting a map of your own?</a>, report problems in <a href="../q/7.html">Q7</a>, or leave a comment below.</li>
+</ul>
+<div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
+<script src="page.js?v={page_v}"></script>"""
+
+
+def build_swap_page():
+    out = OUT / "swap"
+    out.mkdir(exist_ok=True)
+    versions = {"code_v": _short_hash(converter_zip())}
+    for name in ("worker.js", "page.js"):
+        data = (WEB_SWAP / name).read_bytes()
+        (out / name).write_bytes(data)
+        versions[name.split(".")[0] + "_v"] = _short_hash(data)
+    poem = "<br>".join(html.escape(line) for line in OBELIX_POEM)
+    (out / "index.html").write_text(
+        page("Swap the Civil War units", "Swap the Civil War soldiers for regular units",
+             SWAP_BODY.format(poem=poem, **versions), 1, term=SWAP_TERM,
+             kicker="In your browser &middot; beta &middot; requested by Obelix"),
         encoding="utf-8",
     )
 
