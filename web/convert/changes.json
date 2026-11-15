@@ -1,11 +1,12 @@
 [
- {"version": "0.9", "date": "2026-11-09", "change": "The deck of Crow's Bridge's bridge is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath as in The Fallen Levels v2. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords, on every map.",
+ {"version": "0.10", "date": "2026-11-15", "change": "Converted maps now say they are Myth II maps. They used to keep The Fallen Lords' version number, which made Myth II's editor Oak refuse them and may have made the game treat them as older maps.",
   "test": [
-   "Bridges: cross every bridge with a few units. Is the deck drawn under their feet? Name any bridge where they seem to walk on air.",
-   "Water and banks: walk units along rivers, into shallow water and up to deep water. Name any place where they now cross water they shouldn't, or are stopped where they could walk before.",
-   "Ground: name any ground that is missing, see-through or drawn oddly.",
+   "Explosions: let satchels, wights and Alric's magic go off on open ground. Does the ground still go black, streaky or mirrored for a moment?",
+   "Multiplayer: host a free-for-all or team game on a converted map, with co-operative play off. Do the teams, flags, balls and assassins appear now?",
+   "Editors: open a converted map in Oak, Fear and Loathing. Name any that won't open it.",
    "Levels: does every level start? Name any that won't load."
   ]},
+ {"version": "0.9", "date": "2026-11-09", "change": "The deck of Crow's Bridge's bridge is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath as in The Fallen Levels v2. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords, on every map."},
  {"version": "0.8", "date": "2026-11-02", "change": "The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it now meets the bridge's stone sides instead of sagging away below the railings."},
  {"version": "0.7", "date": "2026-10-30", "change": "Fixed a crash when scrolling to the edge of some maps, such as Crow's Bridge and crazyglue's Along the way to... The border at each map edge is also as wide as in The Fallen Lords again."},
  {"version": "0.6", "date": "2026-10-27", "change": "Buildings and other 3D models now appear, such as houses, barns, inns and bridges, and units walk around them."},

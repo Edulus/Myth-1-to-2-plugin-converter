@@ -289,6 +289,7 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
             # convert/headers.py SB_DEFAULTS).
             identifier=index + 1,
             archive_type=formats.ArchiveType.PLUGIN,
+            converted=status == "converted" and body != tag.body,
         )
         converted_tags.append(reader.Tag(header=header, body=body))
 

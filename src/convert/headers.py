@@ -45,6 +45,16 @@ SB_DEFAULTS = {
 
 INT16_MIN, INT16_MAX = -(1 << 15), (1 << 15) - 1
 
+# Tag types whose header version differs between the games. Every other type
+# carries the same version in TFL's TAGS.GOR, Bungie's Myth II install and
+# Magma's ports; maps are 7 in TFL and 11 in all 47 of Bungie's Myth II maps and
+# all of Magma's ported ones (40, 60 and 52). Kept at 7, a converted map makes
+# Myth II's editor Oak refuse it (ZeroPipeline of Project Magma, via Keep).
+# Applied only to a body that was actually converted to Myth II's layout.
+SB_VERSIONS = {
+    b"mesh": 11,
+}
+
 
 def convert_tag_header(
     tfl_header,
@@ -53,6 +63,7 @@ def convert_tag_header(
     name=None,
     identifier=1,
     archive_type=formats.ArchiveType.PLUGIN,
+    converted=False,
 ):
     """Convert one TFL tag header to Myth II form.
 
@@ -60,6 +71,8 @@ def convert_tag_header(
     conversion can change the length. ``tag_id`` and ``name`` override the
     originals, which is how ID remapping is applied. ``identifier`` should be
     unique within the container and ``archive_type`` should match it.
+    ``converted`` says the body is now in Myth II's layout, so the header takes
+    Myth II's version for its type (`SB_VERSIONS`).
 
     ``tag_data_offset`` is left at zero; the writer assigns real offsets when it
     lays the container out.
@@ -72,6 +85,8 @@ def convert_tag_header(
         raise ValueError(f"identifier {identifier} does not fit an int16 field")
 
     version = tfl_header.version
+    if converted and tfl_header.tag_type in SB_VERSIONS:
+        version = SB_VERSIONS[tfl_header.tag_type]
     if not INT16_MIN <= version <= INT16_MAX:
         warnings.append(
             f"version {version} does not fit Myth II's int16 field; clamped to "

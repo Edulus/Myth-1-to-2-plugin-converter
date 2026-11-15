@@ -1781,3 +1781,22 @@ byte-swapped), so the engine probably rebuilds them. A crazyglue built with the
 table and nothing from Magma drew the deck and the dark arch in game. What
 each bit means is still unknown; in Bungie's meshes 0x3d is the usual value
 under water.
+
+
+## 24. Map header version: 7 in TFL, 11 in Myth II
+
+ZeroPipeline of Project Magma told Keep that converted maps carry header
+version 7 and that Myth II's editor Oak needs 11. Checked: every `mesh` tag in
+TFL's TAGS.GOR is version 7; every one in Bungie's Myth II install (47) and in
+Magma's ports (The Fallen Lords v1.9: 40, TFL Multipack v2.6: 60, The Fallen
+Levels v2: 52) is 11. Across all other tag types the version is the same in
+both games. The converter copied the number, so all 73 of Sir Mauriac's Tale's
+maps were 7. From 0.10 a converted map takes 11 (`SB_VERSIONS` in
+`convert/headers.py`); a body left in TFL's layout keeps 7.
+
+Possibly related, not yet confirmed: hosted free-for-all games on converted
+maps have no teams, flags or balls, although Keep found them all in the maps
+with Loathing and saw them appear when "Single Player Map" was ticked in Fear;
+and explosions leave a mirrored, streaky patch on the ground, which goes away
+when the explosion's mesh effect is removed (Keep, on the advice of Point),
+although our wight explosion's `meef` body equals Bungie's own.

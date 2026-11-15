@@ -104,6 +104,17 @@ class TestHeaderConversion(unittest.TestCase):
         self.assertEqual(b"30cb", sb.tag_id)
         self.assertEqual(b"301 crows bridge".ljust(32, b"\0"), sb.name)
 
+    def test_converted_map_takes_myth_ii_version(self):
+        """TFL maps are version 7, Myth II's 11; Oak refuses a 7."""
+        mesh = formats.TFLTagHeader.unpack(fixtures.tfl_tag_header(b"a map", b"mesh", b"map1", 128, 41, version=7))
+        converted, _ = headers.convert_tag_header(mesh, body_length=1, converted=True)
+        passed, _ = headers.convert_tag_header(mesh, body_length=1)
+        other, _ = headers.convert_tag_header(self._tfl_header(version=1), body_length=1, converted=True)
+
+        self.assertEqual(11, converted.version)
+        self.assertEqual(7, passed.version, "a body left in TFL's layout keeps TFL's version")
+        self.assertEqual(1, other.version, "other tag types keep theirs")
+
     def test_rejects_identifier_outside_int16(self):
         with self.assertRaises(ValueError):
             headers.convert_tag_header(self._tfl_header(), 1, identifier=40000)
