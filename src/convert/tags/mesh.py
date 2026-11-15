@@ -263,6 +263,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
         warnings.append("marker palette lies outside the mesh body; dropped")
     elif tfl.marker_palette_entries:
         try:
+            palette = mesh_module.mark_netgame_types(palette, tfl.marker_palette_entries)
             blocks["palette"], palette_warnings = mesh_module.remap_marker_palette(
                 palette, tfl.marker_palette_entries, id_map
             )

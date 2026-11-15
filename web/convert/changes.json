@@ -1,11 +1,12 @@
 [
- {"version": "0.10", "date": "2026-11-15", "change": "Converted maps now say they are Myth II maps. They used to keep The Fallen Lords' version number, which made Myth II's editor Oak refuse them and may have made the game treat them as older maps.",
+ {"version": "0.11", "date": "2026-11-15", "change": "Free-for-all and team maps now tell Myth II which game types their units, scenery, flags and balls belong to. Before, every one was marked as appearing in no game, so a hosted game started with no teams, flags or balls and ended at once. Keep found the cause.",
   "test": [
-   "Explosions: let satchels, wights and Alric's magic go off on open ground. Does the ground still go black, streaky or mirrored for a moment?",
-   "Multiplayer: host a free-for-all or team game on a converted map, with co-operative play off. Do the teams, flags, balls and assassins appear now?",
-   "Editors: open a converted map in Oak, Fear and Loathing. Name any that won't open it.",
+   "Multiplayer: host free-for-all, team, capture-the-flag and king-of-the-hill games on a converted map, with co-operative play off. Do every team's units, the flags, the balls and the scenery appear?",
+   "Game types: name any game type where something is wrong, such as a flag in the wrong game, a missing assassin target, or a unit that should not be there.",
+   "Explosions: do satchels and wights still leave a black or streaky patch on the ground?",
    "Levels: does every level start? Name any that won't load."
   ]},
+ {"version": "0.10", "date": "2026-11-15", "change": "Converted maps now say they are Myth II maps. They used to keep The Fallen Lords' version number, which made Myth II's editor Oak refuse them and may have made the game treat them as older maps."},
  {"version": "0.9", "date": "2026-11-09", "change": "The deck of Crow's Bridge's bridge is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath as in The Fallen Levels v2. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords, on every map."},
  {"version": "0.8", "date": "2026-11-02", "change": "The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it now meets the bridge's stone sides instead of sagging away below the railings."},
  {"version": "0.7", "date": "2026-10-30", "change": "Fixed a crash when scrolling to the edge of some maps, such as Crow's Bridge and crazyglue's Along the way to... The border at each map edge is also as wide as in The Fallen Lords again."},

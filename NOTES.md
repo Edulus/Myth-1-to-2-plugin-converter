@@ -1831,3 +1831,42 @@ Chrome (WORKERFS, folder picker, Blob download): 121 side units swapped across
 found on the way: `py.toPy` of a JS object gives a Python dict, which has no
 `to_py`. Not yet played in Myth II; `swap`'s output was, and the contents are
 the same.
+
+
+## 26. Which game types a palette entry appears in
+
+Keep (Q7, 15 Nov) found why hosted free-for-all games on converted maps had no
+teams, flags, balls or scenery although Loathing showed them all in the map:
+each marker palette entry carries `netgame_flags`, the "Appears in Netgame Type"
+list (Body Count, Steal the Bacon, Last Man on the Hill, Scavenger Hunt, Flag
+Rally, Capture the Flag, Balls on Parade, Territories, Captures, King of the
+Hill, ...; one bit each). TFL's maps leave it 0 on nearly every entry (the odd
+0x763d8 and 0x76a78 on a few are not game types), and Myth II reads 0 as "in no
+game". With "Single Player Map" ticked the field is not consulted, which is why
+every element then appeared.
+
+Bungie's Myth II maps (47 in `small install`, 18 in `Patch 1.8.5 Maps`) and
+Magma's ports mark almost every unit, scenery and model entry 0xFFFF (Magma
+also 0x3FFF, the fourteen types). Observers, sounds and projectiles are 0 about
+as often as 0xFFFF in Bungie's netgame maps, and are left as they were. The
+netgame objects carry one game type each, Bungie's as 0xC000 plus the bit:
+
+| Object (TFL id) | Mask | Game |
+|---|---|---|
+| steal the bacon ball (`neto`) | 0xC002 | Steal the Bacon |
+| last man flag (`nefl`) | 0xC004 | Last Man on the Hill |
+| balls 1-5 (`neb1`-`neb5`) | 0xC008 | Scavenger Hunt |
+| flags 1-5 (`nef1`-`nef5`) | 0xC010 | Flag Rally |
+| capture the flag flag (`nect`) | 0xC020 | Capture the Flag |
+| balls on parade ball (`nebo`) | 0xC040 | Balls on Parade |
+| territories flag (`nedf`) | 0xC080 | Territories |
+| captures ball (`necb`) | 0xC100 | Captures |
+| king of the hill flag (`nelm`) | 0xC200 | King of the Hill |
+| rugby ball and goal (`nerb`, `nerg`) | 0 | none in Myth II |
+
+(Myth II's own ids differ: `nest`, `nelf`, `netf`, `neko`; the converted plugin
+carries TFL's, so the table is keyed by those.) Units whose game type is narrower
+in Bungie's maps (assassin targets 0x800, stampede herds 0x400, heroes missing
+one type) depend on how each map was authored and are not derived: they are
+marked for every type until a rule for them is found. 0.11. The `version` 7 to
+11 change of 0.10 did not fix the explosion glitch, which Keep reproduced on 0.10.

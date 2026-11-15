@@ -955,6 +955,67 @@ def build_lod_data(submesh_width, submesh_height):
     return bytes((columns * rows) // 2)
 
 
+# A palette entry says which netgame types it appears in, one bit per type (the
+# "Appears in Netgame Type" list in Loathing: Body Count, Steal the Bacon, Last
+# Man on the Hill, Scavenger Hunt, Flag Rally, Capture the Flag, Balls on
+# Parade, Territories, Captures, King of the Hill, ...). TFL's maps leave the
+# field 0 on every ordinary entry, and Myth II reads 0 as "appears in no game
+# type": a converted free-for-all map loads with no teams, flags, balls or
+# scenery, and plays only when marked a single-player map (Keep, Q7). Bungie's
+# own Myth II maps and Magma's ports mark ordinary entries for every type.
+NETGAME_ALL_TYPES = 0xFFFF
+# Types whose entries get "every game type"; the rest (observers, sounds,
+# projectiles) are left as they were, 0 in most of Bungie's netgame maps.
+NETGAME_MARKED_TYPES = (
+    MarkerType.SCENERY,
+    MarkerType.UNIT,
+    MarkerType.MODEL,
+    MarkerType.ANIMATION,
+)
+# The netgame objects belong to one game type each. The masks are Bungie's own:
+# 0xC000 plus the type's bit, as Bungie's maps and Magma's ports mark them
+# (Myth II's ids for these are neb1.., nef1.., nest, nelf, netf, neko; TFL's are
+# below). TFL's rugby ball and goal have no Myth II game type, so appear in none.
+NETGAME_OBJECT_MASKS = {
+    b"neto": 0xC002,  # steal the bacon ball
+    b"nefl": 0xC004,  # last man flag
+    b"neb1": 0xC008, b"neb2": 0xC008, b"neb3": 0xC008, b"neb4": 0xC008, b"neb5": 0xC008,  # scavenger hunt balls
+    b"nef1": 0xC010, b"nef2": 0xC010, b"nef3": 0xC010, b"nef4": 0xC010, b"nef5": 0xC010,  # flag rally flags
+    b"nect": 0xC020,  # capture the flag flag
+    b"nebo": 0xC040,  # balls on parade ball
+    b"nedf": 0xC080,  # territories flag
+    b"necb": 0xC100,  # captures ball
+    b"nelm": 0xC200,  # king of the hill flag
+    b"nerb": 0,  # rugby ball
+    b"nerg": 0,  # rugby goal flag
+}
+
+
+def mark_netgame_types(palette_buffer, entry_count):
+    """Set each palette entry's netgame types, which TFL leaves empty.
+
+    ``palette_buffer`` is a TFL palette (its tag ids still TFL's). Scenery,
+    units, models and animations appear in every game type, except the netgame
+    objects (flags and balls), which appear only in theirs. Returns the new
+    buffer, the same size.
+    """
+    out = bytearray(palette_buffer)
+    for i in range(entry_count):
+        offset = i * MARKER_PALETTE_ENTRY_SIZE
+        entry = MarkerPaletteEntry.unpack(palette_buffer, offset)
+        try:
+            marker_type = MarkerType(entry.type)
+        except ValueError:
+            continue
+        if marker_type not in NETGAME_MARKED_TYPES:
+            continue
+        mask = NETGAME_ALL_TYPES
+        if marker_type == MarkerType.SCENERY:
+            mask = NETGAME_OBJECT_MASKS.get(entry.marker_tag, mask)
+        out[offset:offset + MARKER_PALETTE_ENTRY_SIZE] = entry.replace(netgame_flags=mask).encode()
+    return bytes(out)
+
+
 def remap_marker_palette(palette_buffer, entry_count, id_map):
     """Rewrite each marker-palette entry's tag reference through ``id_map``.
 

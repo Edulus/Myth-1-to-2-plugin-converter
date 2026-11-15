@@ -292,6 +292,74 @@ class TestRemapMarkerPalette(unittest.TestCase):
         self.assertEqual(b"unt2", e1.marker_tag)
 
 
+class TestNetgameTypes(unittest.TestCase):
+    """TFL leaves every palette entry's netgame types empty; Myth II reads that
+    as "appears in no game", so a free-for-all map loaded with nothing in it."""
+
+    def _entries(self, specs):
+        return b"".join(
+            mesh.MarkerPaletteEntry.build(
+                type=int(kind), flags=flags, marker_tag=tag, team_index=team, netgame_flags=ng,
+            ).encode()
+            for kind, tag, ng, flags, team in specs
+        )
+
+    def _mark(self, specs):
+        out = mesh.mark_netgame_types(self._entries(specs), len(specs))
+        return [mesh.MarkerPaletteEntry.unpack(out, i * mesh.MARKER_PALETTE_ENTRY_SIZE) for i in range(len(specs))]
+
+    def test_ordinary_entries_appear_in_every_game_type(self):
+        S, U, M, A = mesh.MarkerType.SCENERY, mesh.MarkerType.UNIT, mesh.MarkerType.MODEL, mesh.MarkerType.ANIMATION
+        marked = self._mark([(S, b"tree", 0, 0, -1), (U, b"ghol", 0, 6, 2), (M, b"barn", 0, 0, 0), (A, b"anim", 0, 0, 0)])
+        self.assertEqual([0xFFFF] * 4, [e.netgame_flags for e in marked])
+
+    def test_tfls_own_nonzero_value_is_not_trusted(self):
+        """A few TFL entries carry values such as 0x763d8 that are not netgame types."""
+        marked = self._mark([(mesh.MarkerType.SCENERY, b"mufp", 0x763D8, 0, -1)])
+        self.assertEqual(0xFFFF, marked[0].netgame_flags)
+
+    def test_each_netgame_object_appears_only_in_its_own_game(self):
+        S = mesh.MarkerType.SCENERY
+        wanted = {b"neto": 0xC002, b"nefl": 0xC004, b"neb3": 0xC008, b"nef2": 0xC010, b"nect": 0xC020,
+                  b"nebo": 0xC040, b"nedf": 0xC080, b"necb": 0xC100, b"nelm": 0xC200, b"nerb": 0, b"nerg": 0}
+        marked = self._mark([(S, tag, 0, 0, -1) for tag in wanted])
+        self.assertEqual(list(wanted.values()), [e.netgame_flags for e in marked])
+
+    def test_other_kinds_of_entry_are_left_alone(self):
+        kinds = (mesh.MarkerType.OBSERVER, mesh.MarkerType.AMBIENT_SOUND, mesh.MarkerType.PROJECTILE,
+                 mesh.MarkerType.LOCAL_PROJECTILE_GROUP)
+        marked = self._mark([(k, b"abcd", 0, 0, -1) for k in kinds])
+        self.assertEqual([0] * 4, [e.netgame_flags for e in marked])
+
+    def test_nothing_else_about_an_entry_changes(self):
+        specs = [(mesh.MarkerType.UNIT, b"ghol", 0, 6, 3), (mesh.MarkerType.SCENERY, b"nefl", 0, 0, -1)]
+        before = self._entries(specs)
+        after = mesh.mark_netgame_types(before, 2)
+        self.assertEqual(len(before), len(after))
+        for i in range(2):
+            a = mesh.MarkerPaletteEntry.unpack(before, i * 32)
+            b = mesh.MarkerPaletteEntry.unpack(after, i * 32)
+            self.assertEqual(
+                (a.type, a.flags, a.marker_tag, a.team_index), (b.type, b.flags, b.marker_tag, b.team_index)
+            )
+
+    def test_a_converted_map_carries_the_netgame_types(self):
+        import struct
+
+        from src.convert.tags import mesh as mesh_converter
+        from src.convert import plugin as convert_plugin
+
+        entry = self._entries([(mesh.MarkerType.UNIT, b"ghol", 0, 6, 1)])
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        body = bytearray(fixtures.mesh_body(trailing=entry))
+        struct.pack_into(">L", body, offsets["marker_palette_entries"], 1)
+        struct.pack_into(">L", body, offsets["marker_palette_offset"], 0)
+        struct.pack_into(">L", body, offsets["marker_palette_size"], len(entry))
+        converted, _ = mesh_converter.convert(bytes(body), convert_plugin.ConversionContext())
+        out = mesh.MarkerPaletteEntry.unpack(converted, mesh.MESH_HEADER_SIZE)
+        self.assertEqual((0xFFFF, b"ghol", 6, 1), (out.netgame_flags, out.marker_tag, out.flags, out.team_index))
+
+
 class TestEntrypointSynthesis(unittest.TestCase):
     def _convert(self, tags, id_map=None):
         tfl = reader.read_bytes(fixtures.build_tfl_mono(tags))
