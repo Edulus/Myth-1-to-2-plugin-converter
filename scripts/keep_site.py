@@ -230,7 +230,7 @@ QUESTIONS = [
 # A one-paragraph, plain-words summary at the top of each question page, for
 # Myth players who don't follow the technical back-and-forth. Rewrite one when
 # its conversation moves on, and move the date.
-GISTS_UPDATED = "2026-11-11"
+GISTS_UPDATED = "2026-11-15"
 QUESTION_GISTS = {
     1: "Nobody has answered this one yet. It asks which Fallen Lords maps and plugins you most want to see working in Myth II: the original campaign, a favourite community plugin, solo or multiplayer. That way the ones players care about get tested first. So far, testing has mostly used Crow's Bridge and Sir Mauriac's Tale.",
     2: "This asked whether converted hills should copy The Fallen Lords' coarser ground exactly, or be smoothed to look like a Myth II map. It was settled by comparing with Project Magma's hand-made Myth II version of Crow's Bridge. The converter now keeps every original height and smooths only the points in between, so hills are smooth instead of stepped.",
@@ -238,7 +238,7 @@ QUESTION_GISTS = {
     4: "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on.",
     5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now, and so is Crow's Bridge's bridge. The unit problems are still to do, and multiplayer levels don't work yet. New test reports go in Q7.",
     6: "This asked what a conversion must get right before it feels finished. Testers answered it through their reports in Q3, Q5 and Q7: water, hills, buildings, and units that behave as they did in The Fallen Lords.",
-    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, to a crash at the edge of Crow's Bridge being fixed in 0.7, and to the ground meeting the walls of Crow's Bridge's bridge in 0.8. The crash fix works for every map, not just Crow's Bridge. With a screenshot, Keep then showed that the game didn't draw the bridge's deck, so units seemed to walk on air; that is fixed in 0.9. He can no longer see the floating houses on Tandem. His latest report: multiplayer levels end at once because no teams are present, which is our next job. We have asked him to check water and riverbanks in 0.9, since the fix changed the ground's markings on every map. Units still moonwalk.",
+    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, to a crash at the edge of Crow's Bridge being fixed in 0.7, and to the ground meeting the walls of Crow's Bridge's bridge in 0.8. The crash fix works for every map, not just Crow's Bridge. With a screenshot, Keep then showed that the game didn't draw the bridge's deck, so units seemed to walk on air; that is fixed in 0.9. He can no longer see the floating houses on Tandem. His latest report: multiplayer levels end at once because no teams are present, which is our next job. He checked water and riverbanks in 0.9 and sees no problems. He then reported that explosions leave a black or streaky patch on the ground, which we can reproduce and are investigating. Units still moonwalk.",
     8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units come next, after the multiplayer fix.",
     9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played. On 3 November someone converted Strling2, Mooon6 and nz40_v2; we have asked here how they went.",
 }
@@ -736,7 +736,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-11"
+DOCKET_UPDATED = "2026-11-15"
 DOCKET = {
     "Working on now": [
         "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels load but end at once, because no teams are present, and flags and balls are missing. Keep found it. First we compare how The Fallen Lords and Myth II store each team's units and the game pieces, then fix the converter and play one in the game.",
@@ -744,9 +744,10 @@ DOCKET = {
     "Up next": [
         "Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit's size in a place Myth II doesn't have, and the converter drops it. We will find where Magma's ports keep it, and carry it across.",
         "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
+        "Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black or streaky for a moment. Keep found it and sent a screenshot, and we can reproduce it. Changing the explosion's numbers to Magma's changed the black patch, so the effect matters, but the cause looks to be in how the game redraws the ground afterwards. Keep is checking whether stock Myth II does it too; we will test the ground's level-of-detail data next.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
         "Unit behaviour: Forest Giants and Trow that won't attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.",
-        "Water and banks: version 0.9 changed the ground's markings on every map, and they may also decide where units can walk. We are watching for units that now cross water, or are stopped where they could walk before.",
+        "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [
         "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",

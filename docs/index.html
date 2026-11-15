@@ -30,7 +30,7 @@
 <main class="wrap">
 <section class="release docket" aria-labelledby="docket">
 <h2 id="docket">What we're working on</h2>
-<p class="meta">Updated 11 November 2026. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
+<p class="meta">Updated 15 November 2026. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
 <h3>Working on now</h3>
 <ul>
 <li>Multiplayer levels: Sir Mauriac&#x27;s Tale&#x27;s free-for-all and team levels load but end at once, because no teams are present, and flags and balls are missing. Keep found it. First we compare how The Fallen Lords and Myth II store each team&#x27;s units and the game pieces, then fix the converter and play one in the game.</li>
@@ -39,9 +39,10 @@
 <ul>
 <li>Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit&#x27;s size in a place Myth II doesn&#x27;t have, and the converter drops it. We will find where Magma&#x27;s ports keep it, and carry it across.</li>
 <li>Unit animations: units jog on the spot after they stop moving (the &quot;moonwalking&quot;; the space bar stops it for now), and some walking frames are missing. The two games list each unit&#x27;s animations differently, and part of our mapping is a guess. We will check it against Magma&#x27;s units.</li>
+<li>Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black or streaky for a moment. Keep found it and sent a screenshot, and we can reproduce it. Changing the explosion&#x27;s numbers to Magma&#x27;s changed the black patch, so the effect matters, but the cause looks to be in how the game redraws the ground afterwards. Keep is checking whether stock Myth II does it too; we will test the ground&#x27;s level-of-detail data next.</li>
 <li>Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords&#x27; format, not translated. We will translate it, starting with the effects Keep has seen fail.</li>
 <li>Unit behaviour: Forest Giants and Trow that won&#x27;t attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.</li>
-<li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map, and they may also decide where units can walk. We are watching for units that now cross water, or are stopped where they could walk before.</li>
+<li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map. Keep has checked, and sees no problems with where units can walk.</li>
 </ul>
 <h3>Later</h3>
 <ul>
