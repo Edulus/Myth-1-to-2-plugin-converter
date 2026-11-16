@@ -170,6 +170,8 @@ def unresolved_references(mono, id_map=None):
     missing = {}
 
     def note(tag_type, tag_id):
+        if tag_type == b"scen" and tag_id in mesh_module.MYTH_II_NETGAME_SCENERY:
+            return  # Myth II's own are used, not carried
         resolved = id_map.map_id(tag_type, tag_id) if id_map else tag_id
         if (tag_type, resolved) not in present:
             missing[(tag_type, tag_id)] = missing.get((tag_type, tag_id), 0) + 1
@@ -657,8 +659,13 @@ def is_engine_facing(tag):
     14; in-engine, every level crashed in ``__output`` at the end-game screen.
     Internal *art* (``.256``, ``core``) is not left out: TFL projectiles and
     effects index it by sequence, and expect TFL's.
+
+    Also the netgame flags and balls (`mesh.MYTH_II_NETGAME_SCENERY`): Myth II
+    has its own, which the engine recognises and the converted copies are not.
     """
     if tag.tag_type in ENGINE_FACING_TYPES:
+        return True
+    if tag.tag_type == b"scen" and tag.tag_id in mesh_module.MYTH_II_NETGAME_SCENERY:
         return True
     name = (tag.name or "").strip().lower()
     return tag.tag_type in (b"stli", b"text") and name.startswith("internal")

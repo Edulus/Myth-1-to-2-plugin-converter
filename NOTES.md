@@ -1870,3 +1870,29 @@ in Bungie's maps (assassin targets 0x800, stampede herds 0x400, heroes missing
 one type) depend on how each map was authored and are not derived: they are
 marked for every type until a rule for them is found. 0.11. The `version` 7 to
 11 change of 0.10 did not fix the explosion glitch, which Keep reproduced on 0.10.
+
+
+### Flags and balls: Myth II's own (0.12)
+
+With 0.11 units and scenery appeared in hosted games but the flags and balls
+did not (Keep, Q7). The bundled TFL copies are the cause. Seven share an id with
+a Myth II tag (`neb1`-`neb5`, `nebo`, `necb`, `nect`, `nef1`-`nef5`), so they
+override Myth II's own; the converted `nef1` differs from Myth II's in the
+collection it names (`baob` against `inob`) and in a flag word at byte 16 (4 in
+Myth II's, 0 in ours), and the engine does not treat it as a flag. Four have
+ids Myth II lacks: `neto`, `nefl`, `nedf`, `nelm`, which are Myth II's `nest`,
+`nelf`, `netf`, `neko` (checked by name in `small install`).
+
+So the converter no longer carries them (`MYTH_II_NETGAME_SCENERY`, via
+`is_engine_facing`), points maps at Myth II's ids (`NETGAME_OBJECT_IDS`), and
+does not report them unresolved. Only the rugby ball and goal, which Myth II
+has no counterpart for, are still carried, with a mask of 0.
+
+Not yet understood: Keep found that opening a converted mesh in Loathing and
+saving it with any trivial change makes the explosion ripple glitch disappear,
+on 0.9, 0.10 and 0.11 alike. So Loathing writes something in the mesh that the
+converter writes differently. Candidates: the level-of-detail block, which the
+converter fills with zeros and whose structure is not per cell (Magma's shows a
+period-4 pattern of 0 and 0xF), the cell normals (copied from TFL, and equal to
+Magma's on about half of the cells), and the media coverage region. A pair of
+meshes, converted and Loathing-saved, would show which.

@@ -325,6 +325,20 @@ class TestNetgameTypes(unittest.TestCase):
         marked = self._mark([(S, tag, 0, 0, -1) for tag in wanted])
         self.assertEqual(list(wanted.values()), [e.netgame_flags for e in marked])
 
+    def test_netgame_objects_are_pointed_at_myth_iis_own(self):
+        """Converted copies of the flags and balls are not recognised by the
+        engine, and four have ids Myth II does not use (Keep, Q7)."""
+        S = mesh.MarkerType.SCENERY
+        renamed = {b"neto": b"nest", b"nefl": b"nelf", b"nedf": b"netf", b"nelm": b"neko"}
+        same = [b"neb1", b"neb5", b"nef1", b"nef5", b"nect", b"nebo", b"necb", b"nerb", b"nerg"]
+        marked = self._mark([(S, tag, 0, 0, -1) for tag in list(renamed) + same])
+        self.assertEqual(list(renamed.values()) + same, [e.marker_tag for e in marked])
+
+    def test_only_scenery_is_pointed_elsewhere(self):
+        """A unit that happens to share an id with a netgame object keeps it."""
+        marked = self._mark([(mesh.MarkerType.UNIT, b"nefl", 0, 0, 0)])
+        self.assertEqual((b"nefl", 0xFFFF), (marked[0].marker_tag, marked[0].netgame_flags))
+
     def test_other_kinds_of_entry_are_left_alone(self):
         kinds = (mesh.MarkerType.OBSERVER, mesh.MarkerType.AMBIENT_SOUND, mesh.MarkerType.PROJECTILE,
                  mesh.MarkerType.LOCAL_PROJECTILE_GROUP)
@@ -332,7 +346,7 @@ class TestNetgameTypes(unittest.TestCase):
         self.assertEqual([0] * 4, [e.netgame_flags for e in marked])
 
     def test_nothing_else_about_an_entry_changes(self):
-        specs = [(mesh.MarkerType.UNIT, b"ghol", 0, 6, 3), (mesh.MarkerType.SCENERY, b"nefl", 0, 0, -1)]
+        specs = [(mesh.MarkerType.UNIT, b"ghol", 0, 6, 3), (mesh.MarkerType.SCENERY, b"tree", 0, 0, -1)]
         before = self._entries(specs)
         after = mesh.mark_netgame_types(before, 2)
         self.assertEqual(len(before), len(after))

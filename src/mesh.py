@@ -991,13 +991,28 @@ NETGAME_OBJECT_MASKS = {
 }
 
 
+# Myth II already has every netgame object but the rugby ones, and its engine
+# recognises a flag or ball by its own tag. TFL's copies are not recognised:
+# bundled, `nef1` overrides Myth II's with a body that lacks the netgame marking
+# (a flag word that is 4 in Myth II's and 0 in the converted one), and four have
+# ids Myth II does not know at all (Keep, Q7). So the converter leaves them out
+# and points maps at Myth II's own, under the ids it uses.
+NETGAME_OBJECT_IDS = {
+    b"neto": b"nest",  # steal the bacon ball
+    b"nefl": b"nelf",  # last man flag
+    b"nedf": b"netf",  # territories flag
+    b"nelm": b"neko",  # king of the hill flag
+}
+MYTH_II_NETGAME_SCENERY = frozenset(NETGAME_OBJECT_MASKS) - {b"nerb", b"nerg"}
+
+
 def mark_netgame_types(palette_buffer, entry_count):
     """Set each palette entry's netgame types, which TFL leaves empty.
 
     ``palette_buffer`` is a TFL palette (its tag ids still TFL's). Scenery,
     units, models and animations appear in every game type, except the netgame
-    objects (flags and balls), which appear only in theirs. Returns the new
-    buffer, the same size.
+    objects (flags and balls), which appear only in theirs and are pointed at
+    Myth II's own (`NETGAME_OBJECT_IDS`). Returns the new buffer, the same size.
     """
     out = bytearray(palette_buffer)
     for i in range(entry_count):
@@ -1009,10 +1024,11 @@ def mark_netgame_types(palette_buffer, entry_count):
             continue
         if marker_type not in NETGAME_MARKED_TYPES:
             continue
-        mask = NETGAME_ALL_TYPES
+        mask, tag = NETGAME_ALL_TYPES, entry.marker_tag
         if marker_type == MarkerType.SCENERY:
-            mask = NETGAME_OBJECT_MASKS.get(entry.marker_tag, mask)
-        out[offset:offset + MARKER_PALETTE_ENTRY_SIZE] = entry.replace(netgame_flags=mask).encode()
+            mask = NETGAME_OBJECT_MASKS.get(tag, mask)
+            tag = NETGAME_OBJECT_IDS.get(tag, tag)
+        out[offset:offset + MARKER_PALETTE_ENTRY_SIZE] = entry.replace(netgame_flags=mask, marker_tag=tag).encode()
     return bytes(out)
 
 

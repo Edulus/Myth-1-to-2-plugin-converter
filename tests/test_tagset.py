@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from src import codec, idmap, reader  # noqa: E402
+from src import codec, idmap, mesh, reader  # noqa: E402
 from src.convert import plugin as convert_plugin  # noqa: E402
 
 from . import fixtures  # noqa: E402
@@ -177,3 +177,49 @@ class TestBundleStock(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestNetgameScenery(unittest.TestCase):
+    """Myth II has its own flags and balls; the converted copies are not used."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = pathlib.Path(self.tmp.name)
+        self.plugin = self.dir / "plugin.gor"
+        self.plugin.write_bytes(fixtures.build_tfl_mono(fixtures.MESH_TAGS))
+        self.stock = self.dir / "TAGS.GOR"
+        self.stock.write_bytes(fixtures.build_tfl_mono([
+            (b"netgame flag 1", b"scen", b"nef1", bytes(128)),
+            (b"netgame last man flag", b"scen", b"nefl", bytes(128)),
+            (b"netgame rugby ball", b"scen", b"nerb", bytes(128)),
+            (b"a tree", b"scen", b"tree", bytes(128)),
+        ]))
+        self.out = self.dir / "ZZ out"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_the_netgame_flags_and_balls_are_not_carried_in(self):
+        convert_plugin.convert_file(self.plugin, self.out, stock_paths=[self.stock], all_stock=True)
+        ids = {(t.tag_type, t.tag_id) for t in reader.read(self.out).tags}
+        self.assertNotIn((b"scen", b"nef1"), ids)
+        self.assertNotIn((b"scen", b"nefl"), ids)
+
+    def test_other_scenery_and_the_rugby_objects_still_are(self):
+        convert_plugin.convert_file(self.plugin, self.out, stock_paths=[self.stock], all_stock=True)
+        ids = {(t.tag_type, t.tag_id) for t in reader.read(self.out).tags}
+        self.assertIn((b"scen", b"tree"), ids)
+        self.assertIn((b"scen", b"nerb"), ids, "Myth II has no rugby objects of its own")
+
+    def test_a_map_that_places_them_does_not_report_them_unresolved(self):
+        palette = mesh.MarkerPaletteEntry.build(
+            type=int(mesh.MarkerType.SCENERY), flags=0, marker_tag=b"nefl", team_index=-1, netgame_flags=0
+        ).encode()
+        import struct
+        offsets = {n: s for _, n, s, _ in mesh.TFLMeshHeader._layout if n}
+        body = bytearray(fixtures.mesh_body(trailing=palette))
+        struct.pack_into(">L", body, offsets["marker_palette_entries"], 1)
+        struct.pack_into(">L", body, offsets["marker_palette_offset"], 0)
+        struct.pack_into(">L", body, offsets["marker_palette_size"], len(palette))
+        mono = reader.read_bytes(fixtures.build_tfl_mono([(b"a map", b"mesh", b"map1", bytes(body))]))
+        self.assertNotIn((b"scen", b"nefl"), convert_plugin.unresolved_references(mono))
