@@ -19,9 +19,20 @@ So there are two conversions:
   needs and as `Magma - The Fallen Lords v1.9` does by hand. Against the 24
   monsters both carry, Magma's per-monster objects hold the TFL monster's
   ``maximum_vitality`` exactly, and its 7 ``effect_modifiers`` as the first 7 of
-  9 (the 2 Myth II adds, gas and confusion, get 1.0). Magma's scales are
-  0.7-0.9x TFL's -- retuned for its repainted sprites; with TFL's own sprites,
-  TFL's scale is kept.
+  9 (the 2 Myth II adds, gas and confusion, get 1.0).
+
+**Scale is converted, not copied.** Myth II draws the same sprite larger than
+TFL does at the same scale: copied verbatim, converted units stood about a
+third too tall (thralls stuck out of water they stand in up to the chest in
+TFL). Myth II's own stock tags ship seven of TFL's collections with the same
+pixels -- thrall, dwarf, ghol, soulless, spider, avatara, balor -- and Bungie
+gave every one of them TFL's scale times 0.728: the standard 0.934 became 0.680
+for the thrall, dwarf, ghol and avatara, the spider's 0.797 became 0.590, the
+balor's 1.188 became 0.879. Bungie also cut the random spread on top to about a
+twelfth (the thrall's +0.129 became +0.012, the dwarf's +0.117 became +0.008).
+`Magma - The Fallen Lords v1.9` reuses those values. So: the lower bound times
+`SCALE_FACTOR`, the delta divided by `SCALE_DELTA_DIVISOR`. Two units Bungie
+retuned by eye instead (villagers x0.91, the Shade x0.80) are not modelled.
 """
 
 import struct
@@ -40,6 +51,16 @@ BASIC_OBJECT_PHYSICS = (-2, 0x0080, 0)  # gravity, elasticity, terminal velocity
 MONSTER_FLAGS = 0x0003  # DRAW_SELECTION_BOX | DRAW_VITALITY_BOX, as on Magma's
 EFFECT_CHANNELS = 9
 TFL_EFFECT_CHANNELS = 7
+
+# TFL monster scale -> Myth II object scale (see the module docstring). 174/239
+# maps TFL's standard 0.934 (239) onto Bungie's 0.680 (174) exactly.
+SCALE_FACTOR = 174 / 239
+SCALE_DELTA_DIVISOR = 12
+
+
+def monster_scale(lower_bound, delta):
+    """Myth II's ``(lower_bound, delta)`` for a TFL monster's scale, both 8.8 fixed."""
+    return round(lower_bound * SCALE_FACTOR), round(delta / SCALE_DELTA_DIVISOR)
 
 
 def _build(flags, physics, vitality, scale, effects):
@@ -77,6 +98,6 @@ def for_monster(tfl_mons, physics=BASIC_OBJECT_PHYSICS):
         MONSTER_FLAGS,
         physics,
         (tfl_mons.maximum_vitality, 0),
-        (tfl_mons.object_scale_lower_bound, tfl_mons.object_scale_delta),
+        monster_scale(tfl_mons.object_scale_lower_bound, tfl_mons.object_scale_delta),
         effects,
     )

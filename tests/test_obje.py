@@ -62,8 +62,25 @@ class TestMonsterObjects(unittest.TestCase):
         flags, _physics, vitality, scale, carried = unpack(objects[object_tag])
         self.assertEqual(3, flags)
         self.assertEqual((1408, 0), vitality)
-        self.assertEqual((239, 18), scale)
+        self.assertEqual(obje.monster_scale(239, 18), scale)
         self.assertEqual((256, 256, 128, 256, 256, 288, 256, 256, 256), carried)
+
+    def test_scale_matches_bungies_for_the_tfl_sprites_myth_ii_ships(self):
+        """Myth II's stock tags carry these TFL collections with the same
+        pixels; Bungie's object scales for them, against TFL's monster scales.
+        Copied verbatim, converted units were drawn about a third too large."""
+        bungie = {  # unit: (TFL lower bound, delta) -> Myth II's
+            "thrall": ((239, 33), (174, 3)),
+            "dwarf": ((239, 30), (174, 2)),
+            "ghol": ((239, 30), (174, 2)),
+            "spider": ((204, 26), (151, 3)),
+            "balor": ((304, 0), (225, 0)),
+        }
+        for unit, (tfl, sb) in bungie.items():
+            with self.subTest(unit):
+                lower, delta = obje.monster_scale(*tfl)
+                self.assertLessEqual(abs(lower - sb[0]), 4)  # within 0.016
+                self.assertLessEqual(abs(delta - sb[1]), 1)
 
     def test_carried_fields_are_no_longer_reported_as_dropped(self):
         _, report = self.convert(maximum_vitality=1408)
