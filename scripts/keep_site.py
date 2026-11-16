@@ -35,7 +35,7 @@ COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 # A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
 DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
 DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
-DOWNLOAD_SHA256 = "8bf23ceb289c8e4a74441bfd46d4c8842118fee036d7a49341d8c09fcc89c452"
+DOWNLOAD_SHA256 = "c16b4972cde6440768d3aa97ad6cc8cde0140dff1e4c0b0d069fc438b500abd3"
 DOWNLOAD_MB = 223
 
 UPDATES = [
