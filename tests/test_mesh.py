@@ -592,6 +592,11 @@ class TestMeshBodyConversion(unittest.TestCase):
 
         # The body actually contains everything the header promises.
         trailing = converted[mesh.MESH_HEADER_SIZE :]
+
+        # Never zero: no real Myth II mesh has a zero word here, and zeros left
+        # black ground after explosions until Loathing re-saved the map.
+        lod = trailing[after.mesh_LOD_data_offset : after.mesh_LOD_data_offset + after.mesh_LOD_data_size]
+        self.assertEqual(b"\x00\xf0" * ((32 * 32) // 4), lod)
         self.assertEqual(after.data_size, len(trailing))
         self.assertLessEqual(
             after.mesh_LOD_data_offset + after.mesh_LOD_data_size, len(trailing)

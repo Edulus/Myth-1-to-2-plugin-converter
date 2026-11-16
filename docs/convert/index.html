@@ -30,18 +30,18 @@
 <main class="wrap">
 
 <section class="release" aria-labelledby="release">
-<h2 id="release">Version 0.13 &middot; built 16 November 2026</h2>
+<h2 id="release">Version 0.14 &middot; built 16 November 2026</h2>
 <h3>Please test next</h3>
 <ul>
-<li>Unit size: do units look the right size next to trees, buildings and each other? Do thrall standing in deep water now sit low in it, as in The Fallen Lords?</li>
-<li>Wild River in Sir Mauriac&#x27;s Tale is a good level to check thrall in water.</li>
-<li>Any unit that now looks too small or too large: name it and the level. Villagers and Shades are the likeliest.</li>
-<li>Multiplayer: do the flags and balls appear in their own games (0.12)? Does Assassin work on Sir Mauriac&#x27;s two Bagrada in Winter maps?</li>
-<li>Explosions: the black or streaky ground after satchels and wights is still being worked on.</li>
+<li>Explosions: convert a plugin again with this version, then set off satchels, wights and fireballs. Is the ground still black, streaky or mirrored afterwards?</li>
+<li>If it is, which level, and does saving the map in Loathing still cure it?</li>
+<li>Unit size (0.13): do thrall in deep water sit low now? Does any unit look too small or too large?</li>
+<li>Multiplayer: do the flags and balls appear in their own games? Does Assassin work on Sir Mauriac&#x27;s two Bagrada in Winter maps?</li>
 </ul>
 <p>Report what you find in <a href="../q/7.html">Q7: feature and bug reports</a>, with the version number.</p>
 <h3>What changed</h3>
 <ul class="changes">
+<li><strong>0.14</strong> (16 November 2026): A likely fix for the black or streaky ground after explosions. Keep sent the same converted map before and after saving it in Loathing, and the main thing Loathing rewrites is the map&#x27;s level-of-detail data. The converter wrote it as zeros. No map made by Bungie or Project Magma has a single zero there, so the converter now writes what Loathing writes.</li>
 <li><strong>0.13</strong> (16 November 2026): Units are now drawn at Myth II&#x27;s size. They were about a third too large, so thrall stood out of the water. Myth II&#x27;s own files hold the thrall, dwarf, ghol, soulless and spider of The Fallen Lords with the same pictures, and Bungie drew each at 0.73 of its old size; converted units now get the same. Ambient sounds are also converted, and one damaged part of a plugin no longer stops the whole conversion.</li>
 <li><strong>0.12</strong> (16 November 2026): Free-for-all and team maps now use Myth II&#x27;s own flags and balls. The copies the converter made were not recognised by the game, so a hosted game still showed no flags or balls even after 0.11 made the units and scenery appear.</li>
 <li><strong>0.11</strong> (15 November 2026): Free-for-all and team maps now tell Myth II which game types their units, scenery, flags and balls belong to. Before, every one was marked as appearing in no game, so a hosted game started with no teams, flags or balls and ended at once. Keep found the cause.</li>
@@ -57,7 +57,7 @@
 <li><strong>0.1</strong> (26 October 2026): First beta: convert a plugin in your browser.</li>
 </ul>
 </section>
-<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=efcddaa686b4" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.13">
+<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=acf05eafc992" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.14">
 <p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> Only the plugin's name, its number of levels, the converter version and the date are added to the public list further down, and only while the box below stays ticked. Untick it to keep your conversion off the list.</p>
 <label class="share"><input type="checkbox" id="share" checked> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">

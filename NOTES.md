@@ -1915,3 +1915,36 @@ converter fills with zeros and whose structure is not per cell (Magma's shows a
 period-4 pattern of 0 and 0xF), the cell normals (copied from TFL, and equal to
 Magma's on about half of the cells), and the media coverage region. A pair of
 meshes, converted and Loathing-saved, would show which.
+
+
+## 27. The explosion glitch: what Loathing rewrites (Keep's pair, 16 Nov)
+
+Keep sent one converted mesh twice (Q7): "virgin", exported with Untag from a
+crazyglue plugin converted by 0.12, and "loathing", the same mesh after a
+trivial edit and save in Loathing, verified free of the black ground after
+explosions. Compared block by block:
+
+| Part | Changed | What |
+|---|---|---|
+| Mesh header | 1 field | `connectors_offset` 0 -> end of data (the block is empty either way) |
+| Heights, water heights, models | nothing | no geometry changed |
+| Cell normals (bytes 2-3) | 14,299 of 25,600 cells | recomputed; not a plain slope of the heights, encoding unknown |
+| Cell flags | 438 cells | bit 0x01 (`VERTEX_IS_MEDIA`) added |
+| `first_object_index` | 1,369 cells | runtime values, not 0xFFFF |
+| Marker palette bytes 28-31 | 39 entries | little-endian runtime counts and indexes |
+| Markers | all | reordered; Keep's own edit is among them |
+| **Level-of-detail block** | **all** | **ours all zero; Loathing's `00f0` in 5,892 of 6,400 words, `fff0` in 508** |
+
+The LOD block is one 16-bit word per four cells. Across every real Myth II
+mesh available (Bungie's 65, Magma - The Fallen Lords v1.9's 40, The Fallen
+Levels v2's 52: 1,353,472 words) **not one word is zero**. The second byte's
+high nibble is 0xF in 99.3%, the first byte 0x00 (92%) or 0xFF; Bungie's carry
+flag bits in the low nibble too (`00ff`, `00f1`, `00f2`, `00f4`, `00f8`).
+Loathing writes only the minimal `00f0`/`fff0`; which groups get `fff0` follows
+neither roughness nor water, and is not understood. Ours was the only all-zero
+LOD block in existence, and the glitch is a rendering one, so 0.14 writes `00f0`
+everywhere (`mesh.build_lod_data`). Not yet confirmed in-game.
+
+If the glitch survives 0.14, the next suspects from the same pair are the
+recomputed normals and the water-vertex flag.
+

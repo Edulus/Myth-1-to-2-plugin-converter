@@ -946,13 +946,23 @@ def build_lod_data(submesh_width, submesh_height):
     40 from a community TFL port -- carries this block at exactly half a byte
     per cell, and none has it empty, so it cannot simply be omitted.
 
-    Its contents are rendering detail hints whose encoding is not understood
-    here; real blocks are roughly half zero bytes with 0xF0 and 0xFF common.
-    Zero-filling is the conservative choice: correctly sized, and uniform rather
-    than randomly wrong.
+    It is one 16-bit word per four cells. Across 157 real Myth II meshes
+    (Bungie's 65, Magma's 92; 1.35 million words) **no word is zero**: the
+    second byte's high nibble is 0xF in 99.3% of them, the first byte 0x00 or
+    0xFF, and the low nibble holds flag bits (``00f0``, ``00ff``, ``00f1``,
+    ``00f4``, ...) whose meaning is not known. Up to 0.13 the converter wrote
+    zeros, and explosions left black, streaky ground; saving the same mesh in
+    Loathing with a trivial change cured it (Keep, Q7). Keep's before-and-after
+    pair of one converted mesh shows Loathing writing ``00f0`` in 5,892 of 6,400
+    words and ``fff0`` in the rest, with no height, water or model changed
+    (NOTES.md section 27). So every word is written as ``00f0``, Loathing's
+    base value.
     """
     columns, rows = cell_counts(submesh_width, submesh_height, formats.SB)
-    return bytes((columns * rows) // 2)
+    return LOD_BASE_WORD * ((columns * rows) // 4)
+
+
+LOD_BASE_WORD = b"\x00\xf0"
 
 
 # A palette entry says which netgame types it appears in, one bit per type (the

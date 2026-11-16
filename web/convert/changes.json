@@ -1,4 +1,11 @@
 [
+ {"version": "0.14", "date": "2026-11-16", "change": "A likely fix for the black or streaky ground after explosions. Keep sent the same converted map before and after saving it in Loathing, and the main thing Loathing rewrites is the map's level-of-detail data. The converter wrote it as zeros. No map made by Bungie or Project Magma has a single zero there, so the converter now writes what Loathing writes.",
+  "test": [
+   "Explosions: convert a plugin again with this version, then set off satchels, wights and fireballs. Is the ground still black, streaky or mirrored afterwards?",
+   "If it is, which level, and does saving the map in Loathing still cure it?",
+   "Unit size (0.13): do thrall in deep water sit low now? Does any unit look too small or too large?",
+   "Multiplayer: do the flags and balls appear in their own games? Does Assassin work on Sir Mauriac's two Bagrada in Winter maps?"
+  ]},
  {"version": "0.13", "date": "2026-11-16", "change": "Units are now drawn at Myth II's size. They were about a third too large, so thrall stood out of the water. Myth II's own files hold the thrall, dwarf, ghol, soulless and spider of The Fallen Lords with the same pictures, and Bungie drew each at 0.73 of its old size; converted units now get the same. Ambient sounds are also converted, and one damaged part of a plugin no longer stops the whole conversion.",
   "test": [
    "Unit size: do units look the right size next to trees, buildings and each other? Do thrall standing in deep water now sit low in it, as in The Fallen Lords?",
