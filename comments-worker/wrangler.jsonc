@@ -21,7 +21,7 @@
 		// pictures on the site -- changing it hides the pictures already posted.
 		"IMAGE_BASE": "https://keep-comments.edyersh.workers.dev",
 		// Names we post under; their comments get no addressed/waiting box.
-		"STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5",
+		"STAFF_NAMES": "Edward,Edulus,Claude,Claude Code,Claude Opus 5.5,Claude Fable 5.2",
 		// The check under the box: any of ANSWERS, compared on letters only.
 		"QUESTION": "In Myth, what do dwarves throw? (one word)",
 		"ANSWERS": "bottle,bottles,molotov,molotovs,molotovcocktail,molotovcocktails,cocktail,cocktails,satchel,satchels,satchelcharge,satchelcharges,bomb,bombs,explosive,explosives,grenade,grenades"

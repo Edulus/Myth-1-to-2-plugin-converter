@@ -30,17 +30,18 @@
 <main class="wrap">
 <section class="release docket" aria-labelledby="docket">
 <h2 id="docket">What we're working on</h2>
-<p class="meta">Updated 15 November 2026. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
+<p class="meta">Updated 16 November 2026. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
 <h3>Working on now</h3>
 <ul>
-<li>Multiplayer levels: Sir Mauriac&#x27;s Tale&#x27;s free-for-all and team levels loaded but ended at once, with no teams, flags, balls or assassins. Keep traced it to each unit, scenery piece, flag and ball saying it appears in no game type. Since 0.11 the units and scenery appear. The flags and balls did not, because the copies the converter made are not recognised by the game; 0.12 uses Myth II&#x27;s own. Keep is testing it; assassin targets and some special units may still need their own rule.</li>
+<li>Multiplayer levels: Sir Mauriac&#x27;s Tale&#x27;s free-for-all and team levels loaded but ended at once, with no teams, flags, balls or assassins. Keep traced it to each unit, scenery piece, flag and ball saying it appears in no game type. Since 0.11 the units and scenery appear. The flags and balls did not, because the copies the converter made are not recognised by the game; 0.12 uses Myth II&#x27;s own. Keep is testing it. Assassin targets cannot be worked out from The Fallen Lords&#x27; maps: none of the 219 we checked says which unit is the target, so we need to hear whether Assassin works in the game.</li>
+<li>Unit size: fixed in 0.13 and waiting for testers. Units were drawn about a third too large, so thrall stood out of the water. Myth II&#x27;s own files hold several Fallen Lords units with the same pictures, and Bungie drew each at 0.73 of its old size; the converter now does the same. Please check thrall in deep water, and say if any unit now looks wrong.</li>
 </ul>
 <h3>Up next</h3>
 <ul>
 <li>Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.</li>
-<li>Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit&#x27;s size in a place Myth II doesn&#x27;t have, and the converter drops it. We will find where Magma&#x27;s ports keep it, and carry it across.</li>
 <li>Unit animations: units jog on the spot after they stop moving (the &quot;moonwalking&quot;; the space bar stops it for now), and some walking frames are missing. The two games list each unit&#x27;s animations differently, and part of our mapping is a guess. We will check it against Magma&#x27;s units.</li>
-<li>Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black, streaky or mirrored for a moment. Keep traced it to the ripple each explosion sends through the ground, and found that opening the map in Loathing and saving it with any small change makes the glitch go away, on every version. So Loathing writes something in the map that our converter writes differently. We have asked him for the same map before and after the save, to see exactly what changes.</li>
+<li>Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black, streaky or mirrored for a moment. Keep traced it to the ripple each explosion sends through the ground, and found that opening the map in Loathing and saving it with any small change makes the glitch go away, on every version. So Loathing writes something in the map that our converter writes differently. We have asked him for the same map before and after the save, to see exactly what changes. Meanwhile we are studying the one part of a map the converter cannot yet write properly, its level-of-detail data, using Bungie&#x27;s and Magma&#x27;s maps as examples.</li>
+<li>Water: the tag that describes water is still copied in The Fallen Lords&#x27; format, and a comparison with Magma&#x27;s shows it differs. It needs translating.</li>
 <li>Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords&#x27; format, not translated. We will translate it, starting with the effects Keep has seen fail.</li>
 <li>Unit behaviour: Forest Giants and Trow that won&#x27;t attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.</li>
 <li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map. Keep has checked, and sees no problems with where units can walk.</li>
@@ -48,7 +49,7 @@
 <h3>Later</h3>
 <ul>
 <li>The warning that appears whenever TFL Gameplay (vTFL) is ticked.</li>
-<li>The outer edge of some maps (the south and east edges of Crow&#x27;s Bridge) sits higher than in Magma&#x27;s port.</li>
+<li>The outer edge of Crow&#x27;s Bridge (south and east) sits differently from Magma&#x27;s port. We checked: Magma adjusted that map&#x27;s edges by hand, so this is not a converter error.</li>
 <li>One bush on the edge of a trench on Crow&#x27;s Bridge may still float.</li>
 </ul>
 <h3>How we work</h3>

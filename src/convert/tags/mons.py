@@ -34,10 +34,10 @@ rather than hidden (`SB_ONLY_DEFAULTS`).
 damage-vulnerability profile (close/long-range physical, explosive, electric,
 magical, paralysis, stone). Myth II moved this concept to the `obje` tag
 (`obje.effect_modifiers`, 9 channels) and a single damage type per projectile
-(`proj.ProjDmgFmt`) -- there is no field on `mons` itself to receive it. Wiring
-that up means writing to a *different* tag (`mons.object_tag` -> `obje`), which
-is out of scope here and is reported as a dropped field like any other, not
-silently discarded.
+(`proj.ProjDmgFmt`) -- there is no field on `mons` itself to receive it. This
+converter reports it as dropped; `src.convert.plugin._give_monsters_objects`
+then builds each monster its own `obje` carrying it, with the monster's scale
+and vitality, and removes those "dropped" warnings.
 """
 
 from ... import codec, formats

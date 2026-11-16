@@ -40,9 +40,10 @@ every later parameter in the buffer and is a plausible cause of the
 
 **What this still does not do:** tag references *inside* map-action parameter
 data (a `SOUND` or `PROJECTILE`-typed parameter's element bytes) are not yet
-remapped through the ID map, only the palette's. Terrain is upsampled by
-copying each cell into a 2x2 block, media coverage is copied verbatim, and mesh
-LOD data is zero-filled at the new size.
+remapped through the ID map, only the palette's. Terrain becomes a 2x2 block
+per TFL cell with heights blended between neighbouring points (NOTES.md section
+20), media coverage is copied verbatim, and mesh LOD data is zero-filled at the
+new size because its encoding is not understood.
 """
 
 import struct

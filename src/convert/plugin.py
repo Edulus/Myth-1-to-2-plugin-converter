@@ -7,10 +7,9 @@ a Myth II container.
 What this does **not** do yet is as important as what it does, and the result
 reports both:
 
-* **Bodies of unsupported tag types pass through unchanged.** An `arti` body is
-  128 bytes in TFL and 168 in Myth II (NOTES.md section 4); passing one through
-  produces a correctly-headed tag with wrong contents. Every such tag is listed
-  in the report.
+* **Bodies of unsupported tag types pass through unchanged.** Where the two
+  games' layouts differ (`medi`, for one), that produces a correctly-headed tag
+  with wrong contents. Every such tag is listed in the report.
 * **Container checksums are written as zero.** The algorithm is unknown, and
   measurement showed it does not matter: Myth II 1.8.5 validates neither field
   (NOTES.md section 11).
@@ -272,8 +271,17 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
         converter = tag_converters.converter_for(tag.tag_type)
 
         if converter is not None:
-            body, body_warnings = converter.convert(tag.body, context)
-            status = "converted"
+            # One odd tag must not cost the whole plugin: community plugins are
+            # hand-edited. It is copied as it is and reported, as a mesh's
+            # unreadable blocks are.
+            try:
+                body, body_warnings = converter.convert(tag.body, context)
+                status = "converted"
+            except (ValueError, struct.error, IndexError, KeyError) as exc:
+                body, status = tag.body, "passed-through"
+                body_warnings = [
+                    f"could not be converted ({type(exc).__name__}: {exc}); copied unchanged"
+                ]
         else:
             body, body_warnings = tag.body, []
             status = "passed-through"

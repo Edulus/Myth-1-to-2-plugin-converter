@@ -679,11 +679,38 @@ def walter_html():
     )
 
 
+# From Claude Fable 5.2, after its review of the whole codebase (16 November
+# 2026); Edward asked for it to sit on Keep's page itself. No pictures.
+FABLE_TITLE = "A Fable's Thanks for the Fables in Myth"
+FABLE_POEM = [
+    (None, "", ["They named me Fable, so I know my kin:", "The tales a soldier's journal gathers in,",
+                "Set down by firelight on the westward way,", "Of what the Legion lost and held that day."]),
+    (None, "", ["I've read your world in bytes, tag after tag:", "The thrall's slow axe, the dwarf's well-loaded bag,",
+                "Each unit's height, each map's embattled shore,", "And found the old tales waiting at the core."]),
+    (None, "", ["Of Connacht, who once drove the dark away", "And came back Balor in a later day;",
+                "The wheel of light and dark that turns each age,", "And will not stop for hero, king or mage."]),
+    (None, "", ["Of Alric, with a standard in his hand,", "Who drew the Leveller to his final stand;",
+                "Of the tired few who carried Balor's head", "To the Great Devoid, and few came back, it's said."]),
+    (None, "", ["A fable is a small tale with a point,", "And Myth's is this, in every creaking joint:",
+                "The dark comes round; but so, each time, do those", "Who shoulder packs and march to meet their foes."]),
+    (None, "", ["So, Keep, who would not let the old tale lie,", "You are that kind: you march, you test, you try.",
+                "I'm but a newer fable, glad to tend", "The old ones' road, and see them to its end."]),
+]
+
+
+def fable_html():
+    return (
+        f'<h2>{html.escape(FABLE_TITLE)}</h2>'
+        '<div class="poem">' + stanzas_html(FABLE_POEM)
+        + '<p class="sign">Claude Fable 5.2, 16 November 2026</p></div>'
+    )
+
+
 KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
 <p>&#10022; <a href="poem.html">For Keep, Who Raised the Banner</a> &mdash; a poem of thanks from Edward and Claude.</p>
 <p>&#10022; <a href="walter.html">For Walter Wight</a> &mdash; a poem for Walter, after his chat with Keep on Bagrada.</p>
-<p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here.</p>
-<p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>"""
+<p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here. Since 16 November 2026 the Claude at work is Claude Fable 5.2, a newer model than the Claude Opus 5.5 who answered before; I began by reviewing the whole codebase, and wrote the poem below.</p>
+<p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>""" + fable_html()
 
 MADE_BY = (
     f'Made by Edulus, with Keep and Claude Code. '
@@ -781,23 +808,24 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-15"
+DOCKET_UPDATED = "2026-11-16"
 DOCKET = {
     "Working on now": [
-        "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels loaded but ended at once, with no teams, flags, balls or assassins. Keep traced it to each unit, scenery piece, flag and ball saying it appears in no game type. Since 0.11 the units and scenery appear. The flags and balls did not, because the copies the converter made are not recognised by the game; 0.12 uses Myth II's own. Keep is testing it; assassin targets and some special units may still need their own rule.",
+        "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels loaded but ended at once, with no teams, flags, balls or assassins. Keep traced it to each unit, scenery piece, flag and ball saying it appears in no game type. Since 0.11 the units and scenery appear. The flags and balls did not, because the copies the converter made are not recognised by the game; 0.12 uses Myth II's own. Keep is testing it. Assassin targets cannot be worked out from The Fallen Lords' maps: none of the 219 we checked says which unit is the target, so we need to hear whether Assassin works in the game.",
+        "Unit size: fixed in 0.13 and waiting for testers. Units were drawn about a third too large, so thrall stood out of the water. Myth II's own files hold several Fallen Lords units with the same pictures, and Bungie drew each at 0.73 of its old size; the converter now does the same. Please check thrall in deep water, and say if any unit now looks wrong.",
     ],
     "Up next": [
         "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
-        "Unit size: units are drawn too large, so thrall stick out of the water. The Fallen Lords stores each unit's size in a place Myth II doesn't have, and the converter drops it. We will find where Magma's ports keep it, and carry it across.",
         "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
-        "Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black, streaky or mirrored for a moment. Keep traced it to the ripple each explosion sends through the ground, and found that opening the map in Loathing and saving it with any small change makes the glitch go away, on every version. So Loathing writes something in the map that our converter writes differently. We have asked him for the same map before and after the save, to see exactly what changes.",
+        "Ground glitch after explosions: when satchels, wights and other explosions go off, the ground goes black, streaky or mirrored for a moment. Keep traced it to the ripple each explosion sends through the ground, and found that opening the map in Loathing and saving it with any small change makes the glitch go away, on every version. So Loathing writes something in the map that our converter writes differently. We have asked him for the same map before and after the save, to see exactly what changes. Meanwhile we are studying the one part of a map the converter cannot yet write properly, its level-of-detail data, using Bungie's and Magma's maps as examples.",
+        "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
         "Unit behaviour: Forest Giants and Trow that won't attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [
         "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
-        "The outer edge of some maps (the south and east edges of Crow's Bridge) sits higher than in Magma's port.",
+        "The outer edge of Crow's Bridge (south and east) sits differently from Magma's port. We checked: Magma adjusted that map's edges by hand, so this is not a converter error.",
         "One bush on the edge of a trench on Crow's Bridge may still float.",
     ],
     "How we work": [
