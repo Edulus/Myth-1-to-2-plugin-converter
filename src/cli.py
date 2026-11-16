@@ -277,6 +277,9 @@ def cmd_convert(args):
 
     for line in convert_plugin.format_report(report, str(args.inp), str(args.out)):
         print(line)
+    if args.audit:
+        args.audit.write_text(report.audit_csv(), encoding="utf-8")
+        print(f"Wrote the change list to {args.audit} ({len(report.audit):,} rows).")
     print(f"\nWrote {written:,} bytes.")
 
     if args.emit_decisions:
@@ -460,6 +463,11 @@ def build_parser():
     con.add_argument(
         "--all-stock", action="store_true",
         help="with --stock, bundle every stock tag, not just the ones the plugin uses",
+    )
+    con.add_argument(
+        "--audit", type=pathlib.Path, metavar="FILE",
+        help="write a CSV of every field the converter sets in monsters and their objects: "
+        "value in TFL, value in Myth II, what happened and why",
     )
     con.add_argument(
         "--emit-decisions", type=pathlib.Path, metavar="FILE",

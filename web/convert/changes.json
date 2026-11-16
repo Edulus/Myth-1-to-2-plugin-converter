@@ -1,4 +1,12 @@
 [
+ {"version": "0.16", "date": "2026-11-16", "change": "A likely fix for units jogging on the spot after they stop. The Fallen Lords leaves each unit's pause and turning animations empty, and Myth II plays the pause animation when a unit stops. Bungie's own Myth II versions of the same units fill them, with the unit's idle and moving animations; the converter now does the same. Also new, because Keep asked for it: after converting, you can save a change list, every setting the converter wrote in each unit with its old value, its new value and why, to check the converter's work.",
+  "test": [
+   "Moonwalking: do units stand still when they stop now, without pressing the space bar?",
+   "Turning: do units look right when they turn on the spot?",
+   "Change list: save it after converting and open it in a spreadsheet. Is anything in it wrong, unclear or missing?",
+   "Forest Giants and Trow (0.15): do they attack now?",
+   "Explosions (0.14): is the ground still black after satchels and wights?"
+  ]},
  {"version": "0.15", "date": "2026-11-16", "change": "Each unit now gets the pathfinding room Project Magma's port gives it, instead of one value for every unit. The Forest Giant gets 220 and the trow 154, where both had 77, which may be why they would not attack. Of the 17 monster settings Myth II has and The Fallen Lords does not, these are the only two that differ between units in Magma's port.",
   "test": [
    "Forest Giants and Trow: do they attack now when ordered to? If not, what do they do: walk up and stand, turn away, or not move at all?",

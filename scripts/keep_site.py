@@ -907,7 +907,7 @@ DOCKET = {
     ],
     "Up next": [
         "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
-        "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
+        "Unit animations: units jogged on the spot after they stopped (the \"moonwalking\"). Likely fixed in 0.16: The Fallen Lords leaves each unit's pause and turning animations empty, and Bungie's own Myth II versions of the same units fill them with the idle and moving animations, as the converter now does. Some walking frames may still be missing. Please test.",
         "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
         "Unit behaviour: Forest Giants and Trow that won't attack. In 0.15 each unit gets the pathfinding room Project Magma gave it, instead of one value for all: the Forest Giant 220 and the trow 154, where both had 77. That may be why they would not attack; please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",

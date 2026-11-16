@@ -225,10 +225,29 @@ def convert_sequence_indexes(tfl_bytes):
     shipped, so slots 0-15 are copied as-is and 16-25 are set to -1 (no
     sequence for that role), which is what "TFL never had this role" means in
     practice.
+
+    **Except pause and turning (slots 3 and 4).** TFL leaves them empty on
+    nearly every unit; Myth II fills them. Against the 24 stock TFL units in
+    both Myth II's own tags and Magma's port, Bungie gives an empty pause the
+    unit's idle animation in 16 (another standing one, holding or idle 2, in
+    most of the rest; empty in 1), and an empty turning its moving animation in
+    16. Left empty, a unit that stopped had no pause to play; that fits the
+    "moonwalking", units jogging on the spot after they stop (Keep). So an
+    empty pause takes idle_1 and an empty turning takes moving (NOTES.md
+    section 29).
     """
     values = list(struct_unpack_shorts(tfl_bytes, TFL_SEQUENCE_SLOTS))
     values += [-1] * (SB_SEQUENCE_SLOTS - TFL_SEQUENCE_SLOTS)
+    for slot, source in FILLED_FROM.items():
+        if values[slot] == -1:
+            values[slot] = values[source]
     return struct_pack_shorts(values)
+
+
+# Myth II slot -> the TFL slot whose animation fills it when TFL left it empty
+# (mythextract ``SequenceNames``: 0 idle_1, 1 moving, 3 pause, 4 turning).
+SEQUENCE_IDLE, SEQUENCE_MOVING, SEQUENCE_PAUSE, SEQUENCE_TURNING = 0, 1, 3, 4
+FILLED_FROM = {SEQUENCE_PAUSE: SEQUENCE_IDLE, SEQUENCE_TURNING: SEQUENCE_MOVING}
 
 
 def struct_unpack_shorts(data, count):

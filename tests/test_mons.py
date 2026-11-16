@@ -174,6 +174,22 @@ class TestAttackConversion(unittest.TestCase):
         self.assertEqual(tuple(tfl_values), out[:16])
         self.assertEqual((-1,) * 10, out[16:])
 
+    def test_empty_pause_and_turning_take_idle_and_moving(self):
+        """Bungie's own ports of TFL units fill these; left empty, units
+        jogged on the spot after stopping."""
+        import struct
+
+        tfl = [7, 8] + [-1] * 14
+        out = struct.unpack(">26h", mons.convert_sequence_indexes(struct.pack(">16h", *tfl)))
+        self.assertEqual((7, 8, -1, 7, 8), out[:5])
+
+    def test_a_pause_tfl_has_is_kept(self):
+        import struct
+
+        tfl = [7, 8, -1, 5, 6] + [-1] * 11
+        out = struct.unpack(">26h", mons.convert_sequence_indexes(struct.pack(">16h", *tfl)))
+        self.assertEqual((7, 8, -1, 5, 6), out[:5])
+
 
 class TestMonsBodyConversion(unittest.TestCase):
     def test_output_is_a_valid_myth_ii_mons_header(self):

@@ -23,6 +23,7 @@ import sys
 from dataclasses import dataclass, field
 
 from .. import (
+    audit as audit_module,
     codec,
     formats,
     idmap as idmap_module,
@@ -65,6 +66,8 @@ class ConversionReport:
     warnings: list = field(default_factory=list)
     entrypoints: list = field(default_factory=list)
     unresolved: dict = field(default_factory=dict)
+    # Field-by-field rows for people to check (src.audit), CSV via audit_csv().
+    audit: list = field(default_factory=list)
     source_tags: int = 0
     bundled_stock: int = 0
 
@@ -84,6 +87,9 @@ class ConversionReport:
 
     def renamed(self):
         return [o for o in self.outcomes if o.renamed]
+
+    def audit_csv(self):
+        return audit_module.to_csv(self.audit)
 
     def tag_warnings(self):
         return [(o, w) for o in self.outcomes for w in o.warnings]
@@ -316,7 +322,8 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
             )
         )
 
-    _give_monsters_objects(mono, converted_tags, report)
+    monster_objects = _give_monsters_objects(mono, converted_tags, report)
+    report.audit = audit_module.build(mono.tags, converted_tags, monster_objects)
 
     if len(converted_tags) > headers.INT16_MAX:
         raise ConversionError(
@@ -389,7 +396,10 @@ def _give_monsters_objects(mono, converted_tags, report):
     from its TFL header, under the monster's own ID, and its ``object_tag`` is
     pointed at it. Physics come from the object the monster named, when that is
     in this container, and from the stock "basic object" otherwise.
+
+    Returns ``{monster's index: its object's id}``.
     """
+    built = {}
     taken = {t.tag_id for t in converted_tags if t.tag_type == b"obje"}
     tfl_objects = {t.tag_id: t.body for t in mono.tags if t.tag_type == b"obje"}
     object_tag_at = next(
@@ -409,6 +419,7 @@ def _give_monsters_objects(mono, converted_tags, report):
 
         object_id = _free_id(converted.tag_id, taken)
         taken.add(object_id)
+        built[index] = object_id
         physics = (
             obje_converter.physics_of(tfl_objects[tfl.object_tag])
             if len(tfl_objects.get(tfl.object_tag, b"")) == obje_converter.TFL_SIZE
@@ -449,6 +460,7 @@ def _give_monsters_objects(mono, converted_tags, report):
                 ],
             )
         )
+    return built
 
 
 def _free_id(wanted, taken):

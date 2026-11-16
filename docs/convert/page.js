@@ -14,7 +14,7 @@
   var result = document.getElementById("result");
   var share = document.getElementById("share");
   var log = document.getElementById("log");
-  var worker = null, busy = false, lastUrl = null, uploadName = "";
+  var worker = null, busy = false, lastUrl = null, lastAuditUrl = null, uploadName = "";
 
   function el(tag, text, cls) {
     var e = document.createElement(tag);
@@ -112,6 +112,20 @@
 
     var parts = [el("h2", "Done"), el("p"), ];
     parts[1].append(save);
+
+    // The change list: every field the converter set in each unit, with its
+    // value in The Fallen Lords, in Myth II, and why. Opens in any spreadsheet.
+    if (res.audit) {
+      if (lastAuditUrl) URL.revokeObjectURL(lastAuditUrl);
+      lastAuditUrl = URL.createObjectURL(new Blob([res.audit], { type: "text/csv" }));
+      var list = el("a", "↓ Save the change list (" + res.audit_rows.toLocaleString() + " rows, opens in a spreadsheet)", "btn");
+      list.href = lastAuditUrl;
+      list.download = res.filename + " - changes.csv";
+      var why = el("p", "Every setting the converter wrote in each unit: its value in The Fallen Lords, its value in Myth II, what happened and why. For checking the converter's work.", "meta");
+      parts.push(el("p"));
+      parts[parts.length - 1].append(list);
+      parts.push(why);
+    }
 
     if (res.levels.length) {
       var count = "Myth II will list " + res.levels.length + " level" + (res.levels.length === 1 ? "" : "s");

@@ -69,6 +69,9 @@ def convert(plugin_path, upload_name, out_dir, stock_paths):
         "bytes": written,
         "levels": levels,
         "notes": _notes(report, levels),
+        # Every field set in monsters and their objects, for testers to check.
+        "audit": report.audit_csv(),
+        "audit_rows": len(report.audit),
         "details": "\n".join(
             [f"Converter version {__version__}", ""]
             + plugin.format_report(report, upload_name, filename)

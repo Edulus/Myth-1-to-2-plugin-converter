@@ -1963,3 +1963,29 @@ Forest Giant (220) and trow (154, 90) had 77 and 0, and are the two units Keep
 reports will not attack. 16 of Sir Mauriac's 17 monsters are covered; CbC's
 repainted thrall (`thmo`) is not. The table is on the site at keep/units.html.
 
+
+## 29. Pause and turning animations, and the change list (0.16)
+
+**Animations.** `convert_sequence_indexes` copied TFL's 16 animation slots as
+they are and assumed each means the same in Myth II. Against the 24 stock TFL
+units in both Myth II's own tags and Magma's port, slots 0-2 and 5-15 mostly
+agree (13 to 22 of 24), but slots 3 (pause) and 4 (turning) agree in only 1
+and 4: TFL leaves them -1 and Bungie fills them. Bungie's pause is the unit's
+idle_1 in 16 of 24, another standing animation (holding, idle_2) in most of
+the rest, empty in 1; its turning is moving in 16. Myth II plays pause when a
+unit stops, so an empty pause fits the moonwalking (units jog on the spot
+after stopping until the space bar is pressed; Keep). 0.16 fills an empty pause
+with idle_1 and an empty turning with moving. Not yet confirmed in-game. The
+remaining per-slot differences (celebration, holding, idle_2) are per-unit
+tuning and not modelled.
+
+**The change list.** Keep asked for every `mons` field the converter edits to
+be written down so he can audit its work, ideally as a trail of what changes
+by how much. `src/audit.py` builds it: one row per field per monster and per
+monster object, with the TFL value, the Myth II value, what happened (copied,
+converted, changed, moved, dropped, Myth II only: set / per unit) and why. The
+CLI writes it with `convert --audit FILE`; the website offers it as a CSV next
+to the plugin. Sir Mauriac's Tale gives 4,752 rows for 108 tags. Building it
+is what exposed the sequence-slot assumption above. Other tag types are to
+follow.
+
