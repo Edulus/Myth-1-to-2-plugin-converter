@@ -1,4 +1,11 @@
 [
+ {"version": "0.15", "date": "2026-11-16", "change": "Each unit now gets the pathfinding room Project Magma's port gives it, instead of one value for every unit. The Forest Giant gets 220 and the trow 154, where both had 77, which may be why they would not attack. Of the 17 monster settings Myth II has and The Fallen Lords does not, these are the only two that differ between units in Magma's port.",
+  "test": [
+   "Forest Giants and Trow: do they attack now when ordered to? If not, what do they do: walk up and stand, turn away, or not move at all?",
+   "Movement: do big units get stuck or bunch up more or less than before?",
+   "Explosions (0.14): is the ground still black or streaky after satchels and wights?",
+   "Unit size (0.13): do thrall in deep water sit low now?"
+  ]},
  {"version": "0.14", "date": "2026-11-16", "change": "A likely fix for the black or streaky ground after explosions. Keep sent the same converted map before and after saving it in Loathing, and the main thing Loathing rewrites is the map's level-of-detail data. The converter wrote it as zeros. No map made by Bungie or Project Magma has a single zero there, so the converter now writes what Loathing writes.",
   "test": [
    "Explosions: convert a plugin again with this version, then set off satchels, wights and fireballs. Is the ground still black, streaky or mirrored afterwards?",

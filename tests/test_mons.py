@@ -413,3 +413,29 @@ class TestRealPluginMonsBodies(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPerUnitValues(unittest.TestCase):
+    """Two Myth II-only fields differ unit by unit in Magma's port, so they
+    come from a table keyed by the monster's collection, not one default."""
+
+    def convert(self, collection):
+        converted, _ = mons_converter.convert(_tfl_mons_body(collection_tag=collection))
+        return mons.SBMonsHeader.unpack(converted)
+
+    def test_forest_giant_and_trow_take_magmas_values(self):
+        giant = self.convert(b"ent.")
+        self.assertEqual((220, 0), (giant.pathfinding_radius, giant.more_hack_flags))
+        trow = self.convert(b"trra")
+        self.assertEqual((154, 90), (trow.pathfinding_radius, trow.more_hack_flags))
+
+    def test_a_unit_on_thrall_sprites_gets_the_thralls_values(self):
+        thrall = self.convert(b"thra")
+        self.assertEqual((169, 0), (thrall.pathfinding_radius, thrall.more_hack_flags))
+
+    def test_an_unknown_collection_keeps_the_default(self):
+        custom = self.convert(b"zzzz")
+        self.assertEqual(
+            (mons_converter.SB_ONLY_DEFAULTS["pathfinding_radius"], mons_converter.SB_ONLY_DEFAULTS["more_hack_flags"]),
+            (custom.pathfinding_radius, custom.more_hack_flags),
+        )

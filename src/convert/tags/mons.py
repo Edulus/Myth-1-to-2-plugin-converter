@@ -79,6 +79,39 @@ SB_ONLY_DEFAULTS = {
     "extra_flags": 0,  # 60/60
 }
 
+# Of the 17 Myth II-only fields, only two differ between units in Magma's port
+# of the 39 stock TFL monsters it carries; the other 15 hold the default above
+# in all 39. Those two are per unit, so a single default is wrong for most:
+# 77 is Magma's value for 17 of 39, and the Forest Giant has 220, the trow 154.
+# Keyed by the TFL collection the monster draws with, so a plugin's own monster
+# built on stock sprites (Sir Mauriac's "SUPA thrall", on `thra`) gets the
+# values of the unit it looks like. The value is the one most of the monsters
+# on that collection share in Magma's port (berserk: the berserk's own, not the
+# hero's). (pathfinding_radius, more_hack_flags)
+PER_COLLECTION = {
+    b"Shad": (77, 50),  # shade
+    b"avat": (77, 100),  # avatara x3
+    b"ba#1": (77, 100),  # balor
+    b"bers": (169, 100),  # berserk (the hero has 77)
+    b"cofg": (154, 0),  # containment field generator
+    b"dwar": (123, 100),  # dwarf, hero, pathfinder, heads (falling dwarf: 159)
+    b"ent.": (220, 0),  # forest giant
+    b"ghol": (169, 0),  # ghol
+    b"orc ": (51, 0),  # fir'bolg x3
+    b"sham": (67, 0),  # journeyman
+    b"so#1": (77, 50),  # soulblighter
+    b"soul": (77, 50),  # soulless x2
+    b"spid": (77, 50),  # spider (queen: 169)
+    b"tadu": (51, 0),  # targets x2
+    b"thra": (169, 0),  # thrall, healing target (telltale: 77)
+    b"thwa": (154, 0),  # the watcher
+    b"toad": (159, 100),  # fetch
+    b"trra": (154, 90),  # trow
+    b"vill": (77, 50),  # villagers x3
+    b"warr": (77, 50),  # warrior captain
+    b"wigh": (164, 50),  # wight
+}
+
 # TFL fields with no Myth II destination. Reported when they carry something.
 TFL_ONLY_FIELDS = (
     "visual_distance",
@@ -136,6 +169,9 @@ def convert(body, context=None):
     values = {field: getattr(tfl, field) for field in SHARED_FIELDS}
     values["size"] = tfl.intelligence
     values.update(SB_ONLY_DEFAULTS)
+    per_unit = PER_COLLECTION.get(tfl.collection_tag)
+    if per_unit:
+        values["pathfinding_radius"], values["more_hack_flags"] = per_unit
     values["sequence_indexes"] = mons_module.convert_sequence_indexes(tfl.sequence_indexes)
     values["attacks"] = mons_module.convert_attacks(tfl.attacks, tfl.number_of_attacks)
 

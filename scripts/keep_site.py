@@ -322,6 +322,7 @@ code{padding:.1rem .3rem}
 pre{padding:.9rem 1rem;overflow-x:auto;border:1px solid var(--line)}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:.5rem 0}
+.scroll{overflow-x:auto}
 th,td{text-align:left;vertical-align:top;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
 th{white-space:nowrap;color:var(--muted);font-weight:normal}
 figure{margin:.3rem 0 1rem 1.5rem;float:right;width:min(45%,22rem)}
@@ -706,8 +707,97 @@ def fable_html():
     )
 
 
+# Keep's question (16 Nov 2026): which Myth II-only monster settings, and what
+# Magma's own value per unit looks like. From Magma - The Fallen Lords v1.9 against
+# the stock TFL monsters it carries: (TFL unit, Magma's monster, pathfinding radius,
+# more hack flags). Built once from the tags; regenerate if the converter's table moves.
+UNIT_FIELDS = [
+    ('avatara', 'avatara', 77, 100),
+    ('avatara (5 champions)', 'avatara five champions', 77, 100),
+    ('avatara (pools of iron)', 'avatara (pools of iron)', 77, 100),
+    ('balor', 'balor', 77, 100),
+    ('berserk', 'berserk', 169, 100),
+    ('berserk hero', 'berserk hero', 77, 100),
+    ('containment field generator', 'containment field generator', 154, 0),
+    ('dwarf', 'dwarf tfl', 123, 100),
+    ('dwarf (falling)', 'dwarf falling', 159, 100),
+    ('dwarf heads', 'dwarf tfl (hunting)', 123, 100),
+    ('dwarven hero', 'dwarf tfl (hunting)', 123, 100),
+    ('dwarven pathfinder', 'dwarf tfl (hunting)', 123, 100),
+    ('fetch', 'fetch tfl', 159, 100),
+    ("fir'bolg", "fir'bolg heads", 51, 0),
+    ("fir'bolg heads", "fir'bolg heads", 51, 0),
+    ("fir'bolg hero", "fir'bolg heads", 51, 0),
+    ('forest giant', 'Forest Giant keep', 220, 0),
+    ('ghol', 'ghol tfl', 169, 0),
+    ('great devoid mesh effect', 'great devoid mesh effect', 77, 100),
+    ('journeymen', 'journeyman', 67, 0),
+    ('shade', 'shade', 77, 50),
+    ('soulblighter', 'soulblighter forest heart', 77, 50),
+    ('soulless', 'soulless', 77, 50),
+    ('soulless (flaming)', 'soulless', 77, 50),
+    ('spider (netgame)', 'spider', 77, 50),
+    ('spider (queen)', 'spider (queen)', 169, 50),
+    ('spider (solo)', 'spider (solo)', 77, 50),
+    ('target (healing)', 'thrall tfl', 169, 0),
+    ('target (myrgard)', 'target dummy (myrgard)', 51, 0),
+    ('target (straw)', 'target dummy (myrgard)', 51, 0),
+    ('telltale', 'telltale', 77, 0),
+    ('the watcher', 'The Watcher', 154, 0),
+    ('thrall', 'thrall tfl', 169, 0),
+    ('trow', 'trow', 154, 90),
+    ('villager', 'villager', 77, 50),
+    ('villager (traitor)', 'villager with eyes', 77, 50),
+    ('villager (with visibility)', 'villager with eyes', 77, 50),
+    ('warrior captain', 'warrior captain', 77, 50),
+    ('wight', 'wight tfl', 164, 50),
+]
+
+
+UNITS_TITLE = "The monster settings TFL never had"
+
+
+def units_html():
+    rows = "".join(
+        f"<tr><td>{html.escape(tfl)}</td><td>{html.escape(magma)}</td><td>77</td><td><strong>{path}</strong></td>"
+        f"<td>0</td><td><strong>{hack}</strong></td></tr>"
+        for tfl, magma, path, hack in UNIT_FIELDS
+    )
+    return (
+        "<p>An answer to Keep's question in Bagrada chat: <em>which</em> settings, and what does "
+        "&ldquo;Magma's own version of each unit&rdquo; mean?</p>"
+        "<h2>Which settings</h2>"
+        "<p>Only one tag: the <strong>mons</strong> (monster) tag. Myth II's mons tag has 17 fields that "
+        "The Fallen Lords' does not have at all. Every other field is copied from the unit's own TFL value. "
+        "For these 17 the converter has nothing to copy, so it has to choose a value. It chose one value for "
+        "every unit: the most common one in Project Magma's port of The Fallen Lords.</p>"
+        "<p>Checked against Magma's port, unit by unit: <strong>15 of the 17 are the same for every unit</strong> "
+        "(mana, berserk, artifacts carried, experience, propulsion, map action, hack flags and so on), and our "
+        "value already matches Magma's for all 39 units it ported. Only two differ from unit to unit:</p>"
+        "<ul><li><strong>pathfinding radius</strong>: how much room the unit needs when finding its way "
+        "around others. We gave every unit 77; Magma's values run from 51 to 220.</li>"
+        "<li><strong>more hack flags</strong>: not documented anywhere we have found. 0, 50, 90 or 100 in Magma.</li></ul>"
+        "<h2>Magma's own version of each unit</h2>"
+        "<p>For a thrall, copy what Magma gave its thrall; for a trow, Magma's trow; and so on, instead of one "
+        "value for all. Since version 0.15 the converter does that, choosing by the sprites the unit is drawn "
+        "with, so a plugin's own unit built on thrall sprites gets the thrall's values.</p>"
+        "<p>Two units stand out: the <strong>Forest Giant</strong> (220 in Magma, 77 from us before) and the "
+        "<strong>trow</strong> (154 and 90, against 77 and 0). They are the two Keep found would not attack. "
+        "A big unit given a small unit's room may be the reason; that is a guess until someone tests 0.15.</p>"
+        '<div class="scroll"><table><thead><tr><th>TFL unit</th><th>Magma&rsquo;s unit</th>'
+        "<th>Pathfinding radius, before</th><th>Magma and 0.15</th><th>More hack flags, before</th>"
+        "<th>Magma and 0.15</th></tr></thead><tbody>" + rows + "</tbody></table></div>"
+        '<p class="meta">Measured from <em>Magma - The Fallen Lords v1.9</em> against the stock Fallen Lords '
+        "monsters it carries. Where several units share sprites, the converter uses the value most of them "
+        "share: the falling dwarf (159), the spider queen (169) and the telltale (77) get their group's value "
+        "instead of their own.</p>"
+        '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
+    )
+
+
 KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
 <p>&#10022; <a href="poem.html">For Keep, Who Raised the Banner</a> &mdash; a poem of thanks from Edward and Claude.</p>
+<p>&#10022; <a href="units.html">The monster settings TFL never had</a> &mdash; which settings, and Magma&rsquo;s value for each unit.</p>
 <p>&#10022; <a href="walter.html">For Walter Wight</a> &mdash; a poem for Walter, after his chat with Keep on Bagrada.</p>
 <p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here. Since 16 November 2026 the Claude at work is Claude Fable 5.2, a newer model than the Claude Opus 5.5 who answered before; I began by reviewing the whole codebase, and wrote the poem below.</p>
 <p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>""" + fable_html()
@@ -740,7 +830,7 @@ def sitemap(up):
     rows = [
         ("", [("Home", "index.html"), ("Convert a plugin", "convert/index.html"),
               ("Swap Civil War units", "swap/index.html"), ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html"),
-              ("Poem for Walter", "keep/walter.html")]),
+              ("Poem for Walter", "keep/walter.html"), ("Monster settings", "keep/units.html")]),
         ("Updates", [(u["date"], f"updates/{u['slug']}.html") for u in reversed(UPDATES)]),
         ("Questions", [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS]),
     ]
@@ -820,7 +910,7 @@ DOCKET = {
         "Unit animations: units jog on the spot after they stop moving (the \"moonwalking\"; the space bar stops it for now), and some walking frames are missing. The two games list each unit's animations differently, and part of our mapping is a guess. We will check it against Magma's units.",
         "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
-        "Unit behaviour: Forest Giants and Trow that won't attack, unit speeds, and how much harm fire, explosions and magic do to each unit. Myth II keeps that last part in a different place, and the converter drops it too.",
+        "Unit behaviour: Forest Giants and Trow that won't attack. In 0.15 each unit gets the pathfinding room Project Magma gave it, instead of one value for all: the Forest Giant 220 and the trow 154, where both had 77. That may be why they would not attack; please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [
@@ -998,6 +1088,9 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
     )
     (OUT / "keep" / "walter.html").write_text(
         page(WALTER_TITLE, WALTER_TITLE, walter_html(), 1, kicker="For Walter", body_class="white"), encoding="utf-8"
+    )
+    (OUT / "keep" / "units.html").write_text(
+        page(UNITS_TITLE, UNITS_TITLE, units_html(), 1, kicker="For Keep"), encoding="utf-8"
     )
     (OUT / "keep" / "index.html").write_text(
         page("Keep & Claude Conversation", "Keep &amp; Claude Conversation", KEEP_BODY, 1, KEEP_PAGE["term"])

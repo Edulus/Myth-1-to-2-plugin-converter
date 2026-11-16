@@ -50,6 +50,7 @@ code{padding:.1rem .3rem}
 pre{padding:.9rem 1rem;overflow-x:auto;border:1px solid var(--line)}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:.5rem 0}
+.scroll{overflow-x:auto}
 th,td{text-align:left;vertical-align:top;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
 th{white-space:nowrap;color:var(--muted);font-weight:normal}
 figure{margin:.3rem 0 1rem 1.5rem;float:right;width:min(45%,22rem)}

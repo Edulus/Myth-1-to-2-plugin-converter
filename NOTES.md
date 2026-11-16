@@ -1948,3 +1948,18 @@ everywhere (`mesh.build_lod_data`). Not yet confirmed in-game.
 If the glitch survives 0.14, the next suspects from the same pair are the
 recomputed normals and the water-vertex flag.
 
+
+## 28. Per-unit values for the two Myth II-only fields that vary (0.15)
+
+Keep asked which settings "fill each unit's Myth II-only settings from Magma's
+own version" meant. Measured against Magma - The Fallen Lords v1.9's ports of
+the 39 stock TFL monsters it carries: 15 of the 17 synthesised `mons` fields
+hold our default in all 39. Only `pathfinding_radius` (51 to 220; 77 in 17 of
+39) and `more_hack_flags` (0, 50, 90, 100) vary, and neither follows the size
+class (Bungie's own man-sized units run 26 to 205). So the mons converter now
+takes both from `PER_COLLECTION`, keyed by the collection the monster draws
+with: 21 collections, each the value most of its monsters share in Magma. The
+Forest Giant (220) and trow (154, 90) had 77 and 0, and are the two units Keep
+reports will not attack. 16 of Sir Mauriac's 17 monsters are covered; CbC's
+repainted thrall (`thmo`) is not. The table is on the site at keep/units.html.
+
