@@ -789,7 +789,7 @@ def units_html():
         "<th>Magma and 0.15</th></tr></thead><tbody>" + rows + "</tbody></table></div>"
         '<p class="meta">Measured from <em>Magma - The Fallen Lords v1.9</em> against the stock Fallen Lords '
         "monsters it carries. Where several units share sprites, the converter uses the value most of them "
-        "share: the falling dwarf (159), the spider queen (169) and the telltale (77) get their group's value "
+        "share: the falling dwarf (159), the spider queen (169), the telltale (77) and the berserk hero (77) get their group's value "
         "instead of their own.</p>"
         '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
     )
