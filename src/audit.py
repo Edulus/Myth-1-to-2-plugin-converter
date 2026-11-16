@@ -34,7 +34,9 @@ _CHANGED_WHY = {
     "sequence_indexes": ("TFL lists 16 animation slots, Myth II 26. Slots 1-16 are copied as they are "
                          "(assumed to mean the same in both games), the 10 new ones are none, and an empty "
                          "pause (slot 4) or turning (slot 5) takes the idle or moving animation, as Bungie's do"),
-    "attacks": "TFL's attack records are 32 bytes, Myth II's 64; each attack is rebuilt field by field",
+    "attacks": ("TFL's attack records are 32 bytes, Myth II's 64; each attack is rebuilt field by field. "
+                "The flag word's giant bits are moved (TFL bits 12-13 to Myth II 11-12) and the random-sequences "
+                "bit dropped; a unit with a giants-only attack has its other attacks prohibited against giants"),
 }
 _FORCED = {
     "use_attack_frequency": (1, "TFL always used the attack frequency; Myth II only does when this is on"),
@@ -78,8 +80,10 @@ def mons_rows(tag_id, name, tfl_body, sb_body):
     for field in mons_module.SBMonsHeader.names:
         after = getattr(sb, field)
         if field == "size":
-            before = tfl.intelligence
-            what, why = ("copied", "TFL calls this field 'intelligence'")
+            before = NOT_IN_TFL
+            what = "Myth II only: set"
+            why = ("TFL's 'intelligence' is not size (it is 2 for 40 of 46 units). Man, or giant for the "
+                   "forest giant and trow, as in Bungie's and Magma's versions")
         elif field in mons_converter.SB_ONLY_DEFAULTS:
             before = NOT_IN_TFL
             if per_unit and field in ("pathfinding_radius", "more_hack_flags"):
@@ -99,6 +103,8 @@ def mons_rows(tag_id, name, tfl_body, sb_body):
                 what = "converted" if field in _CHANGED_WHY else "changed"
                 why = _CHANGED_WHY.get(field, "tag reference renamed by the ID map")
         rows.append(head + [field, show(before), show(after), what, why])
+    rows.append(head + ["intelligence", show(tfl.intelligence), NOT_IN_MYTH_II, "dropped",
+                        "TFL's AI intelligence; Myth II has no such field (it is not the size)"])
     for field in mons_converter.TFL_ONLY_FIELDS:
         before = getattr(tfl, field)
         rows.append(head + [field, show(before), NOT_IN_MYTH_II,

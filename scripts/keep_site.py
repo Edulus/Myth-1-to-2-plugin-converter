@@ -898,19 +898,19 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-16"
+DOCKET_UPDATED = "2026-11-17"
 DOCKET = {
     "Working on now": [
-        "Ground glitch after explosions: likely fixed in 0.14, waiting for testers. When satchels, wights and other explosions went off, the ground went black, streaky or mirrored. Keep found that saving the map in Loathing cured it, and sent the same map before and after. The main thing Loathing rewrites is the map's level-of-detail data, which the converter wrote as zeros; no map by Bungie or Project Magma has a zero there. 0.14 writes what Loathing writes. Please convert again and set off some satchels.",
-        "Multiplayer levels: Sir Mauriac's Tale's free-for-all and team levels loaded but ended at once, with no teams, flags, balls or assassins. Keep traced it to each unit, scenery piece, flag and ball saying it appears in no game type. Since 0.11 the units and scenery appear. The flags and balls did not, because the copies the converter made are not recognised by the game; 0.12 uses Myth II's own. Keep is testing it. Assassin targets cannot be worked out from The Fallen Lords' maps: none of the 219 we checked says which unit is the target, so we need to hear whether Assassin works in the game.",
-        "Unit size: fixed in 0.13 and waiting for testers. Units were drawn about a third too large, so thrall stood out of the water. Myth II's own files hold several Fallen Lords units with the same pictures, and Bungie drew each at 0.73 of its old size; the converter now does the same. Please check thrall in deep water, and say if any unit now looks wrong.",
+        "Ground glitch after explosions: fixed in 0.14. Keep found that saving a map in Loathing cured it and sent the same map before and after; the converter was writing the map's level-of-detail data as zeros, and now writes what Loathing writes. Keep reports every explosion now shows a good ground ripple.",
+        "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target, so we need someone who knows the maps to say which unit was meant.",
+        "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
     ],
     "Up next": [
         "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
-        "Unit animations: units jogged on the spot after they stopped (the \"moonwalking\"). Likely fixed in 0.16: The Fallen Lords leaves each unit's pause and turning animations empty, and Bungie's own Myth II versions of the same units fill them with the idle and moving animations, as the converter now does. Some walking frames may still be missing. Please test.",
+        "Unit animations: fixed in 0.16 (Keep: units now stand still when they stop). Some walking frames may still be missing.",
         "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
-        "Unit behaviour: Forest Giants and Trow that won't attack. In 0.15 each unit gets the pathfinding room Project Magma gave it, instead of one value for all: the Forest Giant 220 and the trow 154, where both had 77. That may be why they would not attack; please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
+        "Unit behaviour: Forest Giants and Trow still do not attack men (Keep's tests of 0.16). 0.17 fixes two bugs that may be the reason: every unit was marked giant-sized in Myth II, and each attack's flags, which say whether an attack is for giants or not for giants, were scrambled. They now match Bungie's own versions of the Forest Giant and trow. Please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [

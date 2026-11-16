@@ -1989,3 +1989,37 @@ to the plugin. Sir Mauriac's Tale gives 4,752 rows for 108 tags. Building it
 is what exposed the sequence-slot assumption above. Other tag types are to
 follow.
 
+
+## 30. Why the Forest Giants and Trow would not attack (0.17)
+
+Keep's 0.16 tests (Q7, 16 Nov): moonwalking, explosions and netgame flags and
+balls fixed; Forest Giants, Old Growth Forest Giants and Yearlings still do not
+engage smaller, non-giant units. Two bugs, both found by comparing our output
+with Bungie's and Magma's versions of the same units.
+
+**1. Every unit was giant-sized.** The converter copied TFL's `intelligence`
+into Myth II's `size`, because they share a byte slot and mythextract declares
+both as `Size`. But TFL's field is AI intelligence: 2 for 40 of 46 stock units
+(0 for 4, 1 for 2). Myth II's size is small 0, man 1, giant 2, and in Bungie's
+and Magma's versions of the TFL units it is 1 for all but the forest giants and
+trow (`ent.`, `trra`): 21 of 23 mismatched. Now set by collection, man by
+default (`GIANT_COLLECTIONS`); 24 of 24 paired units match both references.
+Only tiny creatures (chickens, frogs, birds; none in TFL) are small.
+
+**2. Attack flag bits were copied raw.** TFL's flag word has CHOOSES_SEQUENCES_
+RANDOMLY at bit 11, then VS_GIANT_SIZED and PROHIBITED_VS_GIANT_SIZED at 12-13.
+Myth II has no random-sequences flag, so its two giant flags sit at bits 11-12.
+Copied raw, the Forest Giant's first attack (TFL 0x1b00: random + vs giant)
+became 0x1b00 in Myth II: vs-giant AND prohibited-vs-giant, which can never be
+used; its second (0x0b00) became "vs giant only". Now bits 12-13 move down and
+bit 11 is dropped. And in all 9 units of Bungie's tags and Magma's port with a
+giants-only attack (forest giants, trow, the changeling), every other attack is
+prohibited against giants, since Myth II does not choose between them as TFL's
+engine did; the converter does the same. The result for the Forest Giant and
+trow is exactly Bungie's and Magma's `0xb00`, `0x1300`. Not yet confirmed
+in-game.
+
+A giant-sized, giants-only attack on every unit would have kept the giants
+fighting only each other, which fits the symptom; the pathfinding radius fix
+(0.15) was real but not the cause.
+

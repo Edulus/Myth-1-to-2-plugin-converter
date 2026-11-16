@@ -1,4 +1,12 @@
 [
+ {"version": "0.17", "date": "2026-11-17", "change": "Two bugs found that may be why Forest Giants and Trow never attacked. First, every unit was marked giant-sized in Myth II (the converter read The Fallen Lords' AI-intelligence setting as the size); now only the Forest Giant and the trow are, as in Bungie's and Magma's versions, and everyone else is man-sized. Second, each attack's flags were copied raw, which scrambled the bits that say whether an attack is for giants or not for giants; they are now translated, so the Forest Giant's and trow's attacks come out exactly as in Bungie's own tags.",
+  "test": [
+   "Forest Giants, Old Growth Forest Giants, Yearlings and Trow: do they attack men now? Giants?",
+   "Do other units now attack giants, and do giants take damage as before?",
+   "Does anything else behave differently since units stopped being giant-sized: movement, being knocked back, being crowded?",
+   "Unit height line-ups against the Butcher's shop: any unit that now looks the wrong size?",
+   "The change list has the size and attack-flag rows, if you want to check them."
+  ]},
  {"version": "0.16", "date": "2026-11-16", "change": "A likely fix for units jogging on the spot after they stop. The Fallen Lords leaves each unit's pause and turning animations empty, and Myth II plays the pause animation when a unit stops. Bungie's own Myth II versions of the same units fill them, with the unit's idle and moving animations; the converter now does the same. Also new, because Keep asked for it: after converting, you can save a change list, every setting the converter wrote in each unit with its old value, its new value and why, to check the converter's work.",
   "test": [
    "Moonwalking: do units stand still when they stop now, without pressing the space bar?",

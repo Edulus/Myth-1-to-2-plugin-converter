@@ -123,6 +123,28 @@ SEQ_DECLINED = 4
 EMPTY_SEQUENCE = AttackSequence.build(flags=SEQ_NORMAL, sequence_index=-1, skip_fraction=0)
 
 
+# Attack flag words. Bits 0-10 mean the same in both games. TFL then has
+# CHOOSES_SEQUENCES_RANDOMLY at bit 11 and VS_GIANT_SIZED / PROHIBITED_VS_GIANT_SIZED
+# at bits 12-13; Myth II has no random-sequences flag, so its VS_GIANT_SIZED and
+# PROHIBITED_VS_GIANT_SIZED sit at bits 11-12 (mythextract ``AttackFlag`` and
+# ``AttackFlagTFL``). Copied raw, TFL's "only against giants" became Myth II's
+# "not against giants", and its "choose sequences randomly" became "only
+# against giants".
+FLAG_SHARED_BITS = 0x07FF
+TFL_VS_GIANT, TFL_PROHIBITED_VS_GIANT = 1 << 12, 1 << 13
+SB_VS_GIANT, SB_PROHIBITED_VS_GIANT = 1 << 11, 1 << 12
+
+
+def convert_attack_flags(tfl_flags):
+    """A TFL attack flag word as Myth II's. The random-sequences bit is dropped."""
+    flags = tfl_flags & FLAG_SHARED_BITS
+    if tfl_flags & TFL_VS_GIANT:
+        flags |= SB_VS_GIANT
+    if tfl_flags & TFL_PROHIBITED_VS_GIANT:
+        flags |= SB_PROHIBITED_VS_GIANT
+    return flags
+
+
 def convert_attack(tfl_bytes):
     """Convert one TFL attack definition to Myth II's, expanding its single
     sequence trio into Myth II's 4-slot array.
@@ -155,7 +177,7 @@ def convert_attack(tfl_bytes):
     )
 
     return SBAttackDef.build(
-        flags=tfl.flags,
+        flags=convert_attack_flags(tfl.flags),
         miss_fraction=tfl.miss_fraction,
         projectile_tag=tfl.projectile_tag,
         minimum_range=tfl.minimum_range,
@@ -211,7 +233,28 @@ def convert_attacks(tfl_bytes, attack_count):
             out += convert_attack(tfl_bytes[start : start + ATTACK_SIZE[formats.TFL]])
         else:
             out += EMPTY_ATTACK
+    _keep_giant_attacks_for_giants(out, attack_count)
     return bytes(out)
+
+
+def _keep_giant_attacks_for_giants(attacks, attack_count):
+    """A unit with an attack only for giant-sized targets (the Forest Giant's and
+    trow's first) has all its other attacks prohibited against them.
+
+    TFL needed no flag for that: the engine used the giant attack on giants and
+    the other on the rest. Myth II does not choose, so a plain second attack
+    would also be tried on giants. In all 9 units of Bungie's own tags and
+    Magma's port that have a giant-only attack (forest giants, trow, the
+    changeling), every other attack carries PROHIBITED_VS_GIANT_SIZED. Edits
+    ``attacks`` in place.
+    """
+    size = ATTACK_SIZE[formats.SB]
+    flags = [struct.unpack_from(">H", attacks, i * size)[0] for i in range(attack_count)]
+    if not any(f & SB_VS_GIANT for f in flags):
+        return
+    for i, f in enumerate(flags):
+        if not f & (SB_VS_GIANT | SB_PROHIBITED_VS_GIANT):
+            struct.pack_into(">H", attacks, i * size, f | SB_PROHIBITED_VS_GIANT)
 
 
 def convert_sequence_indexes(tfl_bytes):

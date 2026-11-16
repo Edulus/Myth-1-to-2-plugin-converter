@@ -215,11 +215,14 @@ class TestMonsBodyConversion(unittest.TestCase):
             )
         self.assertGreater(checked, 30, "should still be checking most fields")
 
-    def test_intelligence_becomes_size(self):
-        body = _tfl_mons_body(intelligence=2)
-        converted, _ = mons_converter.convert(body)
-        after = mons.parse_header(converted, formats.SB)
-        self.assertEqual(2, after.size)
+    def test_size_is_man_unless_the_unit_is_a_giant(self):
+        """TFL's `intelligence` is 2 for 40 of 46 stock units, and is not Myth
+        II's size: Bungie's and Magma's versions are men, but for the forest
+        giants and trow."""
+        for collection, expected in ((b"warr", 1), (b"thra", 1), (b"zzzz", 1), (b"ent.", 2), (b"trra", 2)):
+            with self.subTest(collection=collection):
+                converted, _ = mons_converter.convert(_tfl_mons_body(intelligence=2, collection_tag=collection))
+                self.assertEqual(expected, mons.parse_header(converted, formats.SB).size)
 
     def test_myth_ii_only_fields_get_the_measured_defaults(self):
         converted, _ = mons_converter.convert(_tfl_mons_body())
@@ -455,3 +458,44 @@ class TestPerUnitValues(unittest.TestCase):
             (mons_converter.SB_ONLY_DEFAULTS["pathfinding_radius"], mons_converter.SB_ONLY_DEFAULTS["more_hack_flags"]),
             (custom.pathfinding_radius, custom.more_hack_flags),
         )
+
+
+class TestAttackFlags(unittest.TestCase):
+    """TFL's attack flag word is not Myth II's: TFL has a "choose sequences
+    randomly" bit at 11 that Myth II lacks, so its giant bits sit one place lower."""
+
+    def attack(self, flags):
+        import struct
+        body = struct.pack(">HH4s11h", 0, flags, b"proj", 0, 0, 3, 1, 0, 0, 0, 0, 4, 5, 0) + bytes(2)
+        return mons.SBAttackDef.unpack(mons.convert_attack(body))
+
+    def test_vs_giant_stays_vs_giant(self):
+        # TFL 0x1b00: random sequences + vs giant-sized (the forest giant's first attack)
+        self.assertEqual(0x0B00, self.attack(0x1B00).flags)
+
+    def test_prohibited_vs_giant_stays_prohibited(self):
+        self.assertEqual(0x1300, self.attack(0x2300).flags)
+
+    def test_the_random_sequences_bit_is_dropped(self):
+        self.assertEqual(0x0300, self.attack(0x0B00).flags)
+
+    def test_the_low_bits_are_kept(self):
+        self.assertEqual(0x0700, self.attack(0x0700).flags)
+
+    def test_the_forest_giant_ends_up_like_bungies(self):
+        """First attack giants-only, second not against giants: 0xb00 and 0x1300
+        in the forest giants and trow of Bungie's tags and Magma's port."""
+        import struct
+        def tfl_attack(flags):
+            return struct.pack(">HH4s11h", 0, flags, b"proj", 0, 0, 3, 1, 0, 0, 0, 0, 4, 5, 0) + bytes(2)
+        block = tfl_attack(0x1B00) + tfl_attack(0x0B00) + bytes(64)
+        converted = mons.convert_attacks(block, 2)
+        flags = [struct.unpack_from(">H", converted, i * 64)[0] for i in range(4)]
+        self.assertEqual([0x0B00, 0x1300], flags[:2])
+
+    def test_a_unit_with_no_giant_attack_is_left_alone(self):
+        import struct
+        def tfl_attack(flags):
+            return struct.pack(">HH4s11h", 0, flags, b"proj", 0, 0, 3, 1, 0, 0, 0, 0, 4, 5, 0) + bytes(2)
+        converted = mons.convert_attacks(tfl_attack(0x0B00) + tfl_attack(0x0300) + bytes(64), 2)
+        self.assertEqual([0x0300, 0x0300], [struct.unpack_from(">H", converted, i * 64)[0] for i in range(2)])

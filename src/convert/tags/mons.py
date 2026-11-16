@@ -10,9 +10,13 @@ Three groups of fields, same shape as the mesh converter:
 **Shared** -- same name in both layouts (`SHARED_FIELDS`, computed by name
 intersection), copied across unchanged. Two fields need help beyond that:
 
-    size / intelligence   Same byte slot, renamed between the games (both
-                           decode via mythextract's ``Size`` enum: small/man/
-                           giant) -- mapped explicitly since the name differs.
+    size                  NOT TFL's ``intelligence``, although they share a byte
+                           slot and mythextract declares both as ``Size``. 40 of
+                           46 stock TFL units have intelligence 2 ("giant"), but
+                           Bungie's and Magma's Myth II versions have size 1
+                           ("man") for all of them but the forest giants and
+                           trow. Set by collection (`PER_COLLECTION`), man by
+                           default (NOTES.md section 30).
     sequence_indexes,      Different sizes in the two games (32 vs 52 bytes,
     attacks                128 vs 256), so a same-name copy would silently
                            zero-pad rather than convert. Handled by
@@ -112,6 +116,12 @@ PER_COLLECTION = {
     b"wigh": (164, 50),  # wight
 }
 
+# Myth II's ``size`` is small (0), man (1) or giant (2). Every unit made from
+# TFL's sprites is a man except these: Bungie's and Magma's versions mark the
+# forest giant and the trow, and no other TFL collection, as giants.
+GIANT_COLLECTIONS = frozenset({b"ent.", b"trra"})
+SIZE_MAN, SIZE_GIANT = 1, 2
+
 # TFL fields with no Myth II destination. Reported when they carry something.
 TFL_ONLY_FIELDS = (
     "visual_distance",
@@ -167,7 +177,7 @@ def convert(body, context=None):
             warnings.append(f"dropped TFL-only mons field {field}={shown}")
 
     values = {field: getattr(tfl, field) for field in SHARED_FIELDS}
-    values["size"] = tfl.intelligence
+    values["size"] = SIZE_GIANT if tfl.collection_tag in GIANT_COLLECTIONS else SIZE_MAN
     values.update(SB_ONLY_DEFAULTS)
     per_unit = PER_COLLECTION.get(tfl.collection_tag)
     if per_unit:

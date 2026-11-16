@@ -30,18 +30,19 @@
 <main class="wrap">
 
 <section class="release" aria-labelledby="release">
-<h2 id="release">Version 0.16 &middot; built 16 November 2026</h2>
+<h2 id="release">Version 0.17 &middot; built 17 November 2026</h2>
 <h3>Please test next</h3>
 <ul>
-<li>Moonwalking: do units stand still when they stop now, without pressing the space bar?</li>
-<li>Turning: do units look right when they turn on the spot?</li>
-<li>Change list: save it after converting and open it in a spreadsheet. Is anything in it wrong, unclear or missing?</li>
-<li>Forest Giants and Trow (0.15): do they attack now?</li>
-<li>Explosions (0.14): is the ground still black after satchels and wights?</li>
+<li>Forest Giants, Old Growth Forest Giants, Yearlings and Trow: do they attack men now? Giants?</li>
+<li>Do other units now attack giants, and do giants take damage as before?</li>
+<li>Does anything else behave differently since units stopped being giant-sized: movement, being knocked back, being crowded?</li>
+<li>Unit height line-ups against the Butcher&#x27;s shop: any unit that now looks the wrong size?</li>
+<li>The change list has the size and attack-flag rows, if you want to check them.</li>
 </ul>
 <p>Report what you find in <a href="../q/7.html">Q7: feature and bug reports</a>, with the version number.</p>
 <h3>What changed</h3>
 <ul class="changes">
+<li><strong>0.17</strong> (17 November 2026): Two bugs found that may be why Forest Giants and Trow never attacked. First, every unit was marked giant-sized in Myth II (the converter read The Fallen Lords&#x27; AI-intelligence setting as the size); now only the Forest Giant and the trow are, as in Bungie&#x27;s and Magma&#x27;s versions, and everyone else is man-sized. Second, each attack&#x27;s flags were copied raw, which scrambled the bits that say whether an attack is for giants or not for giants; they are now translated, so the Forest Giant&#x27;s and trow&#x27;s attacks come out exactly as in Bungie&#x27;s own tags.</li>
 <li><strong>0.16</strong> (16 November 2026): A likely fix for units jogging on the spot after they stop. The Fallen Lords leaves each unit&#x27;s pause and turning animations empty, and Myth II plays the pause animation when a unit stops. Bungie&#x27;s own Myth II versions of the same units fill them, with the unit&#x27;s idle and moving animations; the converter now does the same. Also new, because Keep asked for it: after converting, you can save a change list, every setting the converter wrote in each unit with its old value, its new value and why, to check the converter&#x27;s work.</li>
 <li><strong>0.15</strong> (16 November 2026): Each unit now gets the pathfinding room Project Magma&#x27;s port gives it, instead of one value for every unit. The Forest Giant gets 220 and the trow 154, where both had 77, which may be why they would not attack. Of the 17 monster settings Myth II has and The Fallen Lords does not, these are the only two that differ between units in Magma&#x27;s port.</li>
 <li><strong>0.14</strong> (16 November 2026): A likely fix for the black or streaky ground after explosions. Keep sent the same converted map before and after saving it in Loathing, and the main thing Loathing rewrites is the map&#x27;s level-of-detail data. The converter wrote it as zeros. No map made by Bungie or Project Magma has a single zero there, so the converter now writes what Loathing writes.</li>
@@ -60,7 +61,7 @@
 <li><strong>0.1</strong> (26 October 2026): First beta: convert a plugin in your browser.</li>
 </ul>
 </section>
-<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=d52ac675054e" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.16">
+<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=c163444eb2e0" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.17">
 <p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> Only the plugin's name, its number of levels, the converter version and the date are added to the public list further down, and only while the box below stays ticked. Untick it to keep your conversion off the list.</p>
 <label class="share"><input type="checkbox" id="share" checked> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
