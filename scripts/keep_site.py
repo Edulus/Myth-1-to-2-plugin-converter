@@ -532,13 +532,8 @@ COMMENTS_JS = """
     if(c.votes) a.append(votes(c));
     if(top){var b=el("button","link","Reply to "+c.name); b.type="button"; b.onclick=function(){reply(c);}; a.append(b);}
     return a;}
-  // Newest conversation first: a thread's place is set by its latest message,
-  // so a new reply brings its thread back to the top. Within a thread the
-  // replies stay in the order they were written, so it reads as an exchange.
-  function latest(c){return (c.replies||[]).reduce(function(m,r){return r.at>m?r.at:m;},c.at||"");}
   function render(cs){list.textContent="";
     if(!cs.length){list.append(el("p","meta","Nothing here yet \u2014 yours will be the first."));return;}
-    cs=cs.slice().sort(function(a,b){var x=latest(a), y=latest(b); return x<y?1:x>y?-1:0;});
     cs.forEach(function(c){var a=item(c,true); (c.replies||[]).forEach(function(r){a.append(item(r,false));}); list.append(a);});}
   fetch(api+"/config").then(function(r){return r.json();}).then(function(d){
     if(d.question) form.querySelector(".q").textContent=d.question;}).catch(function(){});
