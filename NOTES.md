@@ -1669,6 +1669,15 @@ becomes 150); all 47 native Myth II meshes keep at least 16. Copied unchanged,
 converted borders were half as wide, as narrow as 5 cells. The mesh converter
 now doubles them.
 
+**The order is not swapped (16 Nov).** Crow's Bridge doubled is 32/32/26/36
+against Magma's 32/36/26/32, as if the second and fourth widths traded places.
+Diversion, the other stock level Magma ported with uneven widths, says no: TFL
+13/18/18/8 doubles to 26/36/36/16, Magma has 26/26/36/16 (same order, one width
+retuned), and the swap would give 26/16/36/36. Pairing every asymmetric TFL
+mesh with Magma's by size found no other clean case. Magma tuned some borders
+by hand; Crow's Bridge's south and east edges sitting differently from Magma's
+port is that tuning, not a converter error.
+
 ### The detail map warning is unrelated
 
 KEEP's log had "Detail map not applied because its dimensions do not match
@@ -1870,6 +1879,16 @@ in Bungie's maps (assassin targets 0x800, stampede herds 0x400, heroes missing
 one type) depend on how each map was authored and are not derived: they are
 marked for every type until a rule for them is found. 0.11. The `version` 7 to
 11 change of 0.10 did not fix the explosion glitch, which Keep reproduced on 0.10.
+
+**No rule is to be had from TFL's maps (16 Nov).** Bungie's own TFL netmaps
+(`TAGS.GOR`, `SCRAP.GOR`) never set the Stampede (bit 10) or Assassin (bit 11)
+header bits, so stock TFL had neither game. Community maps do: of 971
+multiplayer TFL meshes scanned (Mauriac, the UMM set, Fallen Levels v2), 219
+declare Assassin and 47 Stampede, presumably for later community patches. But
+in all 219 Assassin maps every unit palette entry's `netgame_flags` is 0 (4,724
+entries): nothing marks which unit is a target. So units stay marked for every
+type. Two Mauriac meshes declare Assassin (`swda`, `swed`, both "07 Bagrada in
+Winter" variants); whether Myth II picks targets on them is for an in-game test.
 
 
 ### Flags and balls: Myth II's own (0.12)
