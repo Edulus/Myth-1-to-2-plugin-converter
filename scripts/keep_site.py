@@ -35,8 +35,9 @@ COMMENTS_API = "https://keep-comments.edyersh.workers.dev"
 # A converted plugin offered as a GitHub Release asset (the zip is too big for Pages).
 DOWNLOAD_ZIP = "Sir-Mauriac-Tale-for-Myth-II.zip"
 DOWNLOAD_URL = f"{REPO_URL}/releases/download/sir-mauriac-sb-1/{DOWNLOAD_ZIP}"
-DOWNLOAD_SHA256 = "c16b4972cde6440768d3aa97ad6cc8cde0140dff1e4c0b0d069fc438b500abd3"
-DOWNLOAD_MB = 223
+DOWNLOAD_SHA256 = "f152947c558a786cae79d8cfd3ca0f0d7fe58740bad170e719292276c4f6a0b6"
+DOWNLOAD_MB = 222
+DOWNLOAD_VERSION = "0.18"
 
 UPDATES = [
     {
@@ -992,7 +993,7 @@ def build(stock_dir=None):
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude). Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download Sir Mauriac&rsquo;s Tale ({DOWNLOAD_MB} MB zip of Myth II plugin files; no program to run)</a></p>
 <ul>
-<li><strong>Beta.</strong> <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen; the other levels are untested. This exact download has been checked on a plain Myth II 1.8.5 install, with no other plugins, loading and playing <em>Tandem</em>.</li>
+<li><strong>Beta, converter {DOWNLOAD_VERSION}</strong> (updated 17 November 2026; until then this download was 0.12). <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen with earlier versions; the other levels are untested. This {DOWNLOAD_VERSION} download has not been played in the game yet.</li>
 <li>Quit Myth II and extract the zip <strong>straight into</strong> Myth II's <code>plugins</code> folder, not a subfolder (Myth II only finds plugins sitting directly in it). You get the plugin <code>ZZ Mauriac TFL2SB</code> plus a read-me and CbC's credits. Then choose <strong>New Game</strong> &rarr; the campaign <em>ZZ Mauriac TFL2SB</em> &rarr; a level. Leave Tagsets empty.</li>
 </ul>
 </section>
