@@ -901,8 +901,14 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 # items move along; finished work goes into web/convert/changes.json instead.
 DOCKET_UPDATED = "2026-11-17"
 DOCKET = {
+    # Short, for players: what to look at when they play the current version.
+    "Please test now (converter 0.18)": [
+        "Do Forest Giants and Trow attack smaller units, such as Berserks and Thrall? (0.17)",
+        "Can Journeymen and Heron Guards heal other units, and can Yearlings heal themselves? (0.18)",
+        "Do units stand still when they stop, with no moonwalking? (0.16)",
+        "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? (0.13)",
+    ],
     "Working on now": [
-        "Ground glitch after explosions: fixed in 0.14. Keep found that saving a map in Loathing cured it and sent the same map before and after; the converter was writing the map's level-of-detail data as zeros, and now writes what Loathing writes. Keep reports every explosion now shows a good ground ripple.",
         "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
         "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
     ],
