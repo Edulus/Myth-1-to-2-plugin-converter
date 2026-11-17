@@ -499,3 +499,48 @@ class TestAttackFlags(unittest.TestCase):
             return struct.pack(">HH4s11h", 0, flags, b"proj", 0, 0, 3, 1, 0, 0, 0, 0, 4, 5, 0) + bytes(2)
         converted = mons.convert_attacks(tfl_attack(0x0B00) + tfl_attack(0x0300) + bytes(64), 2)
         self.assertEqual([0x0300, 0x0300], [struct.unpack_from(">H", converted, i * 64)[0] for i in range(2)])
+
+
+class TestHealingAttacks(unittest.TestCase):
+    """A heal must be allowed on friendly units, which Myth II needs a flag for
+    and TFL never had."""
+
+    def attack(self, flags, projectile=b"jo#2"):
+        import struct
+        return struct.pack(">HH4s11h", 0, flags, projectile, 0, 0, 3, 1, 0, 0, 0, 0, 4, 5, 0) + bytes(2)
+
+    def converted(self, *attacks, healing=(b"jo#2",)):
+        import struct
+        converted = bytearray(mons.convert_attacks(b"".join(attacks) + bytes(128), len(attacks)))
+        changed = mons.allow_healing_friendlies(converted, len(attacks), set(healing))
+        extra = [struct.unpack_from(">H", converted, i * 64 + 60)[0] for i in range(len(attacks))]
+        return changed, extra
+
+    def test_a_special_ability_firing_a_healing_projectile_may_target_friends(self):
+        changed, extra = self.converted(self.attack(0x0200, b"joss"), self.attack(0x0290))
+        self.assertEqual((1, [0, 1]), (changed, extra))
+
+    def test_an_ordinary_attack_is_left_alone(self):
+        changed, extra = self.converted(self.attack(0x0200))
+        self.assertEqual((0, [0]), (changed, extra))
+
+    def test_a_special_ability_that_does_not_heal_is_left_alone(self):
+        changed, extra = self.converted(self.attack(0x00D0, b"dw#2"))
+        self.assertEqual((0, [0]), (changed, extra))
+
+    def test_ids_of_healing_projectiles_come_from_the_damage_type(self):
+        import struct
+        def proj(tag_id, damage_type):
+            body = bytearray(256); struct.pack_into(">h", body, 108, damage_type)
+            return reader.Tag(header=None, body=bytes(body)) if False else type("T", (), {"tag_type": b"proj", "tag_id": tag_id, "body": bytes(body)})()
+        tags = [proj(b"jo#2", 3), proj(b"fire", 9), proj(b"hurt", 1)]
+        self.assertEqual({b"jo#2"}, mons.healing_projectile_ids(tags))
+
+    def test_the_converter_uses_the_context(self):
+        from src.convert import plugin as convert_plugin
+        context = convert_plugin.ConversionContext()
+        context.healing_projectiles = {b"jo#2"}
+        body = _tfl_mons_body(number_of_attacks=1, attacks=self.attack(0x0290) + bytes(96))
+        converted, _ = mons_converter.convert(body, context)
+        import struct
+        self.assertEqual(1, struct.unpack_from(">H", mons.parse_header(converted, formats.SB).attacks, 60)[0])

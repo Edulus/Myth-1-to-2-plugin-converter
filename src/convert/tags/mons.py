@@ -184,6 +184,11 @@ def convert(body, context=None):
         values["pathfinding_radius"], values["more_hack_flags"] = per_unit
     values["sequence_indexes"] = mons_module.convert_sequence_indexes(tfl.sequence_indexes)
     values["attacks"] = mons_module.convert_attacks(tfl.attacks, tfl.number_of_attacks)
+    healing = getattr(context, "healing_projectiles", None) if context else None
+    if healing:
+        attacks = bytearray(values["attacks"])
+        if mons_module.allow_healing_friendlies(attacks, tfl.number_of_attacks, healing):
+            values["attacks"] = bytes(attacks)
 
     # TFL applied attack_frequency unconditionally -- it had no gating flag for
     # it. The real port's use_attack_frequency is split 37/60 off, 23/60 on,

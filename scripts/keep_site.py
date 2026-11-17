@@ -902,7 +902,7 @@ DOCKET_UPDATED = "2026-11-17"
 DOCKET = {
     "Working on now": [
         "Ground glitch after explosions: fixed in 0.14. Keep found that saving a map in Loathing cured it and sent the same map before and after; the converter was writing the map's level-of-detail data as zeros, and now writes what Loathing writes. Keep reports every explosion now shows a good ground ripple.",
-        "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target, so we need someone who knows the maps to say which unit was meant.",
+        "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
         "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
     ],
     "Up next": [
@@ -911,6 +911,7 @@ DOCKET = {
         "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
         "Unit behaviour: Forest Giants and Trow still do not attack men (Keep's tests of 0.16). 0.17 fixes two bugs that may be the reason: every unit was marked giant-sized in Myth II, and each attack's flags, which say whether an attack is for giants or not for giants, were scrambled. They now match Bungie's own versions of the Forest Giant and trow. Please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
+        "Heals: Journeymen and Heron Guards could not heal themselves or others, and the Yearlings' mandrake heal did not work (Keep). Myth II needs an ability to say it may be used on friendly units; The Fallen Lords never had that setting, so the converter never wrote it. 0.18 sets it on special abilities that fire a healing projectile, as in Bungie's own Journeymen. The Yearlings' case is less certain. Please test.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [

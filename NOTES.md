@@ -2023,3 +2023,35 @@ A giant-sized, giants-only attack on every unit would have kept the giants
 fighting only each other, which fits the symptom; the pathfinding radius fix
 (0.15) was real but not the cause.
 
+
+## 31. Heals, and Assassin targets (0.18; Keep, Q7, 17 Nov)
+
+**Heals.** Journeymen and Heron Guards could neither heal themselves nor others
+(Keep, long-standing); the Yearlings' mandrake heal did not work on themselves.
+Myth II's `AttackExtraFlag.CAN_BE_USED_AGAINST_FRIENDLIES` (bit 0 of the u16 at
+byte 60 of the 64-byte attack) lets an attack target friendly units; TFL had no
+such flag and the converter wrote `extra_flags = 0` on every attack. In Bungie's
+tags every Journeyman- and Heron Guard-type heal (a special ability, flags
+0x290, firing the healing projectile `johg`: damage type 3 = HEALING, 20) has it
+set, 7 of 8 (the exception, `20hg`, the crystal Heron Guard, is a statue); Magma's
+journeyman does too. TFL's Journeyman projectile `jo#2` has the same signature.
+So `allow_healing_friendlies` sets it on any special-ability attack whose
+projectile has damage type HEALING. Only the stock Journeyman and Mauriac's
+Yearling match. The Yearling is less certain: its heal has TFL's "avoids
+friendly units" bit (0x400) and no reflexive bit, and Keep says it should heal
+only itself, which no Bungie unit shows us; whether Myth II then lets it heal
+others is for the game to say. Not yet confirmed in-game.
+
+**Assassin targets.** A target is a placed unit whose marker has
+`IS_NETGAME_TARGET` and whose palette entry's netgame types include Assassin
+(bit 11). Keep's suggestion, that targets are the units players cannot trade,
+holds in Bungie's data: of 282 targets in 38 Assassin maps, all 282 are on
+non-tradable palette entries and none on a tradable one; but only 282 of 1,132
+non-tradable units are targets, and 129 of the 207 TFL community meshes that
+declare Assassin have non-tradable units (many are arenas where all are). In
+Sir Mauriac's two (`swda`, `swed`) every placed unit is tradable, so the rule
+finds none; they would need a unit added in Loathing. Not derivable, so the
+converter does not guess. (The palette index counts within a marker type, not
+across the whole palette; an earlier look at this that did not know that was
+wrong.)
+

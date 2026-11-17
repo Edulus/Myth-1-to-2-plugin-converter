@@ -237,6 +237,51 @@ def convert_attacks(tfl_bytes, attack_count):
     return bytes(out)
 
 
+# Myth II's attack `extra_flags` (mythextract ``AttackExtraFlag``), a u16 at the
+# end of the 64-byte attack. TFL had nothing like it, so every converted attack
+# had 0, and an attack with 0 cannot be used on friendly units at all.
+SB_EXTRA_FLAGS_AT = 60
+EXTRA_CAN_BE_USED_AGAINST_FRIENDLIES = 1
+FLAG_SPECIAL_ABILITY = 0x0080
+DAMAGE_TYPE_HEALING = 3
+TFL_PROJECTILE_DAMAGE_AT = 108  # a TFL projectile's damage block; Myth II's is at 104
+
+
+def healing_projectile_ids(tags):
+    """The ids of the TFL projectiles in ``tags`` whose damage type is healing."""
+    return {
+        t.tag_id for t in tags
+        if t.tag_type == b"proj" and len(t.body) >= TFL_PROJECTILE_DAMAGE_AT + 2
+        and struct.unpack_from(">h", t.body, TFL_PROJECTILE_DAMAGE_AT)[0] == DAMAGE_TYPE_HEALING
+    }
+
+
+def allow_healing_friendlies(attacks, attack_count, healing_projectiles):
+    """Let a special-ability attack that fires a healing projectile be used on
+    friendly units. Edits ``attacks`` (Myth II layout) in place; returns how
+    many attacks it changed.
+
+    TFL needed no flag: its engine let a heal go to anyone. Myth II refuses a
+    friendly target unless the attack says it may, so converted Journeymen and
+    Heron Guards could heal neither others nor themselves (Keep, Q7). In
+    Bungie's own tags every Journeyman- and Heron Guard-type heal (a special
+    ability firing the healing projectile `johg`) has the flag: 7 of 8 (the
+    eighth, the crystal Heron Guard, is a statue).
+    """
+    changed = 0
+    size = ATTACK_SIZE[formats.SB]
+    for i in range(min(attack_count, MAX_ATTACKS)):
+        flags = struct.unpack_from(">H", attacks, i * size)[0]
+        projectile = bytes(attacks[i * size + 4 : i * size + 8])
+        if not flags & FLAG_SPECIAL_ABILITY or projectile not in healing_projectiles:
+            continue
+        extra = struct.unpack_from(">H", attacks, i * size + SB_EXTRA_FLAGS_AT)[0]
+        if not extra & EXTRA_CAN_BE_USED_AGAINST_FRIENDLIES:
+            struct.pack_into(">H", attacks, i * size + SB_EXTRA_FLAGS_AT, extra | EXTRA_CAN_BE_USED_AGAINST_FRIENDLIES)
+            changed += 1
+    return changed
+
+
 def _keep_giant_attacks_for_giants(attacks, attack_count):
     """A unit with an attack only for giant-sized targets (the Forest Giant's and
     trow's first) has all its other attacks prohibited against them.

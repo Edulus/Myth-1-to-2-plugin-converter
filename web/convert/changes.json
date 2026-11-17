@@ -1,4 +1,11 @@
 [
+ {"version": "0.18", "date": "2026-11-17", "change": "Heals should work now. Myth II refuses to let an ability be used on friendly units unless it says so, and The Fallen Lords never had that setting, so converted Journeymen and Heron Guards could heal neither other units nor themselves. A special ability that fires a healing projectile now carries the setting, as it does in Bungie's own Journeymen and Heron Guards. This also covers the Yearlings' mandrake heal, which is less certain.",
+  "test": [
+   "Journeymen and Heron Guards: can they heal themselves? Other units, friend and foe?",
+   "Yearlings: can they heal themselves with the mandrake root? Can they heal others? They should not be able to, by the map makers' design.",
+   "Forest Giants and Trow (0.17): do they attack men now?",
+   "Anything else that can heal or help friendly units and does not work."
+  ]},
  {"version": "0.17", "date": "2026-11-17", "change": "Two bugs found that may be why Forest Giants and Trow never attacked. First, every unit was marked giant-sized in Myth II (the converter read The Fallen Lords' AI-intelligence setting as the size); now only the Forest Giant and the trow are, as in Bungie's and Magma's versions, and everyone else is man-sized. Second, each attack's flags were copied raw, which scrambled the bits that say whether an attack is for giants or not for giants; they are now translated, so the Forest Giant's and trow's attacks come out exactly as in Bungie's own tags.",
   "test": [
    "Forest Giants, Old Growth Forest Giants, Yearlings and Trow: do they attack men now? Giants?",

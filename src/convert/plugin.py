@@ -109,6 +109,9 @@ class ConversionContext:
         # TFL model id -> how far its geometry reaches from that centre, for
         # the ground beside it (see src.mesh.lower_ground_beside_models).
         self.model_reaches = {}
+        # Ids of the TFL projectiles that heal, so a special ability firing one
+        # can be allowed on friendly units (see mons.allow_healing_friendlies).
+        self.healing_projectiles = set()
 
 
 def model_centres(tags):
@@ -264,6 +267,7 @@ def convert_container(mono, id_map=None, name=None, description=b"", context=Non
     context.id_map = id_map
     context.model_centres = model_centres(mono.tags)
     context.model_reaches = model_reaches(mono.tags)
+    context.healing_projectiles = mons_module.healing_projectile_ids(mono.tags)
     report = ConversionReport(source_tags=len(mono.tags))
 
     if len(mono.tags) > headers.INT16_MAX:
