@@ -1136,15 +1136,18 @@ def _source_bytes(path):
 
 def converter_zip():
     """src/ as a zip, byte-for-byte the same for the same sources, so an
-    unchanged converter does not show up as a changed file."""
+    unchanged converter does not show up as a changed file. Stored, not
+    compressed: zlib versions compress the same bytes differently, so a
+    compressed zip built on Windows differed from CI's Linux build (and the
+    pages' cache hashes with it). About 360 KB instead of 130 KB."""
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
         for path in sorted((ROOT / "src").rglob("*.py")):
             rel = path.relative_to(ROOT)
             if any(part in CODE_SKIP for part in rel.parts):
                 continue
             info = zipfile.ZipInfo(rel.as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
+            info.compress_type = zipfile.ZIP_STORED
             zf.writestr(info, _source_bytes(path))
     return buf.getvalue()
 
