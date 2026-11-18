@@ -1148,6 +1148,7 @@ def converter_zip():
                 continue
             info = zipfile.ZipInfo(rel.as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_STORED
+            info.create_system = 3  # zipfile stamps 0 on Windows, 3 elsewhere
             zf.writestr(info, _source_bytes(path))
     return buf.getvalue()
 
