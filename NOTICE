@@ -13,7 +13,8 @@ monolith container layout, the TFL and SB tag header structures, the TFL-to-SB
 tag header conversion, and the written format notes in its `docs/` directory.
 Any code in this repository that is derived from or closely follows mythextract
 remains subject to its MIT license, and is credited in place at the relevant
-source files. NOTES.md documents what was taken from it, file by file.
+source files. documentation/notes/prior-art.md documents what was taken from it,
+file by file.
 
 mythextract is not vendored or redistributed here. It is cloned into a
 git-ignored `reference/` directory for study only.
@@ -29,7 +30,7 @@ cross-checked against:
 No code from that tool is vendored or reproduced here; it was consulted only
 as a second, independent source to validate struct layouts and the TFL/Myth II
 parameter-type mapping already derived from mythextract, and the reasoning is
-recorded in NOTES.md section 14.
+recorded in documentation/notes/maps.md §14.
 
 The field descriptions in `src/fieldinfo.py` are short factual summaries, written
 for this project, of behaviour documented in:
@@ -42,7 +43,7 @@ for this project, of behaviour documented in:
 The manuals themselves are not reproduced or redistributed here. They were read
 to learn what each mesh setting does and what values are usual, and that
 knowledge is expressed in our own words with the manual credited at the point of
-use. NOTES.md section 15 records what was learned, including the measurement
+use. documentation/notes/maps.md §15 records what was learned, including the measurement
 they made possible: that Myth II's terrain grid is genuinely double TFL's
 resolution rather than a different bookkeeping convention.
 

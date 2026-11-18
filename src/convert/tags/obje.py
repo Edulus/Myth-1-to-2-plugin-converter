@@ -7,7 +7,7 @@ Myth II's object is 64 bytes (mythextract ``mons_tag.ObjeTagFmt``) and also
 carries what TFL kept on the monster: vitality, scale, and the damage-type
 effect modifiers. Read as a Myth II object, a TFL one has scale 0 at byte 12 --
 in-engine, every unit and tree was drawn at scale 0 (invisible) while its
-shadow, sounds and minimap dot were fine (NOTES.md section 18).
+shadow, sounds and minimap dot were fine (documentation/notes/stock-tags.md §18).
 
 So there are two conversions:
 

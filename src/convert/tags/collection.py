@@ -4,7 +4,7 @@ mythextract reads both games' collections with one layout
 (``myth_collection.Header256Fmt`` and friends), and it is right that the
 *records* are the same. What differs is where the data starts, and what TFL
 left behind in its files. Measured against the 198 collections present both in
-the stock TFL tags and `Magma - The Fallen Lords v1.9` (NOTES.md section 18):
+the stock TFL tags and `Magma - The Fallen Lords v1.9` (documentation/notes/stock-tags.md §18):
 
 * **Myth II's data block starts with 32 bytes the sections come after.** In
   191 of Magma's 198 it holds ``"This tag was saved by Amber 2.0"`` -- an editor

@@ -10,23 +10,27 @@ read a TFL monolith/plugin, rewrite the tags it contains into Myth II form, and 
 a working Myth II plugin**.
 
 Built on the research and format work in [jwheare/mythextract](https://github.com/jwheare/mythextract),
-which provides the reading and single-tag-header conversion side of the problem. See
-[NOTES.md](NOTES.md) for a detailed account of what mythextract gives us and what this
-project still has to build.
+which provides the reading and single-tag-header conversion side of the problem. The
+[documentation](documentation/README.md) folder holds what the converter does to each tag
+type, the research notes behind every rule, and how the site and releases work.
 
 ## Status
 
-**Public beta.** Two levels from *Sir Mauriac's Tale* -- **Tandem** and
-**In the Name of Glory** -- load, play and reach the end-game screen in Myth II
-1.8.5, converted entirely by the tool. Other levels and multiplayer remain
-unverified. See [NOTES.md](NOTES.md) sections 17-18.
+**Public beta, converter 0.18 (17 November 2026).** Two levels from *Sir
+Mauriac's Tale* -- **Tandem** and **In the Name of Glory** -- load, play and
+reach the end-game screen in Myth II 1.8.5, converted entirely by the tool.
+Testers have confirmed water, riverbanks, buildings, hosted multiplayer games
+(units, scenery, flags and balls), the ground after explosions, and units that
+stand still when they stop. Forest Giants, Trow and healers were fixed in 0.17
+and 0.18 and are not yet checked in the game. Other levels are untested.
 
 The converter handles terrain, markers, map actions, monsters/units and their
 objects, projectiles, artifacts, scenery, weather, mesh effects, lighting,
-sprite collections, text and building models (`mode`/`geom`). Lighting uses
-standard values for every map, terrain heights are blended onto Myth II's finer
-grid, and some tag bodies (including sounds and projectile groups) pass through
-unchanged. The support matrix below records those limits.
+ambient sounds, sprite collections, text and building models (`mode`/`geom`).
+Lighting uses standard values for every map, and a few tag types (including
+water definitions and projectile groups) are still copied unchanged.
+[documentation/conversion-rules.md](documentation/conversion-rules.md) has the
+rule for every tag type and what has been checked in the game.
 
 **Convert in your browser:** the project website has a *Convert a plugin* page.
 Drop a TFL plugin on it and it converts inside the browser tab, with nothing
@@ -38,15 +42,9 @@ Mauriac's Tale*: about 5 seconds to convert, roughly 1.1 GB of browser memory,
 and the result played *Tandem* on a clean Myth II 1.8.5 install.
 
 Unless visitors untick a box (ticked by default), the plugin's name, level count
-and converter version go on a public "Maps converted so far" list on that page. The list lives
-in the comments service (`comments-worker/`, Cloudflare KV key `conversions`).
-To remove an entry, from `comments-worker/`:
-
-```powershell
-npx wrangler kv key get conversions --binding VOTES --remote > conversions.json
-# edit conversions.json: delete the unwanted entry
-npx wrangler kv key put conversions --binding VOTES --remote --path conversions.json
-```
+and converter version go on a public "Maps converted so far" list on that page;
+[documentation/site-and-releases.md](documentation/site-and-releases.md) says how
+to remove an entry.
 
 **Also in this beta:** a ready-made, already-converted *Sir Mauriac's Tale*
 (a GitHub release, linked from the project website) that needs nothing else
@@ -91,7 +89,7 @@ cd Myth-1-to-2-plugin-converter
 You need Python 3.12+, Myth II 1.8.5, your own TFL game's `tags` folder
 (`TAGS.GOR` and `ARTSOUND.GOR`), and an extracted TFL plugin (`.gor`). No game
 data is included. No Python packages or build step are needed. There is no
-packaged GitHub release yet.
+packaged release of the converter itself.
 
 On Windows, `launch.bat` finds Python or attempts to install it with winget,
 then opens the studio. Follow its prompt to run it again after installation;
@@ -204,7 +202,7 @@ replacement units and other Civil War packs are untested. Use the tagset that
 matches your maps: the 1.7 tagset for the 1.7 map packs, the 1.8.4 one for 1.8.4. The "yours" and "enemy"
 shortcuts rely on that tagset naming its units with a leading `@` or `+`. Maps
 unlock in order in the campaign list, so only the first levels are playable at
-first. See [NOTES.md](NOTES.md) for the details.
+first. See [documentation/notes/unit-swapper.md](documentation/notes/unit-swapper.md) for the details.
 
 ## Usage
 
@@ -311,70 +309,23 @@ MYTH_SAMPLE_DIR=<dir>     python -m unittest discover -s . -p "test_*.py"
 Set `MYTH_REQUIRE_SAMPLE=1` to make a *missing* sample an error rather than a skip, for a
 run that is meant to be the real gate.
 
-## Tag type support matrix
+## What is converted
 
-| Tag type | Status | Known lossy fields | Myth II fields synthesised |
-|---|---|---|---|
-| `text` | **converts** | a literal `\` becomes `\|`; when followed by `i`/`b`/`p` it is indistinguishable from markup and no warning is possible | -- |
-| `stli` | **converts** | as `text` | -- |
-| `.256` | **converts** | none -- records shared; Myth II's data block gains 32 bytes (every internal offset moves) and TFL's saved runtime pointers are zeroed; 48 of 79 unedited Magma collections reproduce byte-for-byte -- see [NOTES.md](NOTES.md) section 18 | -- |
-| `d256` | pass-through | body unconverted | -- |
-| `mons` | **converts** | TFL-only fields dropped (`visual_distance`, `sound_pitch_*`, `melee_power`); scale, vitality and `effect_modifiers` move to the monster's own `obje` (below) | 17 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; `pathfinding_radius` has no honest single default (per-monster) and `more_hack_flags` is an unresolved tie -- see [NOTES.md](NOTES.md) section 16 |
-| `unit` | **converts** | none -- byte-identical layout in both games (128 bytes; only the first 8, two tag references, are declared), only those references may need remapping | -- |
-| `proj` | **converts** | TFL's 4 bytes at 76..80 dropped (meaning unknown); TFL flag bit 1 (thrown debris) cleared -- Myth II reads it as *guided* -- see [NOTES.md](NOTES.md) section 18 | zero references written as none |
-| `scen` | **converts** | TFL words at 32..44 dropped (no Myth II destination) -- see [NOTES.md](NOTES.md) section 18 | netgame scoring type and flag number (0xFFFF) |
-| `meef` | **converts** | TFL's word at 16 and constant at 10 not carried; no shockwave (TFL has none) -- see [NOTES.md](NOTES.md) section 18 | velocity, dissipation, camera shake, shockwave block (Bungie's own port of `wiex` and the 13 Myth II effects) |
-| `meli` | **converts** | per-map intensities not carried yet: every stock TFL lighting tag converts to the same lighting -- see [NOTES.md](NOTES.md) section 18 | ambient/diffuse/model/total intensities, smoothing, filter (Bungie's base-game values) |
-| `obje` | **converts**, and each monster gets its own | TFL bytes 6..16 (zero in stock) | scale, vitality and 9 effect modifiers -- from the monster for per-monster objects (scale times 0.728 and its random spread divided by 12, Bungie's own factor for the TFL sprites Myth II ships), 1.0 otherwise; TFL objects read unconverted made every unit and tree invisible (scale 0) -- see [NOTES.md](NOTES.md) section 18 |
-| `part` | **converts** | none -- first 92 bytes shared | splash box (`box_width` etc.) from Magma's majority; a zero width crashed the engine -- see [NOTES.md](NOTES.md) section 18 |
-| `arti` | **converts** | 128 zero padding bytes after the declared 128 dropped | 4 extra effect-modifier slots; all-zero TFL modifiers become 1.0 (Magma's untuned default) rather than immune -- see [NOTES.md](NOTES.md) section 18 |
-| `mesh` | **header + terrain + markers + map actions convert** | 6 TFL-only header fields dropped (`render_variables_tag`, `teams_*`, `annotation_*`); tag references inside map-action *parameter data* not yet remapped (marker-palette references are); terrain is upsampled to a 2x2 block per TFL cell, with heights blended between neighbouring points and every other field copied, as in Project Magma's hand port of *The Fallen Levels v2*; the media coverage region is copied verbatim (its values are already on Myth II's scale) | 38 Myth II-only header fields, defaulted from measurements of `Magma - The Fallen Lords v1.9`; per-cell `model_index` (none) and `media_height` (the "Water level" decision); `mesh_LOD_data` **zero-filled** at the new size -- its encoding is not understood |
-| `mode` `geom` | **convert** | `mode`: footprint cells split 2x2; `geom`: header grows 96B to 128B; model markers move from TFL's corner anchor to Myth II's centre anchor. The mesh's per-cell `model_index` stays "none" (the engine builds obstruction from the footprint, verified in-engine) -- see [NOTES.md](NOTES.md) section 17 | `geom`: bounding box (derived from vertices), `center_z` 0; material tail and extra surface flag bits left as TFL has them |
-| `amso` | **converts** | none -- same 64-byte layout; Bungie's retuned radii are not copied | unused sound slots written as none (`FFFFFFFF`), as in 208 of 220 slots of Bungie's and Magma's copies |
-| `prgr` `core` `soun` `phys` | pass-through | measured against the same tags in Myth II's stock files and Magma's port: same size, and no byte differs systematically | -- |
-| `lpgr` `medi` `ligh` `wind` | pass-through | `medi` (water) differs widely from Magma's and needs a converter; `lpgr`'s eight stretch factors are 0 in TFL and usually 1.0 in Myth II, though Myth II's own stock has all-zero ones; `ligh` and `wind` have too few samples to judge | -- |
-| *(all types)* | header converts | TFL `tag_version` and `flags` dropped -- measured safe, see [NOTES.md](NOTES.md) section 9; `version` clamped if it exceeds int16 | `identifier` (unique, sequential), `type` (mirrors container), `flags`, `destination`, `owner_index` |
-| *(container)* | header converts | TFL `checksum`, `mod_time` dropped | `checksum` and `header_checksum` **written as zero** -- algorithm unknown; `type`=`PLUGIN`; `version`=0 |
+[documentation/conversion-rules.md](documentation/conversion-rules.md) lists, for
+every tag type, whether it converts, what is lost or changed, and which Myth II
+fields the converter fills in, each with the measurement behind it. It also
+lists what has been checked in the game. In short:
 
-"Pass-through" means the body is copied byte-for-byte and the tag is reported as
-unconverted. It is never silently presented as converted.
-
-**Entrypoints are synthesised**, one per mesh tag, so converted levels appear
-in Myth II's campaign menu. A TFL plugin still depends on the original game's
-stock tags: use `tagset` above to provide them alongside the converted campaign.
-The two tested levels finish; unsupported tag layouts can still affect others.
-
-The container side is confirmed working: a plugin built by `src/writer.py` with
-**both checksums zeroed** loads and plays in Myth II 1.8.5. See below.
-
-## Verified in-engine
-
-Current gameplay results are in [NOTES.md](NOTES.md) section 18: *Tandem* and
-*In the Name of Glory* reach the end-game screen. Earlier container checks used
-**Myth II 1.8.5 build 471b** and a real 102-tag plugin (section 11):
-
-- **Neither container checksum is validated.** A plugin we built, with `checksum` and
-  `header_checksum` both zero, loads and plays. This removes what was the project's biggest
-  risk -- the algorithm never needs reversing.
-- **Padding between the tag directory and the first body is optional.** Dropping it changes
-  nothing, matching the corpus where 51 of 186 entrypoint-bearing plugins have none.
-- **Myth II silently ignores a plugin whose filename exceeds 32 characters.** Nothing
-  reports this; the plugin simply never appears. `convert` warns about it.
-- **Only plugins with no entrypoints can be activated as tagsets.** A plugin with
-  entrypoints is a *campaign*, and campaigns are single-select -- so two of them cannot load
-  together. Stripping entrypoints with `src/writer.py` turns one into a tagset, which is how
-  the stock-tag dependency problem below can be worked around.
-- **Converting the original stock TFL tags resolves dependencies that Magma's
-  port did not supply under the original IDs.** The `tagset` command implements
-  this workflow. Earlier failures and their fixes are recorded in NOTES sections
-  13 and 18.
-- **Markers, marker-palette entries, and map-action headers need no format conversion at
-  all** -- verified against a real, working 2011 community tool's source code as well as
-  mythextract's own declared struct formats. The one genuine bug found: TFL's map-action
-  parameter type numbering is missing a slot Myth II has, so every TFL type code from 12
-  up is off by one -- a suspected cause of an earlier loading crash. Fixed and validated
-  against all 2,760 map actions / 7,942 parameters in the real test plugin. See
-  [NOTES.md](NOTES.md) section 14.
+- Converted: maps (header, terrain, markers, map actions), monsters and units
+  with an object of their own each, projectiles, scenery, artifacts, particle
+  systems, mesh effects, lighting, ambient sounds, sprite collections, building
+  models, text.
+- Copied unchanged ("pass-through", always reported as such): `prgr`, `core`,
+  `soun`, `phys` (measured: no systematic difference from Myth II's copies), and
+  `lpgr`, `medi`, `ligh`, `wind`, `d256`.
+- Container checksums are written as zero: Myth II 1.8.5 validates neither.
+- Entrypoints are synthesised, one per map, so converted levels appear in the
+  campaign menu.
 
 ## Layout
 
@@ -397,19 +348,18 @@ src/cli.py         command line entry point
 tests/             unittest suite; fixtures.py builds synthetic containers
 reference/         third-party material we study but do not redistribute --
                    git-ignored except its README, which says how to get each item
-NOTES.md           research notes on the reference implementation and the format
+documentation/     conversion rules, research notes, the site and releases, plans
 ```
 
 ## Honest limitations
 
 Only two single-player levels have been tested through to the end-game screen.
 Lighting uses standard values, and terrain heights are blended between the
-original points (no hand detail as in Magma's ports). Mesh LOD data is zero-filled because
-its encoding is not understood. References inside map-action parameter data
-are not yet remapped. Sounds, projectile groups, collection references and
-other unsupported bodies are copied unchanged. Expect manual finishing work
-and verify each level in-game; a passing file round-trip is not a gameplay test.
-See [NOTES.md](NOTES.md) sections 17-18 and the support matrix above.
+original points (no hand detail as in Magma's ports). References inside
+map-action parameter data are not yet remapped. Water definitions, projectile
+groups and a few other types are copied unchanged. Expect manual finishing work
+and verify each level in game; a passing file round-trip is not a gameplay test.
+See [documentation/conversion-rules.md](documentation/conversion-rules.md).
 
 ## Game data
 
@@ -435,8 +385,8 @@ MIT -- see [LICENSE](LICENSE).
 This project would not exist without [jwheare/mythextract](https://github.com/jwheare/mythextract)
 (MIT, © 2025 James Wheare), which is the source of the format research this builds on.
 [NOTICE](NOTICE) records the attribution and the trademark position;
-[NOTES.md](NOTES.md) documents what was taken from it, file by file, with citations at
-each use site in the source.
+[documentation/notes/prior-art.md](documentation/notes/prior-art.md) documents what was
+taken from it, file by file, with citations at each use site in the source.
 
 Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights
 holders. This is an unofficial, non-commercial interoperability tool, not affiliated with

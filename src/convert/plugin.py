@@ -12,7 +12,7 @@ reports both:
   with wrong contents. Every such tag is listed in the report.
 * **Container checksums are written as zero.** The algorithm is unknown, and
   measurement showed it does not matter: Myth II 1.8.5 validates neither field
-  (NOTES.md section 11).
+  (documentation/notes/containers.md §11).
 
 Entrypoints *are* synthesised, one per mesh tag, so converted levels appear in
 the game's menu -- see `entrypoints`.
@@ -481,7 +481,7 @@ def _free_id(wanted, taken):
 # Myth II silently ignores a plugin whose filename is longer than this. Verified
 # in-engine: a 33-character file did not appear in the Campaign list at all, and
 # appeared immediately when renamed to 20, with no change to its contents. Same
-# width as the container's internal `name` field. See NOTES.md section 11.
+# width as the container's internal `name` field. See documentation/notes/containers.md §11.
 MAX_PLUGIN_FILENAME = 32
 
 
@@ -609,7 +609,7 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
     A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on
     the base game; converting those stock tags -- an install's ``TAGS.GOR``
     and ``ARTSOUND.GOR`` -- into a tagset is what lets a converted plugin load
-    (NOTES.md section 18). Where several archives carry the same tag, the first
+    (documentation/notes/stock-tags.md §18). Where several archives carry the same tag, the first
     one given wins, so list them most-authoritative first.
 
     The result has no entrypoints -- Myth II only offers entrypoint-free plugins
@@ -670,7 +670,7 @@ def convert_tagset(in_paths, out_path, name=None, id_map=None, context=None):
 # Tags Myth II's *code* drives -- dialogs, templates, fonts, the interface,
 # observer constants, the internal sound list. A tagset's tags replace Myth II's
 # base tags of the same ID, and TFL's versions of these do not fit Myth II's
-# code (NOTES.md section 18).
+# code (documentation/notes/stock-tags.md §18).
 ENGINE_FACING_TYPES = frozenset({b"bina", b"font", b"inte", b"obpc", b"soli", b"temp"})
 
 

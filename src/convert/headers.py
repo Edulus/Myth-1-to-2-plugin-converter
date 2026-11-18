@@ -36,7 +36,7 @@ from .. import codec, formats
 #   destination  varies (0, -1, 3, 2, 1); 0 is the most common by far.
 #
 # Whether the engine actually reads `identifier` at load time is unknown -- see
-# NOTES.md section 6. Matching observed practice is the conservative choice.
+# documentation/notes/containers.md §9. Matching observed practice is the conservative choice.
 SB_DEFAULTS = {
     "flags": 0,
     "destination": 0,
@@ -132,7 +132,7 @@ def _fit(value, width):
 def convert_mono_header(tfl_mono, tag_count, entry_count, name=None, description=b""):
     """Build a Myth II container header for a plugin converted from TFL.
 
-    The two containers share almost nothing (NOTES.md section 3), so most of this
+    The two containers share almost nothing (documentation/notes/containers.md §3), so most of this
     is synthesised rather than translated:
 
     * ``type`` becomes ``PLUGIN``. A TFL ``.gor`` is a foundation archive
@@ -144,7 +144,7 @@ def convert_mono_header(tfl_mono, tag_count, entry_count, name=None, description
     * ``checksum`` and ``header_checksum`` are zeroed. Nobody has worked out how
       Myth II computes them, and it turns out nobody needs to: a plugin built by
       this tool with both fields zeroed loads and plays in Myth II 1.8.5, so
-      neither is validated (verified in-engine, NOTES.md section 11). TFL's
+      neither is validated (verified in-engine, documentation/notes/containers.md §11). TFL's
       single uint32 checksum is a different field of a different width anyway.
     * ``size`` is filled in by the writer, which is the only thing that knows the
       final layout.
@@ -153,7 +153,7 @@ def convert_mono_header(tfl_mono, tag_count, entry_count, name=None, description
     """
     warnings = [
         "container checksum and header_checksum written as zero -- Myth II 1.8.5 "
-        "does not validate either (verified in-engine, NOTES.md section 11)"
+        "does not validate either (verified in-engine, documentation/notes/containers.md §11)"
     ]
     if entry_count == 0:
         warnings.append(

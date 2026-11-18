@@ -67,7 +67,7 @@ SBMonoHeader = codec.Struct(
         ("64s", "description"),
         ("H", "entry_tag_count"),  # offset 100
         ("H", "tag_list_count"),  # offset 102
-        ("4s", "checksum"),  # algorithm unknown -- see NOTES.md section 6
+        ("4s", "checksum"),  # algorithm unknown -- see documentation/notes/containers.md §11
         ("L", "flags"),
         ("L", "size"),  # total file size in bytes
         ("4s", "header_checksum"),  # algorithm unknown
@@ -117,7 +117,7 @@ TFLTagHeader = codec.Struct(
         ("4s", "tag_type"),
         ("4s", "tag_id"),
         ("L", "version"),
-        ("H", "tag_version"),  # dropped by tfl2sb -- see NOTES.md section 2
+        ("H", "tag_version"),  # dropped by tfl2sb -- see documentation/notes/containers.md §9
         ("H", "flags"),  # dropped by tfl2sb
         ("i", "tag_data_offset"),  # absolute file offset inside a monolith
         ("l", "tag_data_size"),  # body length, excluding this 64-byte header

@@ -8,7 +8,7 @@ diffuse and maximum total intensity (16.16 each); then maximum shadow distance,
 smoothing Gaussian width and filter width (16-bit each).
 
 Measured across all 8 stock TFL lighting tags and 28 distinct Myth II ones
-(NOTES.md section 18):
+(documentation/notes/stock-tags.md §18):
 
 * **Incident light I, J, K** are TFL's floats 16..18 -- 1.0, 1.0, -0.6 in all
   8; K matches Bungie's own Myth II tags exactly (``gras``: 0.95, 1.0, -0.6).

@@ -8,7 +8,7 @@ each TFL cell becomes the 2x2 block of cells covering the same ground, in rows:
 (2x, 2y), (2x+1, 2y), (2x, 2y+1), (2x+1, 2y+1), flags unchanged.
 
 Measured against the stock TFL tags and Magma's ports, footprints are TFL's
-split this way in 81 of 91 models, the rest hand-edited (NOTES.md section 17);
+split this way in 81 of 91 models, the rest hand-edited (documentation/notes/models.md §17);
 everything before the footprint is byte-identical in all 91.
 """
 

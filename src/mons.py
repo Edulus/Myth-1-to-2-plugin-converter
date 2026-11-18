@@ -321,8 +321,8 @@ def convert_sequence_indexes(tfl_bytes):
     most of the rest; empty in 1), and an empty turning its moving animation in
     16. Left empty, a unit that stopped had no pause to play; that fits the
     "moonwalking", units jogging on the spot after they stop (Keep). So an
-    empty pause takes idle_1 and an empty turning takes moving (NOTES.md
-    section 29).
+    empty pause takes idle_1 and an empty turning takes moving (documentation/notes/units.md
+    §29).
     """
     values = list(struct_unpack_shorts(tfl_bytes, TFL_SEQUENCE_SLOTS))
     values += [-1] * (SB_SEQUENCE_SLOTS - TFL_SEQUENCE_SLOTS)
@@ -411,7 +411,7 @@ TFLMonsHeader = codec.Struct(
         ("h", "visibility_type"),
         ("h", "combined_power"),
         ("h", "longest_range"),
-        ("24s", "effect_modifiers"),  # TFL-only; see NOTES.md section 16
+        ("24s", "effect_modifiers"),  # TFL-only; see documentation/notes/units.md §16
         ("h", "cost"),
         ("10s", "sound_types"),  # 10 x int8, same both games
         ("h", "enemy_experience_kill_bonus"),

@@ -3,7 +3,7 @@
 Everything in this directory except this file is **git-ignored on purpose**. It is
 other people's work: prior-art source code, a community tool, and the official
 Myth II editor manuals. We read it, cite it, and record what we learned in
-[../NOTES.md](../NOTES.md) — we do not redistribute it.
+[../documentation/notes/](../documentation/README.md) — we do not redistribute it.
 
 That means a fresh clone of this repository gets an empty `reference/`. Nothing
 in the project *needs* these files to build, run, or pass its tests; they are for
@@ -43,8 +43,8 @@ tag-making sections of <https://tain.totalcodex.net> to find them.
 
 These answered a question no amount of struct analysis could: a submesh is
 256×256 colormap pixels, which is what established that Myth II has double TFL's
-linear terrain resolution rather than merely different bookkeeping. See NOTES.md
-section 15.
+linear terrain resolution rather than merely different bookkeeping. See documentation/notes/maps.md
+§15.
 
 `src/fieldinfo.py` carries short factual summaries of the field semantics learned
 here — written in our own words, with the manual cited — so the application can
@@ -60,5 +60,5 @@ source for the marker/map-action structures in `src/mesh.py`.
 
 Only `ReadMe.txt`, `converter.c` and `winconverter.c` are kept here — the
 compiled Mac/Windows binaries in the original archive are not needed to read the
-logic. See NOTES.md section 14 for what was taken from it, and for the two
+logic. See documentation/notes/maps.md §14 for what was taken from it, and for the two
 places its approach was improved on rather than copied.

@@ -199,7 +199,7 @@ class TestWriterRebuildsOffsets(unittest.TestCase):
         self.assertEqual(len(packed), reader.read_bytes(packed).header.size)
 
     def test_checksums_are_carried_through_untouched(self):
-        """We cannot compute them (NOTES.md section 6), so we must not invent them."""
+        """We cannot compute them (documentation/notes/containers.md §11), so we must not invent them."""
         data = fixtures.build_sb_mono(
             fixtures.SAMPLE_TAGS, checksum=b"\xaa\xbb\xcc\xdd",
             header_checksum=b"\x11\x22\x33\x44",

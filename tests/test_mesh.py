@@ -74,7 +74,7 @@ class TestMeshHeaderLayout(unittest.TestCase):
 
 
 class TestMarkerAndMapActionStructs(unittest.TestCase):
-    """The pure structural facts from NOTES.md section 14: markers, marker
+    """The pure structural facts from documentation/notes/maps.md §14: markers, marker
     palette entries and map-action heads are byte-identical between TFL and
     Myth II. Sizes cross-checked against mythextract's own declared formats
     and two independent community tools that ported real levels this way."""
@@ -701,7 +701,7 @@ class TestMeshBodyConversion(unittest.TestCase):
 
     def test_map_action_param_types_are_corrected(self):
         """The actual fix for the EXCEPTION_ACCESS_VIOLATION in byte_swap_data
-        (NOTES.md section 14): TFL param type 12 means WORLD_POINT_2D, which
+        (documentation/notes/maps.md §14): TFL param type 12 means WORLD_POINT_2D, which
         Myth II numbers 13. Left uncorrected, the engine misreads every
         parameter after the first wrongly-typed one."""
         import struct

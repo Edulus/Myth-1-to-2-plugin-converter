@@ -3,14 +3,14 @@
 The header grows from 96 bytes to Myth II's 128 (mythextract
 ``myth_tags.GeomFmt``); every count, section offset and size is unchanged, and
 the data after the header is copied as it is. Measured against the stock TFL
-tags and Magma's ports (NOTES.md section 17):
+tags and Magma's ports (documentation/notes/models.md §17):
 
 - ``data_offset`` follows the header, 96 -> 128.
 - The bounding box Myth II adds is the min/max of the vertices, which are
   (x, y, z) int16 triples; it matches Magma's in 90 of 91 geometries.
 - ``center_z`` is 0 in 90 of 91 of Magma's (TFL holds half the height).
 
-Myth II-only defaults, agreed and recorded in NOTES.md section 20: the tails of
+Myth II-only defaults, agreed and recorded in documentation/notes/models.md §17: the tails of
 material records (bytes 58..63) and the surface flag bits Magma sometimes adds
 are left as TFL has them. 43 of Magma's 91 geometries are byte-identical to
 TFL's in that data, so Myth II accepts it.

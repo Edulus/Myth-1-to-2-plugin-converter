@@ -1043,7 +1043,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <h2>Help test or report a problem</h2>
 <p>Every visitor can help. Try a level you know and report what differs from TFL. Open a question or progress update below and use its comment box: a name, message and one-word Myth check &mdash; <strong>no account or sign-in</strong>.</p>
 <p>Include the plugin and level names, Myth II version, what you expected, what happened, and the final lines of <code>myth_log.txt</code> from the Myth II folder. For a crash, include relevant lines from the newest <code>myth_crashlog- &lt;date&gt;.txt</code>. Check that the log lists both your campaign and stock tagset after <code>Starting mesh</code>. Share logs and observations, not game files; remove private paths if needed.</p>
-<p>Code contributions are welcome through <a href="{REPO_URL}">GitHub</a>; the <a href="{REPO_URL}/blob/main/README.md">README</a> and <a href="{REPO_URL}/blob/main/NOTES.md">format notes</a> describe current support and research.</p>
+<p>Code contributions are welcome through <a href="{REPO_URL}">GitHub</a>; the <a href="{REPO_URL}/blob/main/README.md">README</a> and <a href="{REPO_URL}/tree/main/documentation">documentation</a> describe current support and research.</p>
 <h2>Open questions for testers</h2>
 <ul class="cards">{questions}</ul>
 <h3>Closed questions</h3>

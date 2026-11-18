@@ -7,7 +7,7 @@ camera shaking type, then a shockwave block -- collection reference, sequence,
 radial points, thickness, height offset -- which TFL does not have. Read as
 Myth II's, TFL bytes land in the collection reference: in-engine, "couldn't
 read header for collection reference definition" for the satchel charge, which
-took the dwarves and the shade's magic down with it (NOTES.md section 18).
+took the dwarves and the shade's magic down with it (documentation/notes/stock-tags.md §18).
 
 Evidence is thin -- 4 stock TFL mesh effects, 13 Myth II ones (Magma's 3 plus
 the base game's 10) -- but one pair is decisive: Bungie's own Myth II port of

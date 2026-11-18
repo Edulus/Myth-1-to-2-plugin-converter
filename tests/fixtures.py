@@ -1,7 +1,7 @@
 """Synthetic Myth containers, built by hand for tests.
 
 These are assembled with raw ``struct.pack`` calls straight from the layouts
-documented in NOTES.md section 3, **deliberately not** using ``src.writer``. If
+documented in documentation/notes/containers.md §3, **deliberately not** using ``src.writer``. If
 they were built by the writer, a round-trip test would only prove the writer is
 self-consistent. Built independently, it proves reader and writer agree with the
 format.
