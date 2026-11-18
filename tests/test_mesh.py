@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from src import codec, formats, idmap, mesh, reader  # noqa: E402
-from src.convert import entrypoints, plugin as convert_plugin  # noqa: E402
+from src.convert import entrypoints, meshrules, plugin as convert_plugin  # noqa: E402
 
 from . import fixtures  # noqa: E402
 
@@ -153,7 +153,7 @@ class TestConvertTflMapActions(unittest.TestCase):
         param = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 100, 200)
         buf = self._action(param, num_params=1)
 
-        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        new_buf, warnings = meshrules.convert_tfl_map_actions(buf, action_count=1)
         self.assertEqual([], warnings)
         self.assertEqual(13, struct.unpack_from(">H", new_buf, 64)[0])
         self.assertEqual(param[2:], new_buf[64 + 2 :])  # count/name/data untouched
@@ -164,7 +164,7 @@ class TestConvertTflMapActions(unittest.TestCase):
         param = struct.pack(">HH4s", 3, 1, b"link") + b"\x00\x00\x00\x2a"
         buf = self._action(param, num_params=1)
 
-        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        new_buf, warnings = meshrules.convert_tfl_map_actions(buf, action_count=1)
         self.assertEqual([], warnings)
         self.assertEqual(buf, new_buf)
 
@@ -178,7 +178,7 @@ class TestConvertTflMapActions(unittest.TestCase):
         param2 = struct.pack(">HH4s", 5, 1, b"cnt1") + struct.pack(">L", 42)
         buf = self._action(param1 + param2, num_params=2)
 
-        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        new_buf, warnings = meshrules.convert_tfl_map_actions(buf, action_count=1)
         self.assertEqual([], warnings)
         self.assertEqual(13, struct.unpack_from(">H", new_buf, 64)[0])
         self.assertEqual(5, struct.unpack_from(">H", new_buf, 64 + len(param1))[0])
@@ -192,7 +192,7 @@ class TestConvertTflMapActions(unittest.TestCase):
         param2 = struct.pack(">HH4s", 3, 1, b"link") + b"\x00" * 4
         buf = self._action(param1 + param2, num_params=2)
 
-        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=1)
+        new_buf, warnings = meshrules.convert_tfl_map_actions(buf, action_count=1)
         self.assertEqual(1, len(warnings))
         self.assertIn("unrecognised parameter type 250", warnings[0])
         self.assertEqual(buf, new_buf, "left fully untouched once trust is lost")
@@ -214,7 +214,7 @@ class TestConvertTflMapActions(unittest.TestCase):
         ).encode()
         buf = head_a + head_b + param_a + param_b
 
-        new_buf, warnings = mesh.convert_tfl_map_actions(buf, action_count=2)
+        new_buf, warnings = meshrules.convert_tfl_map_actions(buf, action_count=2)
         self.assertEqual([], warnings)
         action_head_end = 2 * mesh.MAP_ACTION_HEAD_SIZE
         self.assertEqual(13, struct.unpack_from(">H", new_buf, action_head_end)[0])
@@ -268,7 +268,7 @@ class TestMapActionTagRefs(unittest.TestCase):
         id_map.add(b"soun", b"am05", b"am5b")
         id_map.add(b"proj", b"lite", b"lit2")
         id_map.add(b"unit", b"\x00\x07\x00\x00", b"xxxx")  # must not touch the marker id
-        new_buf, renamed = mesh.remap_map_action_tags(buf, 1, id_map)
+        new_buf, renamed = meshrules.remap_map_action_tags(buf, 1, id_map)
         self.assertEqual(2, renamed)
         self.assertEqual(len(buf), len(new_buf))
         self.assertEqual(buf.replace(b"am05", b"am5b").replace(b"lite", b"lit2"), new_buf)
@@ -278,7 +278,7 @@ class TestMapActionTagRefs(unittest.TestCase):
 
         params, n = self._params()
         buf = self._buf(params, n)
-        self.assertEqual((buf, 0), mesh.remap_map_action_tags(buf, 1, IdMap()))
+        self.assertEqual((buf, 0), meshrules.remap_map_action_tags(buf, 1, IdMap()))
 
 
 class TestRemapMarkerPalette(unittest.TestCase):
@@ -298,7 +298,7 @@ class TestRemapMarkerPalette(unittest.TestCase):
         id_map = IdMap()
         id_map.add(b"scen", b"oldi", b"newi")
 
-        new_buf, warnings = mesh.remap_marker_palette(buf, 1, id_map)
+        new_buf, warnings = meshrules.remap_marker_palette(buf, 1, id_map)
         self.assertEqual([], warnings)
         entry = mesh.MarkerPaletteEntry.unpack(new_buf, 0)
         self.assertEqual(b"newi", entry.marker_tag)
@@ -307,12 +307,12 @@ class TestRemapMarkerPalette(unittest.TestCase):
         from src.idmap import IdMap
 
         buf = self._palette([(mesh.MarkerType.SCENERY, b"unkn")])
-        new_buf, _ = mesh.remap_marker_palette(buf, 1, IdMap())
+        new_buf, _ = meshrules.remap_marker_palette(buf, 1, IdMap())
         self.assertEqual(buf, new_buf)
 
     def test_no_id_map_leaves_everything_alone(self):
         buf = self._palette([(mesh.MarkerType.SCENERY, b"oldi")])
-        new_buf, _ = mesh.remap_marker_palette(buf, 1, None)
+        new_buf, _ = meshrules.remap_marker_palette(buf, 1, None)
         self.assertEqual(buf, new_buf)
 
     def test_unset_and_type_without_a_tag_are_skipped(self):
@@ -327,7 +327,7 @@ class TestRemapMarkerPalette(unittest.TestCase):
         id_map = IdMap()
         id_map.add(b"scen", b"oldi", b"newi")  # would match if type were SCENERY
 
-        new_buf, _ = mesh.remap_marker_palette(buf, 2, id_map)
+        new_buf, _ = meshrules.remap_marker_palette(buf, 2, id_map)
         self.assertEqual(buf, new_buf, "neither entry should have been touched")
 
     def test_multiple_entries_each_remapped_independently(self):
@@ -343,7 +343,7 @@ class TestRemapMarkerPalette(unittest.TestCase):
         id_map.add(b"scen", b"tre1", b"tre2")
         id_map.add(b"unit", b"unt1", b"unt2")
 
-        new_buf, _ = mesh.remap_marker_palette(buf, 2, id_map)
+        new_buf, _ = meshrules.remap_marker_palette(buf, 2, id_map)
         e0 = mesh.MarkerPaletteEntry.unpack(new_buf, 0)
         e1 = mesh.MarkerPaletteEntry.unpack(new_buf, mesh.MARKER_PALETTE_ENTRY_SIZE)
         self.assertEqual(b"tre2", e0.marker_tag)
@@ -363,7 +363,7 @@ class TestNetgameTypes(unittest.TestCase):
         )
 
     def _mark(self, specs):
-        out = mesh.mark_netgame_types(self._entries(specs), len(specs))
+        out = meshrules.mark_netgame_types(self._entries(specs), len(specs))
         return [mesh.MarkerPaletteEntry.unpack(out, i * mesh.MARKER_PALETTE_ENTRY_SIZE) for i in range(len(specs))]
 
     def test_ordinary_entries_appear_in_every_game_type(self):
@@ -406,7 +406,7 @@ class TestNetgameTypes(unittest.TestCase):
     def test_nothing_else_about_an_entry_changes(self):
         specs = [(mesh.MarkerType.UNIT, b"ghol", 0, 6, 3), (mesh.MarkerType.SCENERY, b"tree", 0, 0, -1)]
         before = self._entries(specs)
-        after = mesh.mark_netgame_types(before, 2)
+        after = meshrules.mark_netgame_types(before, 2)
         self.assertEqual(len(before), len(after))
         for i in range(2):
             a = mesh.MarkerPaletteEntry.unpack(before, i * 32)
@@ -961,7 +961,7 @@ class TestRealPluginMeshBodies(unittest.TestCase):
 
             if header.map_action_count:
                 start, size = header.map_actions_offset, header.map_action_buffer_size
-                _, warnings = mesh.convert_tfl_map_actions(
+                _, warnings = meshrules.convert_tfl_map_actions(
                     bytes(trailing[start : start + size]), header.map_action_count
                 )
                 self.assertEqual(
@@ -972,7 +972,7 @@ class TestRealPluginMeshBodies(unittest.TestCase):
             if header.marker_palette_entries:
                 start = header.marker_palette_offset
                 size = header.marker_palette_size
-                _, warnings = mesh.remap_marker_palette(
+                _, warnings = meshrules.remap_marker_palette(
                     bytes(trailing[start : start + size]),
                     header.marker_palette_entries,
                     id_map=None,
@@ -1020,7 +1020,7 @@ class TestGroundHeight(unittest.TestCase):
         block = marker(mesh.MarkerType.SCENERY) + marker(mesh.MarkerType.UNIT) + marker(mesh.MarkerType.AMBIENT_SOUND)
         # A 1x1-submesh mesh is 32x32 Myth II cells.
         flat = self.terrain([[64] * 32 for _ in range(32)])
-        out, moved = mesh.place_markers_on_ground(block, 3, flat, 1, 1)
+        out, moved = meshrules.place_markers_on_ground(block, 3, flat, 1, 1)
         zs = [m.pos_z for m in mesh.MarkerHead.unpack_many(out, 0, 3)]
         self.assertEqual([64, 64, -500], zs)
         self.assertEqual(2, moved)
@@ -1044,7 +1044,7 @@ class TestModelsByCentre(unittest.TestCase):
     def test_a_model_moves_by_its_centre_rounded_to_whole_cells(self):
         palette = self.palette((mesh.MarkerType.SCENERY, b"tree"), (mesh.MarkerType.MODEL, b"barn"))
         block = self.marker(mesh.MarkerType.MODEL, 0, 1000, 2000) + self.marker(mesh.MarkerType.SCENERY, 0, 1000, 2000)
-        out, moved, missing = mesh.place_models_by_centre(block, 2, palette, 2, {b"barn": (3072, 1000)})
+        out, moved, missing = meshrules.place_models_by_centre(block, 2, palette, 2, {b"barn": (3072, 1000)})
         model, tree = mesh.MarkerHead.unpack_many(out, 0, 2)
         self.assertEqual((1000 + 3072, 2000 + 1024, 7), (model.pos_x, model.pos_y, model.pos_z))
         self.assertEqual((1000, 2000), (tree.pos_x, tree.pos_y), "scenery is not a model")
@@ -1053,7 +1053,7 @@ class TestModelsByCentre(unittest.TestCase):
     def test_a_model_with_no_known_centre_stays_and_is_reported(self):
         palette = self.palette((mesh.MarkerType.MODEL, b"gone"))
         block = self.marker(mesh.MarkerType.MODEL, 0, 1000, 2000)
-        out, moved, missing = mesh.place_models_by_centre(block, 1, palette, 1, {})
+        out, moved, missing = meshrules.place_models_by_centre(block, 1, palette, 1, {})
         self.assertEqual(block, out)
         self.assertEqual((0, [b"gone"]), (moved, missing))
 
@@ -1109,7 +1109,7 @@ class TestGroundBesideModels(unittest.TestCase):
             flags=0, type=kind, palette_index=0, id=0, min_difficulty=0,
             pos_x=8 * self.CELL, pos_y=8 * self.CELL, pos_z=pos_z, yaw=0,
         ).encode()
-        return mesh.lower_ground_beside_models(terrain, 1, 1, marker, 1, palette, 1, {b"crow": reach})
+        return meshrules.lower_ground_beside_models(terrain, 1, 1, marker, 1, palette, 1, {b"crow": reach})
 
     def bank(self):
         # A 1x1-submesh mesh is 32x32 Myth II cells. TFL points sit at even

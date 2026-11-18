@@ -263,7 +263,7 @@ widths, and element counts for every parameter type are identical between
 the games (confirmed against all three of `docs/ActionParamElementFormat.txt`'s
 worked examples). Converting a parameter is therefore never a matter of
 re-encoding values — only of correcting **which 2-byte type code sits in
-front of already-correct data**, so `src/mesh.py:convert_tfl_map_actions`
+front of already-correct data**, so `src/convert/meshrules.py:convert_tfl_map_actions`
 walks the parameter stream (correctly computing each parameter's byte
 length via `param_data_length`, itself ported from mythextract's own sizing
 rules) and rewrites only that one field per parameter, in place.
@@ -272,7 +272,7 @@ rules) and rewrites only that one field per parameter, in place.
 
 A marker's actual tag reference lives one level removed — on the *palette
 entry* its `palette_index` points at (`marker_tag`, a plain 4-byte tag id),
-not on the marker record itself. `src/mesh.py:remap_marker_palette` applies
+not on the marker record itself. `src/convert/meshrules.py:remap_marker_palette` applies
 the plugin's `id_map` here, exactly the same substitution mechanism already
 used for the top-level tag directory and mesh header fields. This also
 means `unresolved_references()` in `convert/plugin.py` was undercounting:
@@ -502,7 +502,7 @@ port, not a rule.
 
 The normals are copied in the port, not blended or recomputed. At the
 in-between cells copying is closer to the port than blending (mean gap 7.3
-against 8.0, and 4.4 against 7.2). So `upsample_terrain` (`src/mesh.py`) now
+against 8.0, and 4.4 against 7.2). So `upsample_terrain` (`src/convert/meshrules.py`) now
 blends heights only, rounding down, with the last row and column kept level, and
 copies every other field. Crow's Bridge against the port:
 
@@ -530,7 +530,7 @@ the other way where it is odd. That rule puts 99.2% of the port's scenery and
 units at their stored height within 1, and all within 3. A single split
 direction misses by up to 45, a bilinear blend by up to 21.
 
-So `place_markers_on_ground` (`src/mesh.py`) now sets every observer, scenery
+So `place_markers_on_ground` (`src/convert/meshrules.py`) now sets every observer, scenery
 and unit marker to the ground under it. In-engine, the floating plants on
 *On the road to Strand* came down. One bush on the lip of a steep trench still
 looked raised, possibly its shadow falling down the wall; not yet checked from
@@ -618,7 +618,7 @@ so Keep's bridge was placed right; convert with `--stock` to test.
 
 ### The rule, and how far it carries
 
-`lower_ground_beside_models` (`src/mesh.py`): an in-between point inside a
+`lower_ground_beside_models` (`src/convert/meshrules.py`): an in-between point inside a
 model's reach (its vertices' furthest x or y from its centre, a square that
 holds it whichever way it faces), whose TFL corners step 400 or more and whose
 lowest corner is the model's base (marker height, within 32), takes that
@@ -747,7 +747,7 @@ flag bits in the low nibble too (`00ff`, `00f1`, `00f2`, `00f4`, `00f8`).
 Loathing writes only the minimal `00f0`/`fff0`; which groups get `fff0` follows
 neither roughness nor water, and is not understood. Ours was the only all-zero
 LOD block in existence, and the glitch is a rendering one, so 0.14 writes `00f0`
-everywhere (`mesh.build_lod_data`). Not yet confirmed in-game.
+everywhere (`meshrules.build_lod_data`). Not yet confirmed in-game.
 
 > **Update:** confirmed. Keep's 0.16 tests (Q7, 16 November): every explosion shows a good ground ripple.
 

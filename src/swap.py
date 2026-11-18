@@ -20,7 +20,7 @@ import pathlib
 from dataclasses import dataclass, field
 
 from . import codec, formats, mesh, reader, writer
-from .convert import headers as convert_headers
+from .convert import headers as convert_headers, meshrules
 
 
 class SwapError(ValueError):
@@ -40,7 +40,7 @@ class UnitUse:
 
 
 class _UnitSwapMap:
-    """Just enough of an `idmap.IdMap` for `mesh.remap_marker_palette`: maps
+    """Just enough of an `idmap.IdMap` for `meshrules.remap_marker_palette`: maps
     unit ids through ``swaps`` and leaves every other tag type alone."""
 
     def __init__(self, swaps):
@@ -108,7 +108,7 @@ def swap_units(mono, swaps, name=None):
             continue
         start, size, count = _palette_span(tag, mono.game_version)
         palette = tag.body[start : start + size]
-        new_palette, _warnings = mesh.remap_marker_palette(palette, count, id_map)
+        new_palette, _warnings = meshrules.remap_marker_palette(palette, count, id_map)
         if new_palette == palette:
             tags.append(tag)
             continue

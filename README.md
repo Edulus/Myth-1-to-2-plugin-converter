@@ -357,6 +357,7 @@ lists what has been checked in the game. In short:
 src/codec.py       minimal binary struct codec (lossless; preserves padding)
 src/formats.py     container and tag header definitions, ported with citations
 src/mesh.py        mesh headers, markers, marker palette, map actions
+src/convert/meshrules.py  conversion rules for meshes (terrain, markers, netgame, ID remap)
 src/mons.py        mons/unit headers and attack definitions
 src/fieldinfo.py   what mesh fields mean and what a sane value is (Fear manual)
 src/reader.py      parse a TFL .gor or Myth II container

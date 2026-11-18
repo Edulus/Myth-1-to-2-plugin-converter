@@ -28,7 +28,7 @@ says what has happened to each item since.
 | C4 Housekeeping | **Done** 18 November: `git gc` took `.git` from 1.2 GB to 187 MB (28 leftover temporary objects removed, `git fsck` clean); `debug.log` deleted and ignored; `CODEX-HANDOFF.md` in the ignored `local/archive/` |
 | D1 Our posting names can be claimed by anyone | **Done** 18 November: posts under our names need the `X-Staff-Key` secret (see [../site-and-releases.md](../site-and-releases.md)). Remaining: names in look-alike letters (a Cyrillic Е in "Еdward") still post freely, though they show the visitor's waiting box; and whether Cloudflare's invocation logs record request headers is unchecked |
 | E1 Stale comments | The three listed are fixed; one more found and fixed on 17 November (mesh LOD comment) |
-| E2 Split `src/mesh.py` | Open |
+| E2 Split `src/mesh.py` | Done 18 November: the conversion policy (terrain upsampling, grounding and anchoring, LOD, netgame masks, map-action fix-ups, ID remapping) moved to `src/convert/meshrules.py`; `src/mesh.py` keeps the layouts. |
 | E3 Browser memory | Open; no failures reported |
 | F Documentation | **Done** on 17 November: NOTES.md split by topic into [../notes/](../notes/), superseded passages marked, current rules in [../conversion-rules.md](../conversion-rules.md) |
 

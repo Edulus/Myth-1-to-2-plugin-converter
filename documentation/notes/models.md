@@ -165,7 +165,7 @@ Iron's 2011 converter has the same idea commented out (`marker[i].distancex
 stock TFL levels, the amount is the model geometry's (`center_x`,
 `center_y`) rounded to a whole Myth II cell, whatever the facing: TFL anchors
 a model by a corner, Myth II by its centre. `place_models_by_centre`
-(`src/mesh.py`) applies that; afterwards 287 of 328 model markers sit exactly
+(`src/convert/meshrules.py`) applies that; afterwards 287 of 328 model markers sit exactly
 where Magma's do. The rest are Magma's own: the farm one cell further east
 (15, with a re-drawn footprint), 18 cave stalagmites not moved at all, 4 night
 farmhouses placed by hand, and 3 world-knot stones nudged a fraction of a cell.

@@ -22,7 +22,7 @@ import collections
 import pathlib
 
 from . import codec, formats, mesh, reader, swap
-from .convert import headers as convert_headers
+from .convert import headers as convert_headers, meshrules
 
 CHUNK = 8 << 20
 
@@ -181,7 +181,7 @@ def palette_patches(maps, swaps):
         tag = maps.tag(i)
         start, size, count = swap._palette_span(tag, formats.SB)
         palette = tag.body[start : start + size]
-        new_palette, _warnings = mesh.remap_marker_palette(palette, count, id_map)
+        new_palette, _warnings = meshrules.remap_marker_palette(palette, count, id_map)
         if new_palette == palette:
             continue
         if len(new_palette) != len(palette):

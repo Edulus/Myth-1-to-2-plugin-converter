@@ -32,7 +32,7 @@ from .. import (
     reader,
     writer,
 )
-from . import entrypoints, headers, tags as tag_converters
+from . import entrypoints, headers, meshrules, tags as tag_converters
 from .tags import geom as geom_converter, mode as mode_converter, obje as obje_converter
 
 
@@ -103,11 +103,11 @@ class ConversionContext:
         self.mesh_defaults = mesh_defaults or {}
         self.id_map = id_map
         # TFL model id -> its geometry's (center_x, center_y), for re-placing
-        # model markers (see src.mesh.place_models_by_centre). Filled in by
+        # model markers (see src.convert.meshrules.place_models_by_centre). Filled in by
         # convert_container from the container being converted.
         self.model_centres = {}
         # TFL model id -> how far its geometry reaches from that centre, for
-        # the ground beside it (see src.mesh.lower_ground_beside_models).
+        # the ground beside it (see src.convert.meshrules.lower_ground_beside_models).
         self.model_reaches = {}
         # Ids of the TFL projectiles that heal, so a special ability firing one
         # can be allowed on friendly units (see mons.allow_healing_friendlies).
@@ -178,7 +178,7 @@ def unresolved_references(mono, id_map=None):
     missing = {}
 
     def note(tag_type, tag_id):
-        if tag_type == b"scen" and tag_id in mesh_module.MYTH_II_NETGAME_SCENERY:
+        if tag_type == b"scen" and tag_id in meshrules.MYTH_II_NETGAME_SCENERY:
             return  # Myth II's own are used, not carried
         resolved = id_map.map_id(tag_type, tag_id) if id_map else tag_id
         if (tag_type, resolved) not in present:
@@ -695,12 +695,12 @@ def is_engine_facing(tag):
     Internal *art* (``.256``, ``core``) is not left out: TFL projectiles and
     effects index it by sequence, and expect TFL's.
 
-    Also the netgame flags and balls (`mesh.MYTH_II_NETGAME_SCENERY`): Myth II
+    Also the netgame flags and balls (`meshrules.MYTH_II_NETGAME_SCENERY`): Myth II
     has its own, which the engine recognises and the converted copies are not.
     """
     if tag.tag_type in ENGINE_FACING_TYPES:
         return True
-    if tag.tag_type == b"scen" and tag.tag_id in mesh_module.MYTH_II_NETGAME_SCENERY:
+    if tag.tag_type == b"scen" and tag.tag_id in meshrules.MYTH_II_NETGAME_SCENERY:
         return True
     name = (tag.name or "").strip().lower()
     return tag.tag_type in (b"stli", b"text") and name.startswith("internal")

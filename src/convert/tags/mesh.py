@@ -40,7 +40,7 @@ every later parameter in the buffer and is a plausible cause of the
 
 Tag references *inside* map-action parameter data (a `SOUND` or
 `PROJECTILE`-typed parameter's element ids) are renamed through the ID map like
-the palette's (`mesh_module.remap_map_action_tags`). Terrain becomes a 2x2 block
+the palette's (`meshrules.remap_map_action_tags`). Terrain becomes a 2x2 block
 per TFL cell with heights blended between neighbouring points
 (documentation/notes/maps.md section 20), media coverage is copied verbatim, and the
 level-of-detail block is written as ``00f0`` words, as Loathing writes them
@@ -50,6 +50,7 @@ level-of-detail block is written as ``00f0`` words, as Loathing writes them
 import struct
 
 from ... import codec, formats, mesh as mesh_module
+from .. import meshrules
 
 HANDLES = (b"mesh",)
 
@@ -251,7 +252,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
         )
     else:
         try:
-            blocks["terrain"] = mesh_module.upsample_terrain(
+            blocks["terrain"] = meshrules.upsample_terrain(
                 terrain, tfl.submesh_width, tfl.submesh_height, media_height
             )
         except (ValueError, struct.error) as exc:
@@ -265,8 +266,8 @@ def _convert_blocks(tfl, trailing, id_map, context):
         warnings.append("marker palette lies outside the mesh body; dropped")
     elif tfl.marker_palette_entries:
         try:
-            palette = mesh_module.mark_netgame_types(palette, tfl.marker_palette_entries)
-            blocks["palette"], palette_warnings = mesh_module.remap_marker_palette(
+            palette = meshrules.mark_netgame_types(palette, tfl.marker_palette_entries)
+            blocks["palette"], palette_warnings = meshrules.remap_marker_palette(
                 palette, tfl.marker_palette_entries, id_map
             )
             warnings.extend(palette_warnings)
@@ -288,7 +289,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
     centres = getattr(context, "model_centres", None) if context else None
     if centres and palette and tfl.marker_count and tfl.marker_palette_entries:
         try:
-            blocks["markers"], _moved, missing = mesh_module.place_models_by_centre(
+            blocks["markers"], _moved, missing = meshrules.place_models_by_centre(
                 blocks["markers"], tfl.marker_count, palette,
                 tfl.marker_palette_entries, centres,
             )
@@ -302,7 +303,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
     reaches = getattr(context, "model_reaches", None) if context else None
     if reaches and palette and blocks["terrain"] and tfl.marker_count and tfl.marker_palette_entries:
         try:
-            blocks["terrain"], _lowered = mesh_module.lower_ground_beside_models(
+            blocks["terrain"], _lowered = meshrules.lower_ground_beside_models(
                 blocks["terrain"], tfl.submesh_width, tfl.submesh_height,
                 blocks["markers"], tfl.marker_count, palette, tfl.marker_palette_entries, reaches,
             )
@@ -313,7 +314,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
     # ignored for scenery and units; set them on the converted ground.
     if tfl.marker_count and blocks["markers"] and blocks["terrain"]:
         try:
-            blocks["markers"], _moved = mesh_module.place_markers_on_ground(
+            blocks["markers"], _moved = meshrules.place_markers_on_ground(
                 blocks["markers"], tfl.marker_count, blocks["terrain"],
                 tfl.submesh_width, tfl.submesh_height,
             )
@@ -327,12 +328,12 @@ def _convert_blocks(tfl, trailing, id_map, context):
         warnings.append("map actions lie outside the mesh body; dropped")
     elif tfl.map_action_count:
         try:
-            blocks["actions"], action_warnings = mesh_module.convert_tfl_map_actions(
+            blocks["actions"], action_warnings = meshrules.convert_tfl_map_actions(
                 actions, tfl.map_action_count
             )
             warnings.extend(action_warnings)
             if id_map is not None:
-                blocks["actions"], _renamed = mesh_module.remap_map_action_tags(
+                blocks["actions"], _renamed = meshrules.remap_map_action_tags(
                     blocks["actions"], tfl.map_action_count, id_map
                 )
         except (struct.error, ValueError) as exc:
@@ -356,7 +357,7 @@ def _convert_blocks(tfl, trailing, id_map, context):
         blocks["coverage"] = coverage
 
     # -- level of detail: must exist, and must match the new cell count ------
-    blocks["lod"] = mesh_module.build_lod_data(tfl.submesh_width, tfl.submesh_height)
+    blocks["lod"] = meshrules.build_lod_data(tfl.submesh_width, tfl.submesh_height)
 
     return blocks, warnings
 

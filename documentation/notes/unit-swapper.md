@@ -14,7 +14,7 @@ Written for the Civil War plugins; code in `src/swap.py`, page in
 
 A unit marker names a slot in the mesh's **marker palette**, and the slot holds a
 unit tag id. Rewriting that id changes every marker using the slot and nothing else.
-`mesh.remap_marker_palette` already did this for TFL conversion; `swap.swap_units`
+`meshrules.remap_marker_palette` already did this for TFL conversion; `swap.swap_units`
 reuses it with an id map that only touches `unit` ids.
 
 Map actions need no change. All 8,323 `MONSTER_IDENTIFIER` parameters in the CWR
