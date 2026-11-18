@@ -1,0 +1,52 @@
+# Runs on every push and pull request (improvement plan item B3).
+#   python  -- the converter's test suite (tests needing game files skip)
+#   worker  -- the comment service's tests
+#   site    -- docs/ must be what scripts/keep_site.py builds from this commit
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest
+      - run: python -m pytest -q
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: comments-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # The tests import only the worker's own source; no install needed.
+      - run: npm test
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/keep_site.py
+      - name: docs/ is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            git status --short -- docs
+            echo "docs/ differs from what scripts/keep_site.py builds: run it and commit the result."
+            exit 1
+          fi

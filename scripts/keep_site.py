@@ -1128,6 +1128,12 @@ def _short_hash(data):
     return hashlib.sha256(data).hexdigest()[:12]
 
 
+def _source_bytes(path):
+    """A text source's bytes with Unix line endings, so the site builds the
+    same on Windows (whose checkouts have CRLF) as on Linux (CI)."""
+    return pathlib.Path(path).read_bytes().replace(b"\r\n", b"\n")
+
+
 def converter_zip():
     """src/ as a zip, byte-for-byte the same for the same sources, so an
     unchanged converter does not show up as a changed file."""
@@ -1139,7 +1145,7 @@ def converter_zip():
                 continue
             info = zipfile.ZipInfo(rel.as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(info, path.read_bytes())
+            zf.writestr(info, _source_bytes(path))
     return buf.getvalue()
 
 
@@ -1238,7 +1244,7 @@ def build_converter_page(stock_dir=None):
     (out / "converter.zip").write_bytes(code)
     versions = {"code_v": _short_hash(code)}
     for name in ("worker.js", "page.js"):
-        data = (WEB / name).read_bytes()
+        data = _source_bytes(WEB / name)
         (out / name).write_bytes(data)
         versions[name.split(".")[0] + "_v"] = _short_hash(data)
     if stock_dir:
@@ -1348,7 +1354,7 @@ def build_swap_page():
     out.mkdir(exist_ok=True)
     versions = {"code_v": _short_hash(converter_zip())}
     for name in ("worker.js", "page.js"):
-        data = (WEB_SWAP / name).read_bytes()
+        data = _source_bytes(WEB_SWAP / name)
         (out / name).write_bytes(data)
         versions[name.split(".")[0] + "_v"] = _short_hash(data)
     poem = "<br>".join(html.escape(line) for line in OBELIX_POEM)

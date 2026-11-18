@@ -25,6 +25,13 @@ class TestChanges(unittest.TestCase):
     def test_the_newest_change_is_the_current_version(self):
         self.assertEqual(__version__, self.changes[0]["version"])
 
+    def test_pyproject_has_the_current_version(self):
+        import tomllib
+
+        pyproject = CHANGES.parent.parent.parent / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            self.assertEqual(__version__, tomllib.load(f)["project"]["version"])
+
     def test_the_newest_version_says_what_to_test_next(self):
         tests = self.changes[0].get("test", [])
         self.assertTrue(tests)
