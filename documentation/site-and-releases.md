@@ -18,7 +18,8 @@ download are published. Current as of 17 November 2026.
   `gh api repos/Edulus/Myth-1-to-2-plugin-converter/pages/builds/latest --jq '.status+" "+.commit[0:7]'`.
 - **Never remove `docs/google5781bd5b5c2cd529.html`.** It verifies the site in
   Google Search Console, which was needed after Safe Browsing flagged the site
-  in November 2026.
+  in November 2026 (the cause was the owner's separate Space Pong page on the
+  same github.io host, since resolved).
 - The pages carry a `noindex` tag. Whether to remove it is the owner's decision.
 - **CI** (`.github/workflows/ci.yml`) runs on every push: the Python tests, the
   comment service's tests, and a check that `docs/` is exactly what the
@@ -151,5 +152,6 @@ record dates) but identical contents.
 
 The code, tests and fixtures hold no game data. Two deliberate exceptions, so
 that players need nothing else installed: the stock TFL tags served to the
-in-browser converter, and the stock tags inside the ready-made download. No
+in-browser converter, and the stock tags inside the ready-made download. The
+owner decided on 18 November 2026 to keep it that way (plan item C3). No
 Civil War files are supplied. Never link to sources of unlicensed game files.

@@ -24,7 +24,7 @@ says what has happened to each item since.
 | B4 In-game checks | Partly: each version's `test` list in `web/convert/changes.json` and the home page's "Please test now" list |
 | C1 Script the release | **Done** 18 November: `scripts/release.py` (build only, or `--publish`); checked to reproduce the published 0.18 plugin and Read Me byte for byte. Steps in [../site-and-releases.md](../site-and-releases.md) |
 | C2 Site content apart from its generator | Open |
-| C3 Stock TFL files in the repository | Owner's decision; unchanged |
+| C3 Stock TFL files in the repository | **Decided** 18 November: keep hosting them, so the converter page and the ready-made download need nothing from the player. The Safe Browsing flag, once a suspect, was traced to the owner's separate Space Pong page, not to these files, and is resolved |
 | C4 Housekeeping | **Done** 18 November: `git gc` took `.git` from 1.2 GB to 187 MB (28 leftover temporary objects removed, `git fsck` clean); `debug.log` deleted and ignored; `CODEX-HANDOFF.md` in the ignored `local/archive/` |
 | D1 Our posting names can be claimed by anyone | **Done** 18 November: posts under our names need the `X-Staff-Key` secret (see [../site-and-releases.md](../site-and-releases.md)). Remaining: names in look-alike letters (a Cyrillic Е in "Еdward") still post freely, though they show the visitor's waiting box; and whether Cloudflare's invocation logs record request headers is unchecked |
 | E1 Stale comments | The three listed are fixed; one more found and fixed on 17 November (mesh LOD comment) |
@@ -271,8 +271,9 @@ worth weighing again:
 - It is the one place the project republishes game data in bulk. The rights
   position is the owner's call; the review only notes that everything else in
   the repository is careful to avoid it.
-- The site was flagged by Safe Browsing in November. The cause is unconfirmed,
-  and large binary downloads are among the suspects.
+- The site was flagged by Safe Browsing in November. The cause was later found
+  to be the owner's separate Space Pong page on the same host (resolved), not
+  these files.
 - Every clone carries the files.
 
 An option that keeps the convenience: let the page accept the visitor's own
