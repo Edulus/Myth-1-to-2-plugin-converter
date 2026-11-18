@@ -1,5 +1,6 @@
 // Pure logic for KEEP's comment box: validation, and the comment format
-// stored in GitHub Discussions. No I/O here, so it can be tested in Node.
+// stored in GitHub Discussions. No I/O here, so it can be tested in Node
+// (crypto.subtle, used by staffKeyMatches, is built into both).
 
 export const LIMITS = { name: 40, message: 4000 };
 
@@ -155,10 +156,30 @@ export function parseComment(node, imageBase = "") {
 }
 
 // Names we post under (compared on letters only, like the Myth answer).
-// Our own posts are answers, so they get no addressed/waiting box.
+// Our own posts are answers, so they get no addressed/waiting box. The worker
+// uses the same rule to keep these names for posts that carry STAFF_KEY.
+export function isStaffName(name, staff) {
+  const given = normalizeAnswer(name);
+  return given !== "" && staff.map(normalizeAnswer).includes(given);
+}
+
 export function isStaff(shown, owner, staff) {
   if (!shown.viaSite) return shown.name.toLowerCase() === owner.toLowerCase();
-  return staff.map(normalizeAnswer).includes(normalizeAnswer(shown.name));
+  return isStaffName(shown.name, staff);
+}
+
+// Whether a post may use a staff name: the X-Staff-Key header must equal the
+// STAFF_KEY secret. With no secret set, nobody may (fail closed). Both sides
+// are hashed first, so the comparison takes the same time whatever the input
+// and leaks neither the key's length nor how much of it matched.
+export async function staffKeyMatches(given, expected) {
+  if (typeof expected !== "string" || expected === "") return false;
+  if (typeof given !== "string" || given === "") return false;
+  const digest = async (text) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+  const [a, b] = await Promise.all([digest(given), digest(expected)]);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
 }
 
 // A visitor's comment is "addressed" once the repository owner gives it a

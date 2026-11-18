@@ -32,10 +32,15 @@
 //          comment is pushed there, since posts made through the site go out
 //          under the token owner's account and GitHub does not notify you
 //          of your own activity.
+//          STAFF_KEY -- a long random string. A POST /comments under one of
+//          the STAFF_NAMES must send it in the X-Staff-Key header, or it is
+//          refused (403) before anything is stored; if STAFF_KEY is not set,
+//          those names are refused for everyone. Never logged.
 
 import {
   shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments,
   validateConversion, addConversion, BODY_LIMIT, IMAGE_ERRORS, imageId, imageUrl, parseImagePath,
+  isStaffName, staffKeyMatches,
 } from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
@@ -46,7 +51,7 @@ function cors(env, request) {
   return {
     "Access-Control-Allow-Origin": allowed.includes(origin) ? origin : allowed[0],
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-Staff-Key",
     Vary: "Origin",
   };
 }
@@ -318,6 +323,13 @@ export default {
         const checked = validate(input, env.ANSWERS.split(","));
         if (!checked.ok) return json({ error: checked.error }, 400, headers);
         const { term, name, message, replyTo, image } = checked.value;
+
+        // Our own names (STAFF_NAMES, matched as core.js isStaff does) need
+        // the staff key, checked before anything is stored or sent to GitHub.
+        if (isStaffName(name, threadOptions(env, url).staff)
+            && !(await staffKeyMatches(request.headers.get("X-Staff-Key"), env.STAFF_KEY))) {
+          return json({ error: "That name is reserved for the project. Please choose another name." }, 403, headers);
+        }
 
         // The picture is stored first, so a comment never links to nothing;
         // if the comment then fails, the picture is taken out again.

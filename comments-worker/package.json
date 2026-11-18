@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "No-account comment box for the KEEP progress site",
   "scripts": {
-    "test": "node --test test/core.test.js",
+    "test": "node --test test/core.test.js test/index.test.js",
     "deploy": "wrangler deploy",
     "dryrun": "wrangler deploy --dry-run --outdir dist"
   },
