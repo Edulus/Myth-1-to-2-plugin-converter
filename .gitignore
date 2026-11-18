@@ -58,3 +58,6 @@ Thumbs.db
 
 # Third-party plugins used for testing the Civil War swap tool; never commit
 /civil war plugins/
+
+# Chrome crash-reporter noise left by headless browser tests
+debug.log

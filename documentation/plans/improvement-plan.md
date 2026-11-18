@@ -25,7 +25,7 @@ says what has happened to each item since.
 | C1 Script the release | Open. The manual steps are now written down in [../site-and-releases.md](../site-and-releases.md) and the source plugin kept in `local/release/` |
 | C2 Site content apart from its generator | Open |
 | C3 Stock TFL files in the repository | Owner's decision; unchanged |
-| C4 Housekeeping | `CODEX-HANDOFF.md` moved to the ignored `local/archive/`. `git gc` not yet run (28 temporary objects remain). `debug.log` still untracked in the root |
+| C4 Housekeeping | **Done** 18 November: `git gc` took `.git` from 1.2 GB to 187 MB (28 leftover temporary objects removed, `git fsck` clean); `debug.log` deleted and ignored; `CODEX-HANDOFF.md` in the ignored `local/archive/` |
 | D1 Our posting names can be claimed by anyone | **Done** 18 November: posts under our names need the `X-Staff-Key` secret (see [../site-and-releases.md](../site-and-releases.md)). Remaining: names in look-alike letters (a Cyrillic Е in "Еdward") still post freely, though they show the visitor's waiting box; and whether Cloudflare's invocation logs record request headers is unchecked |
 | E1 Stale comments | The three listed are fixed; one more found and fixed on 17 November (mesh LOD comment) |
 | E2 Split `src/mesh.py` | Open |
