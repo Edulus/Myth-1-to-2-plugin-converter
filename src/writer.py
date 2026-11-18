@@ -5,9 +5,9 @@ jwheare/mythextract @ c747909 produces either a loose extracted tag, a derived
 media file, or an in-place byte splice of an existing container
 (``scripts/fixentrypoints.py`` via ``mono2tag.encode_entrypoints``, which reuses
 the original directory and bodies verbatim and recomputes no offsets). Nothing
-there rebuilds a directory. See documentation/notes/containers.md §5.
+there rebuilds a directory. See documentation/notes/containers.md section 5.
 
-Layouts produced (documentation/notes/containers.md §3):
+Layouts produced (documentation/notes/containers.md section 3):
 
     SB       [128B header][entrypoints: N x 112][directory: M x 64][bodies ...]
     TFL      [64B header][bodies ...][directory: M x 64 @ tag_list_offset]
@@ -20,10 +20,10 @@ Two things this deliberately does **not** do:
   byte-exact round-trip possible. It also turns out to be sufficient: Myth II
   1.8.5 validates neither field, so a repacked plugin whose checksums no longer
   match its contents loads and plays normally (verified in-engine, documentation/notes/containers.md
-  §11). Nothing here needs to compute them.
+  section 11). Nothing here needs to compute them.
 
 * **Bodies are written verbatim.** Offsets *inside* a tag body are relative to
-  the body, not the file (verified in documentation/notes/containers.md §3), so moving a tag within
+  the body, not the file (verified in documentation/notes/containers.md section 3), so moving a tag within
   the container does not require rewriting its interior.
 """
 

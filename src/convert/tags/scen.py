@@ -3,7 +3,7 @@
 Both games store scenery in 128 bytes, in different layouts. mythextract
 declares only the Myth II one (``myth_tags.SceneryFmt``), so the TFL side was
 measured: the 61 scenery IDs present both in the stock TFL tags and in
-`Magma - The Fallen Lords v1.9` were aligned word by word (documentation/notes/stock-tags.md §18).
+`Magma - The Fallen Lords v1.9` were aligned word by word (documentation/notes/stock-tags.md section 18).
 Handed to Myth II unconverted, a TFL scenery tag reads its object reference out
 of the wrong bytes -- in-engine, "couldn't read header for object definition"
 and "collection reference definition '    '" for every bush, tree and barrel.

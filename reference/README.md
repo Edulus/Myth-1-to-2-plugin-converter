@@ -44,7 +44,7 @@ tag-making sections of <https://tain.totalcodex.net> to find them.
 These answered a question no amount of struct analysis could: a submesh is
 256×256 colormap pixels, which is what established that Myth II has double TFL's
 linear terrain resolution rather than merely different bookkeeping. See documentation/notes/maps.md
-§15.
+section 15.
 
 `src/fieldinfo.py` carries short factual summaries of the field semantics learned
 here — written in our own words, with the manual cited — so the application can
@@ -60,5 +60,5 @@ source for the marker/map-action structures in `src/mesh.py`.
 
 Only `ReadMe.txt`, `converter.c` and `winconverter.c` are kept here — the
 compiled Mac/Windows binaries in the original archive are not needed to read the
-logic. See documentation/notes/maps.md §14 for what was taken from it, and for the two
+logic. See documentation/notes/maps.md section 14 for what was taken from it, and for the two
 places its approach was improved on rather than copied.

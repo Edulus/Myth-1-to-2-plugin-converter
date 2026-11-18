@@ -4,7 +4,7 @@ Both games store a projectile in 256 bytes, but not in the same layout.
 mythextract declares only the Myth II one (``myth_projectile.ProjFmt``), so the
 TFL side was measured: the 104 projectile IDs present both in the stock TFL tags
 and in `Magma - The Fallen Lords v1.9` were compared field by field (documentation/notes/stock-tags.md
-§18). Handed to Myth II unconverted, a TFL projectile reads a tag
+section 18). Handed to Myth II unconverted, a TFL projectile reads a tag
 reference out of the wrong bytes -- in-engine, "couldn't read header for
 projectile definition '    '", which then takes down every projectile group,
 media and mesh that uses it.

@@ -21,7 +21,7 @@ overturned by a later one; each file opens with a short "Where this stands"
 summary, and overturned passages carry an **Update** note.
 
 Sections keep their original numbers (§1 to §33), which the code cites as
-`documentation/notes/<file>.md §N`. There is no §10.
+`documentation/notes/<file>.md section N`. There is no §10.
 
 | File | Sections | Topic |
 |---|---|---|

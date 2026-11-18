@@ -375,7 +375,7 @@ def referenced_tags(header, game_version):
 # "Iron's Mesh Converter" (Mac and Windows builds, both with source,
 # distributed with permission at
 # tain.totalcodex.net/items/show/mesh-converter-mac-and-windows-w-source-code).
-# See documentation/notes/maps.md §14.
+# See documentation/notes/maps.md section 14.
 #
 # What is *not* shared: the map-action **parameter type codes**. TFL's
 # ``ParamType`` numbering is missing the slot Myth II uses for a standalone
@@ -642,7 +642,7 @@ def convert_tfl_map_actions(action_buffer, action_count):
 #
 # The one part of a mesh whose *size* changes between the games. Myth II packs
 # 32x32 cells into a submesh where TFL packs 16x16, across identical ground --
-# a submesh is 32 world units in both (documentation/notes/maps.md §15) -- so Myth II has
+# a submesh is 32 world units in both (documentation/notes/maps.md section 15) -- so Myth II has
 # double the linear terrain resolution and four times the cells.
 #
 # The cell struct grows too, but conveniently rather than awkwardly: a TFL cell
@@ -674,7 +674,7 @@ NO_MODEL_INDEX = 0xFFFF
 # (*The Fallen Levels v2*) most often hold where TFL holds the key, over all
 # four Myth II cells of each TFL cell on the 11 levels they share with TFL.
 # It matches their flags on 95.5% of cells, against 84.2% copied (documentation/notes/maps.md
-# §23). Values not listed (0x00 among them) are kept.
+# section 23). Values not listed (0x00 among them) are kept.
 TFL_TO_SB_CELL_FLAGS = {
     0x01: 0x00,
     0x10: 0x38,
@@ -715,7 +715,7 @@ def upsample_terrain(terrain, submesh_width, submesh_height, media_height=0):
     v2*): their heights equal TFL's at the original points and sit halfway
     between them elsewhere, while their normals are copied, not blended or
     recomputed. Blending brought our mean height gap to their port from 48 to
-    21 (documentation/notes/maps.md §20).
+    21 (documentation/notes/maps.md section 20).
 
     ``media_height`` is a Myth II-only per-cell field with no TFL source. It is
     the height of the water *surface*, and is a single constant across nearly
@@ -838,7 +838,7 @@ def place_models_by_centre(markers, count, palette, palette_entries, centres):
     the 17 levels of *The Fallen Levels v2* that pair with stock TFL levels,
     Magma moved every copy of a model by the same amount, and for nearly every
     model that amount is the geometry's (center_x, center_y) rounded to a whole
-    Myth II cell, whatever way the model faces (documentation/notes/models.md §17).
+    Myth II cell, whatever way the model faces (documentation/notes/models.md section 17).
 
     ``palette`` is the mesh's marker palette, whose model entries are indexed
     by a model marker's ``palette_index``; ``centres`` maps a TFL model id to
@@ -888,7 +888,7 @@ def lower_ground_beside_models(
     levels, this brings Crow's Bridge's 14 such points from a mean of 351
     off Magma's to 48 and Forest Heart's ent bridge's 44 from 2,339 to 1,885;
     under the other five models it touches it is a little nearer on the
-    whole (documentation/notes/maps.md §22). Without the base condition, or with a
+    whole (documentation/notes/maps.md section 22). Without the base condition, or with a
     gentler step, it is further off on most of them.
 
     ``markers`` must already be placed by centre; ``reaches`` maps a TFL
@@ -955,7 +955,7 @@ def build_lod_data(submesh_width, submesh_height):
     Loathing with a trivial change cured it (Keep, Q7). Keep's before-and-after
     pair of one converted mesh shows Loathing writing ``00f0`` in 5,892 of 6,400
     words and ``fff0`` in the rest, with no height, water or model changed
-    (documentation/notes/maps.md §27). So every word is written as ``00f0``, Loathing's
+    (documentation/notes/maps.md section 27). So every word is written as ``00f0``, Loathing's
     base value.
     """
     columns, rows = cell_counts(submesh_width, submesh_height, formats.SB)

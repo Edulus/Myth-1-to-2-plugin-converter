@@ -29,7 +29,7 @@ inventing plausible ones.
 
 **What else this converts, and what it still does not.** Markers themselves and
 marker-palette entries need no structural change at all -- both are the same
-size and layout in TFL and Myth II (documentation/notes/maps.md §14) -- but a palette
+size and layout in TFL and Myth II (documentation/notes/maps.md section 14) -- but a palette
 entry's tag reference is remapped through the ID map, same as any other tag
 reference. Map-action parameter **type codes** are corrected: TFL's numbering
 is missing a slot Myth II uses for a standalone ``PROJECTILE`` type, so every
@@ -42,9 +42,9 @@ every later parameter in the buffer and is a plausible cause of the
 data (a `SOUND` or `PROJECTILE`-typed parameter's element bytes) are not yet
 remapped through the ID map, only the palette's. Terrain becomes a 2x2 block
 per TFL cell with heights blended between neighbouring points
-(documentation/notes/maps.md §20), media coverage is copied verbatim, and the
+(documentation/notes/maps.md section 20), media coverage is copied verbatim, and the
 level-of-detail block is written as ``00f0`` words, as Loathing writes them
-(documentation/notes/maps.md §27).
+(documentation/notes/maps.md section 27).
 """
 
 import struct

@@ -21,7 +21,7 @@ untuned artifacts carry 0x0100 in the first 9 slots and 0 in the rest
 (``bahe``, ``booi``, ``boos``), so copied zeros could leave a bearer immune to
 everything. An all-zero TFL set therefore becomes that default; a set with
 real values is copied into the first 12 slots. Measured against the 5 artifact
-IDs in both the stock TFL tags and Magma (documentation/notes/stock-tags.md §18).
+IDs in both the stock TFL tags and Magma (documentation/notes/stock-tags.md section 18).
 """
 
 from ... import codec, mons as mons_module

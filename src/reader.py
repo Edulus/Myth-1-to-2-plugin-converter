@@ -8,7 +8,7 @@ The read path mirrors mythextract ``scripts/mono2tag.py`` and
     for tag_header in get_mono_tags(...):     # tag_count records at tag_list_start
         body = data[offset:offset + size]
 
-Container layouts (see documentation/notes/containers.md §3):
+Container layouts (see documentation/notes/containers.md section 3):
 
     SB       [128B header][entrypoints: N x 112][directory: M x 64][bodies ...]
     TFL      [64B header][bodies ...][directory: M x 64 @ tag_list_offset]

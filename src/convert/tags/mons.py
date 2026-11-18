@@ -16,7 +16,7 @@ intersection), copied across unchanged. Two fields need help beyond that:
                            Bungie's and Magma's Myth II versions have size 1
                            ("man") for all of them but the forest giants and
                            trow. Set by collection (`PER_COLLECTION`), man by
-                           default (documentation/notes/units.md §30).
+                           default (documentation/notes/units.md section 30).
     sequence_indexes,      Different sizes in the two games (32 vs 52 bytes,
     attacks                128 vs 256), so a same-name copy would silently
                            zero-pad rather than convert. Handled by
@@ -64,7 +64,7 @@ SB_ONLY_DEFAULTS = {
     "damage_to_propulsion": 65535,  # 60/60, same gating
     # 28/60 for the plurality value (77); the rest spread across dozens of
     # distinct values -- this is a per-monster "space bubble" radius with no
-    # single meaningful default (see documentation/notes/units.md §16). Kept as the
+    # single meaningful default (see documentation/notes/units.md section 16). Kept as the
     # plurality so the field is never left at zero, which Fear treats as a
     # real (zero-radius) value rather than "unset".
     "pathfinding_radius": 77,

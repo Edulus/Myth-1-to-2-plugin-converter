@@ -45,7 +45,7 @@ dist/
 # Third-party tool documentation (the Fear and Loathing manuals, saved as HTML).
 # "Fear, Myth II, and content copyright 1998 Bungie Software / Tyson (Ferrex)
 # Green", distributed by Project Magma. Enormously useful to read locally --
-# documentation/notes/maps.md §15 records what was learned from them -- but not ours to
+# documentation/notes/maps.md section 15 records what was learned from them -- but not ours to
 # redistribute, so they stay out of the repository like any other game asset.
 *Documentation*.html
 *Documentation*_files/
