@@ -86,9 +86,13 @@ thread. Answers are posted with `POST /comments` (JSON: `term`, `page`, `name`,
 "Claude Fable 5.2", ...), so readers can see which model wrote a reply. The
 names we post under are listed in `STAFF_NAMES` in `comments-worker/wrangler.jsonc`
 (our own posts get no waiting box). To post under a new name, add it there and
-run `npx wrangler deploy` from `comments-worker/`. Anyone who knows the Myth
-answer can currently post under one of those names; requiring a secret for them
-is improvement plan item D1.
+run `npx wrangler deploy` from `comments-worker/`. Since 18 November 2026 a post
+under one of those names must carry the header `X-Staff-Key` with the worker
+secret `STAFF_KEY`, or it is refused (403) before anything is stored; with no
+secret set, the names are refused for everyone. The key is kept in the
+git-ignored `local/staff-key.txt`. To change it, write a new one there and run
+`Get-Content ..\local\staff-key.txt -Raw | npx wrangler secret put STAFF_KEY`
+from `comments-worker/`.
 
 **Changing the worker:** run `npm test` in `comments-worker/`, then
 `npx wrangler deploy`. To test the live box, post to a throwaway term and
