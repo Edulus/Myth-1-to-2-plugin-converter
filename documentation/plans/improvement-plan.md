@@ -20,7 +20,7 @@ says what has happened to each item since.
 | A5 One bad tag stops a conversion | **Done** in 0.13 (§33) |
 | B1 Compare command | Open |
 | B2 Real-data regression gate | Open |
-| B3 Continuous integration | Open (no `.github/workflows`) |
+| B3 Continuous integration | **Done** 18 November: `.github/workflows/ci.yml` runs the Python suite, the comment service's tests, and checks `docs/` is what the generator builds. The generator now builds identically on Windows and Linux (Unix line endings, stored zip, pinned zip system byte). A test ties `pyproject.toml`'s version to the converter's |
 | B4 In-game checks | Partly: each version's `test` list in `web/convert/changes.json` and the home page's "Please test now" list |
 | C1 Script the release | **Done** 18 November: `scripts/release.py` (build only, or `--publish`); checked to reproduce the published 0.18 plugin and Read Me byte for byte. Steps in [../site-and-releases.md](../site-and-releases.md) |
 | C2 Site content apart from its generator | Open |

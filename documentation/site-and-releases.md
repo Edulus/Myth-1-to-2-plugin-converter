@@ -20,6 +20,12 @@ download are published. Current as of 17 November 2026.
   Google Search Console, which was needed after Safe Browsing flagged the site
   in November 2026.
 - The pages carry a `noindex` tag. Whether to remove it is the owner's decision.
+- **CI** (`.github/workflows/ci.yml`) runs on every push: the Python tests, the
+  comment service's tests, and a check that `docs/` is exactly what the
+  generator builds from that commit. So after changing the generator or its
+  content, rebuild the site and commit `docs/` in the same commit. The build is
+  the same on Windows and Linux; keep it that way (no timestamps, no
+  OS-dependent bytes in generated files).
 
 What lives where in `scripts/keep_site.py`:
 
