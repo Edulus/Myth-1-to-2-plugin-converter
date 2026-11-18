@@ -22,7 +22,7 @@ says what has happened to each item since.
 | B2 Real-data regression gate | Open |
 | B3 Continuous integration | Open (no `.github/workflows`) |
 | B4 In-game checks | Partly: each version's `test` list in `web/convert/changes.json` and the home page's "Please test now" list |
-| C1 Script the release | Open. The manual steps are now written down in [../site-and-releases.md](../site-and-releases.md) and the source plugin kept in `local/release/` |
+| C1 Script the release | **Done** 18 November: `scripts/release.py` (build only, or `--publish`); checked to reproduce the published 0.18 plugin and Read Me byte for byte. Steps in [../site-and-releases.md](../site-and-releases.md) |
 | C2 Site content apart from its generator | Open |
 | C3 Stock TFL files in the repository | Owner's decision; unchanged |
 | C4 Housekeeping | **Done** 18 November: `git gc` took `.git` from 1.2 GB to 187 MB (28 leftover temporary objects removed, `git fsck` clean); `debug.log` deleted and ignored; `CODEX-HANDOFF.md` in the ignored `local/archive/` |

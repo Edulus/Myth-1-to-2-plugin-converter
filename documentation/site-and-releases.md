@@ -121,33 +121,25 @@ The source plugin and the zip's two text files are kept in the git-ignored
 `Sir Mauriac's Tale - Read Me.txt`, `Sir Mauriac's Tale - Credits.txt`. The
 stock TFL tags come from your own TFL install.
 
-1. Convert, with every stock tag carried:
+`scripts/release.py` does every step:
 
-   ```sh
-   python -m src convert --in "local/release/cbc.TFL.mauriac.gor" \
-       --out "<build>/ZZ Mauriac TFL2SB" --name "ZZ Mauriac TFL2SB" \
-       --stock "<TFL>/TAGS/TAGS.GOR" --stock "<TFL>/TAGS/ARTSOUND.GOR" --all-stock
-   ```
+```sh
+python scripts/release.py --tfl-tags "<TFL>/TAGS"            # build only: zip and checksum, nothing public
+python scripts/release.py --tfl-tags "<TFL>/TAGS" --publish  # and publish
+```
 
-2. Copy the Read Me and Credits next to it. Edit the Read Me's line "made with
-   version X of the converter". Keep its Windows line endings (CRLF).
-3. Zip the three files at the top level of the zip, no folder: the plugin
-   `ZZ Mauriac TFL2SB` (no extension), the Read Me, the Credits. Note the
-   SHA-256.
-4. Upload, replacing the old asset, and update the release notes' version and
-   checksum:
+Build only converts the source with the current converter (every stock tag
+carried), sets the Read Me's "made with version X of the converter" line in
+Windows line endings, zips the three files at the top level, and prints the
+size and SHA-256, under `local/release/build-<version>/`. `--publish` then
+uploads the zip over the old asset, rewrites the release notes with the version
+and checksum, downloads the zip fresh and checks its checksum and Read Me, and
+only then sets `DOWNLOAD_SHA256`, `DOWNLOAD_MB` and `DOWNLOAD_VERSION` in
+`scripts/keep_site.py` and rebuilds the site. Commit and push after it. It stops
+at the first step that fails. `--tfl-tags` can also come from `TFL_TAGS_DIR`.
 
-   ```sh
-   gh release upload sir-mauriac-sb-1 "<build>/Sir-Mauriac-Tale-for-Myth-II.zip" --clobber
-   gh release edit sir-mauriac-sb-1 --notes "..."
-   ```
-
-5. In `scripts/keep_site.py` set `DOWNLOAD_SHA256`, `DOWNLOAD_MB` and
-   `DOWNLOAD_VERSION`; rebuild the site, commit, push.
-6. Download the zip fresh from the release URL and check that its SHA-256
-   matches and that its Read Me names the new version.
-
-Improvement plan item C1 is to turn these steps into `scripts/release.py`.
+Two builds of the same version give zips with different checksums (zip files
+record dates) but identical contents.
 
 ## Game data on the site
 
