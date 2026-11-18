@@ -170,9 +170,9 @@ def unresolved_references(mono, id_map=None):
     references, its sound-tag list, its attack projectile tags, and a `unit`
     tag's `mons`/`core` references. Still not the full picture: other tag
     types hold references too (mythextract ``tag2local.py`` is the full list),
-    and tag references embedded in map-action parameter data are not walked
-    yet -- so this undercounts, and says so, rather than pretending to be
-    complete.
+    so this undercounts, and says so, rather than pretending to be complete.
+    Sound and projectile ids in map-action parameter data are walked too
+    (`src.mesh.map_action_tag_refs`).
     """
     present = {(t.tag_type, t.tag_id) for t in mono.tags}
     missing = {}
@@ -199,9 +199,20 @@ def unresolved_references(mono, id_map=None):
         ):
             note(tag_type, tag_id)
 
+        trailing = tag.body[mesh_module.MESH_HEADER_SIZE :]
+        if header.map_action_count:
+            start = header.map_actions_offset
+            actions = trailing[start : start + header.map_action_buffer_size]
+            try:
+                for _at, tag_type, tag_id in mesh_module.map_action_tag_refs(
+                    actions, header.map_action_count, mono.game_version
+                ):
+                    note(tag_type, tag_id)
+            except (struct.error, ValueError):
+                pass
+
         if not header.marker_palette_entries:
             continue
-        trailing = tag.body[mesh_module.MESH_HEADER_SIZE :]
         start = header.marker_palette_offset
         end = start + header.marker_palette_size
         try:

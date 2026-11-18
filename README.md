@@ -211,6 +211,7 @@ python -m src info <container>            # header, entrypoints and tag list
 python -m src info --types <container>     # summarise by tag type
 python -m src roundtrip <container|dir>... # verify read/write is byte-exact
 python -m src diff <a> <b>                 # compare two containers tag by tag
+python -m src compare --ours <a> --ref <r> # bytes that differ systematically, per tag type
 python -m src plan --in <gor>                     # what a conversion would do
 python -m src convert --in <gor> --out <plugin>   # do it
 python -m src swap --in <maps> --tags <tagset> --list   # units a Myth II plugin's maps place
@@ -292,6 +293,20 @@ between people converting different plugins.
 `info` and `roundtrip` accept both Myth II containers and TFL `.gor` files. `diff` compares
 across game versions too. `convert` and `plan` read TFL `.gor` files only.
 
+### Compare with a reference port
+
+```sh
+python -m src compare --ours "TFL/tags/TAGS.GOR" --ours "TFL/tags/ARTSOUND.GOR" \
+    --ref "Myth II/plugins/Magma - The Fallen Lords v1.9" --types amso,lpgr --detail amso
+```
+
+`compare` pairs each tag on the `--ours` side with the tag of the same type and id in the
+references (`--by-name` also pairs leftovers by name; on each side the first file that has a
+tag wins). Per tag type it counts pairs, same-size and byte-identical pairs and size changes,
+and lists the byte ranges that differ in at least `--threshold` (default 60%) of same-size
+pairs, with their most common values on each side and field names where the Myth II layout
+is declared (`FIELD_LAYOUTS` in `src/compare.py`). `--csv FILE` keeps the result as a table.
+
 ## Tests
 
 ```sh
@@ -355,8 +370,7 @@ documentation/     conversion rules, research notes, the site and releases, plan
 
 Only two single-player levels have been tested through to the end-game screen.
 Lighting uses standard values, and terrain heights are blended between the
-original points (no hand detail as in Magma's ports). References inside
-map-action parameter data are not yet remapped. Water definitions, projectile
+original points (no hand detail as in Magma's ports). Water definitions, projectile
 groups and a few other types are copied unchanged. Expect manual finishing work
 and verify each level in game; a passing file round-trip is not a gameplay test.
 See [documentation/conversion-rules.md](documentation/conversion-rules.md).

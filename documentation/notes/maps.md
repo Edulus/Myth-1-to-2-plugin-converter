@@ -15,8 +15,8 @@
 - *Water*: the media coverage block is copied (§20).
 - *Level of detail*: written as `00f0` words, as Loathing does (§27). Keep
   confirmed on 0.16 that the black ground after explosions is gone.
-- *Still open*: tag references inside map-action parameter data are not remapped
-  (§14; improvement plan item A3).
+- *Map-action references*: sound and projectile ids inside parameters follow the
+  ID map (§14, since 18 November).
 
 ## 12. Mesh headers, entrypoints, and the dependency problem
 
@@ -299,7 +299,7 @@ particular plugin.
 
 ### Still not done
 
-> **Still open** (17 November 2026): improvement plan item A3.
+> **Update (18 November 2026):** done. `remap_map_action_tags` renames the ids in `SOUND` and `PROJECTILE` parameters through the ID map, and `unresolved_references` counts them. Only those two types hold tag ids; the `*_IDENTIFIER` types hold marker ids (§19), which the palette remap already covers. *Sir Mauriac's Tale* has 139 such references, all sounds, all resolved; its conversion is byte-identical, since the default ID map renames nothing.
 
 Tag references *inside* map-action parameter **data** (a `SOUND`- or
 `PROJECTILE`-typed parameter's element bytes, per `PARAM_TYPE_TAG` in

@@ -3,6 +3,7 @@
     python -m src info <container>          list tags and container header
     python -m src roundtrip <container>...  verify read/write is byte-exact
     python -m src diff <a> <b>              compare two containers tag by tag
+    python -m src compare --ours A --ref R  bytes that differ systematically, by type
     python -m src plan --in <gor>           what a conversion would do
     python -m src convert --in <gor> --out <plugin>
     python -m src tagset --in TAGS.GOR --in ARTSOUND.GOR --out <plugin>
@@ -13,7 +14,7 @@ import argparse
 import pathlib
 import sys
 
-from . import codec, decisions, plan as plan_module, plugindiff, reader, swap as swap_module, writer
+from . import codec, compare as compare_module, decisions, plan as plan_module, plugindiff, reader, swap as swap_module, writer
 from .views import html as html_view, text as text_view
 from .convert import plugin as convert_plugin
 
@@ -139,6 +140,36 @@ def cmd_diff(args):
     ):
         print(line)
     return 0 if result.identical else 1
+
+
+def cmd_compare(args):
+    ours = [_load(path) for path in args.ours]
+    ref = [_load(path) for path in args.ref]
+    if not 0 < args.threshold <= 1:
+        print("error: --threshold must be above 0 and at most 1", file=sys.stderr)
+        return 2
+    result = compare_module.compare(
+        ours, ref,
+        types=compare_module.parse_types(args.types),
+        threshold=args.threshold,
+        by_name=args.by_name,
+    )
+    detail = None
+    if args.detail:
+        detail = set()
+        for text in args.detail:
+            detail |= compare_module.parse_types(text) or set()
+    for line in compare_module.format_report(
+        result,
+        ours_names=[str(p) for p in args.ours],
+        ref_names=[str(p) for p in args.ref],
+        detail=detail,
+    ):
+        print(line)
+    if args.csv:
+        compare_module.write_csv(result, args.csv)
+        print(f"\nwrote {args.csv}")
+    return 0
 
 
 def _candidate_tags(myth2_dir):
@@ -445,6 +476,36 @@ def build_parser():
     dif.add_argument("right", type=pathlib.Path)
     dif.add_argument("--all", action="store_true", help="include unchanged tags")
     dif.set_defaults(func=cmd_diff)
+
+    cmp_ = sub.add_parser(
+        "compare",
+        help="pair tags with a reference port and find the bytes that differ systematically",
+    )
+    cmp_.add_argument(
+        "--ours", required=True, action="append", type=pathlib.Path,
+        help="a container (TFL .gor or Myth II); repeat for several, first wins",
+    )
+    cmp_.add_argument(
+        "--ref", required=True, action="append", type=pathlib.Path,
+        help="a reference container; repeat for several, first wins",
+    )
+    cmp_.add_argument("--types", help="comma-separated tag types to compare, e.g. amso,lpgr")
+    cmp_.add_argument(
+        "--threshold", type=float, default=compare_module.DEFAULT_THRESHOLD,
+        help="report offsets differing in at least this fraction of same-size pairs "
+        "(default %(default)s)",
+    )
+    cmp_.add_argument(
+        "--by-name", action="store_true", help="pair tags left unpaired by id by name"
+    )
+    cmp_.add_argument(
+        "--csv", type=pathlib.Path, metavar="FILE", help="write one row per (type, range)"
+    )
+    cmp_.add_argument(
+        "--detail", action="append", metavar="TYPE",
+        help="show the ranges and their values for these types (comma-separated or repeated)",
+    )
+    cmp_.set_defaults(func=cmd_compare)
 
     con = sub.add_parser("convert", help="convert a TFL container into a Myth II plugin")
     con.add_argument("--in", dest="inp", required=True, type=pathlib.Path)

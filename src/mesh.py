@@ -638,6 +638,62 @@ def convert_tfl_map_actions(action_buffer, action_count):
     return bytes(out), warnings
 
 
+# Parameter types whose element data are 4-byte tag ids, and the tag type each
+# id names. The *_IDENTIFIER types in `PARAM_TYPE_TAG` hold 2-byte marker ids
+# instead (all 8,323 MONSTER_IDENTIFIER values in the Civil War maps are marker
+# ids: documentation/notes/unit-swapper.md section 19), which resolve through
+# the marker palette; only these two name a tag directly.
+PARAM_TAG_ELEMENTS = {
+    ParamType.SOUND: b"soun",
+    ParamType.PROJECTILE: b"proj",
+}
+
+
+def map_action_tag_refs(action_buffer, action_count, game_version):
+    """Every tag id held in map-action parameter data.
+
+    Yields ``(offset, tag_type, tag_id)``, ``offset`` being the id's position
+    in ``action_buffer``. Unset ids (all zero or all 0xFF) are skipped. Walks
+    parameters the way `convert_tfl_map_actions` does, reading type codes in
+    ``game_version``'s numbering; an action with an unrecognised type is
+    abandoned at that point, since nothing after it can be located safely.
+    """
+    action_head_end = action_count * MAP_ACTION_HEAD_SIZE
+    for action in MapActionHead.unpack_many(action_buffer, 0, action_count):
+        offset = action_head_end + action.offset
+        for _ in range(action.num_params):
+            raw_type, count = struct.unpack_from(">HH", action_buffer, offset)
+            try:
+                semantic = resolve_param_type(raw_type, game_version)
+            except ValueError:
+                break
+            tag_type = PARAM_TAG_ELEMENTS.get(semantic)
+            if tag_type is not None:
+                for i in range(count):
+                    at = offset + 8 + 4 * i
+                    tag_id = bytes(action_buffer[at : at + 4])
+                    if len(tag_id) == 4 and not (codec.all_on(tag_id) or codec.all_off(tag_id)):
+                        yield at, tag_type, tag_id
+            offset += 8 + param_data_length(semantic, count)
+
+
+def remap_map_action_tags(action_buffer, action_count, id_map):
+    """Rename the tag ids in a Myth II map-action buffer's ``SOUND`` and
+    ``PROJECTILE`` parameters through ``id_map`` (improvement plan item A3).
+
+    Run after `convert_tfl_map_actions`, so type codes are already Myth II's.
+    Same size in, same size out. Returns ``(new_buffer, renamed_count)``.
+    """
+    out = bytearray(action_buffer)
+    renamed = 0
+    for at, tag_type, tag_id in map_action_tag_refs(action_buffer, action_count, formats.SB):
+        mapped = id_map.map_id(tag_type, tag_id)
+        if mapped != tag_id:
+            out[at : at + 4] = mapped
+            renamed += 1
+    return bytes(out), renamed
+
+
 # --- Terrain -----------------------------------------------------------------
 #
 # The one part of a mesh whose *size* changes between the games. Myth II packs

@@ -223,6 +223,64 @@ class TestConvertTflMapActions(unittest.TestCase):
         )
 
 
+class TestMapActionTagRefs(unittest.TestCase):
+    """Sound and projectile ids inside map-action parameters (plan item A3)."""
+
+    def _buf(self, params, num_params):
+        head = mesh.MapActionHead.build(
+            id=1, expiration_mode=0, type=b"soun", flags=0,
+            trigger_time_lower_bound=0, trigger_time_delta=0,
+            num_params=num_params, size=len(params), offset=0, indent=0,
+        ).encode()
+        return head + params
+
+    def _params(self):
+        import struct
+
+        point = struct.pack(">HH4s", 13, 1, b"wayp") + struct.pack(">2L", 1, 2)  # Myth II WORLD_POINT_2D
+        sounds = struct.pack(">HH4s", 11, 3, b"soun") + b"am05" + b"\xff\xff\xff\xff" + b"zzzz"
+        proj = struct.pack(">HH4s", 9, 1, b"proj") + b"lite"
+        marker = struct.pack(">HH4s", 2, 1, b"mons") + b"\x00\x07\x00\x00"  # a marker id, not a tag
+        return point + sounds + proj + marker, 4
+
+    def test_finds_sound_and_projectile_ids_only(self):
+        params, n = self._params()
+        buf = self._buf(params, n)
+        refs = [(t, i) for _at, t, i in mesh.map_action_tag_refs(buf, 1, formats.SB)]
+        self.assertEqual([(b"soun", b"am05"), (b"soun", b"zzzz"), (b"proj", b"lite")], refs)
+
+    def test_tfl_numbering_is_resolved_first(self):
+        import struct
+
+        # TFL raw 12 is WORLD_POINT_2D (8 bytes a pair), not Myth II's PROJECTILE.
+        point = struct.pack(">HH4s", 12, 1, b"wayp") + struct.pack(">2L", 1, 2)
+        sound = struct.pack(">HH4s", 11, 1, b"soun") + b"am05"
+        buf = self._buf(point + sound, 2)
+        refs = [(t, i) for _at, t, i in mesh.map_action_tag_refs(buf, 1, formats.TFL)]
+        self.assertEqual([(b"soun", b"am05")], refs)
+
+    def test_remap_renames_in_place_and_keeps_size(self):
+        from src.idmap import IdMap
+
+        params, n = self._params()
+        buf = self._buf(params, n)
+        id_map = IdMap()
+        id_map.add(b"soun", b"am05", b"am5b")
+        id_map.add(b"proj", b"lite", b"lit2")
+        id_map.add(b"unit", b"\x00\x07\x00\x00", b"xxxx")  # must not touch the marker id
+        new_buf, renamed = mesh.remap_map_action_tags(buf, 1, id_map)
+        self.assertEqual(2, renamed)
+        self.assertEqual(len(buf), len(new_buf))
+        self.assertEqual(buf.replace(b"am05", b"am5b").replace(b"lite", b"lit2"), new_buf)
+
+    def test_no_mapping_changes_nothing(self):
+        from src.idmap import IdMap
+
+        params, n = self._params()
+        buf = self._buf(params, n)
+        self.assertEqual((buf, 0), mesh.remap_map_action_tags(buf, 1, IdMap()))
+
+
 class TestRemapMarkerPalette(unittest.TestCase):
     def _palette(self, entries):
         return b"".join(

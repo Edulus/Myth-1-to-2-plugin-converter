@@ -15,10 +15,10 @@ says what has happened to each item since.
 |---|---|
 | A1 Level-of-detail block | **Done** in 0.14: written as `00f0` words, as Loathing does ([notes §27](../notes/maps.md)). Keep confirmed on 0.16: no black ground after explosions |
 | A2 Types copied unchanged | `amso` **done** (0.13, [§33](../notes/stock-tags.md)). `prgr`, `phys`, `core`, `soun`: no change needed. `medi` **open** (needs a converter). `lpgr` undecided. `ligh`, `wind`: need samples |
-| A3 References in map-action parameters | **Open** |
+| A3 References in map-action parameters | **Done** 18 November: sound and projectile ids follow the ID map and are counted as references ([notes §14](../notes/maps.md)) |
 | A4 Unit behaviour, per unit | **Done** in substance: per-collection values (0.15, §28), pause and turning animations (0.16, §29), size and attack flags (0.17, §30), heals (0.18, §31), in [notes/units.md](../notes/units.md). Moonwalking confirmed fixed; 0.17 and 0.18 await testing. Still open: per-map lighting, the villager and Shade scale exceptions, hero height (§32) |
 | A5 One bad tag stops a conversion | **Done** in 0.13 (§33) |
-| B1 Compare command | Open |
+| B1 Compare command | **Done** 18 November: `python -m src compare --ours ... --ref ...` pairs tags by id (or name), and per type reports identical and resized pairs, the byte ranges that differ systematically, their commonest value changes and, where the layout is declared, the fields. About 2 seconds on Myth II's whole stock. Reproduces the [§33](../notes/stock-tags.md) table |
 | B2 Real-data regression gate | Open |
 | B3 Continuous integration | **Done** 18 November: `.github/workflows/ci.yml` runs the Python suite, the comment service's tests, and checks `docs/` is what the generator builds. The generator now builds identically on Windows and Linux (Unix line endings, stored zip, pinned zip system byte). A test ties `pyproject.toml`'s version to the converter's |
 | B4 In-game checks | Partly: each version's `test` list in `web/convert/changes.json` and the home page's "Please test now" list |

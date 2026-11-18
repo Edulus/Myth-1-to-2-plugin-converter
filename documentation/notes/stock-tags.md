@@ -240,3 +240,17 @@ tuning and are not copied.
 **One bad tag no longer stops a conversion.** `convert_container` now catches an
 error from any one tag's converter, copies that tag unchanged and reports it as
 "could not be converted". Community plugins are hand-edited and sometimes odd.
+
+**The measurement is now a command** (18 November 2026, plan item B1).
+`python -m src compare --ours TAGS.GOR --ours ARTSOUND.GOR --ref "<Magma - The
+Fallen Lords v1.9>" --types amso,lpgr,medi,ligh,prgr,phys,core,soun` reproduces
+the Magma column of the table above (pairs, same size, identical, ranges at the
+default 60%); for the Bungie column pass Myth II's `small install` and
+`international small install` (the stock sounds live there) as `--ref`. Add
+`--detail amso` for the value transitions, `--csv FILE` to keep the table. Rerun
+on 18 November: amso 22 pairs, 20-37 (the sound slots plus the retuned radius at
+36) differ in 22 of 22; lpgr 62 and 72-77 at 60%, `00 -> 01` on alternate bytes
+(64 and 66 change in fewer pairs than the table implied); ligh 15, 18, 27, 52,
+55; prgr, phys, core and soun none. The Bungie pair counts come out slightly
+different from the table's (amso 33, lpgr 10, prgr 79, soun 234) because they
+depend on which stock archives are passed.

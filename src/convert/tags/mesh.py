@@ -38,9 +38,9 @@ TFL code from 12 up means something different in Myth II
 every later parameter in the buffer and is a plausible cause of the
 ``EXCEPTION_ACCESS_VIOLATION`` seen when loading an otherwise-converted mesh.
 
-**What this still does not do:** tag references *inside* map-action parameter
-data (a `SOUND` or `PROJECTILE`-typed parameter's element bytes) are not yet
-remapped through the ID map, only the palette's. Terrain becomes a 2x2 block
+Tag references *inside* map-action parameter data (a `SOUND` or
+`PROJECTILE`-typed parameter's element ids) are renamed through the ID map like
+the palette's (`mesh_module.remap_map_action_tags`). Terrain becomes a 2x2 block
 per TFL cell with heights blended between neighbouring points
 (documentation/notes/maps.md section 20), media coverage is copied verbatim, and the
 level-of-detail block is written as ``00f0`` words, as Loathing writes them
@@ -331,6 +331,10 @@ def _convert_blocks(tfl, trailing, id_map, context):
                 actions, tfl.map_action_count
             )
             warnings.extend(action_warnings)
+            if id_map is not None:
+                blocks["actions"], _renamed = mesh_module.remap_map_action_tags(
+                    blocks["actions"], tfl.map_action_count, id_map
+                )
         except (struct.error, ValueError) as exc:
             blocks["actions"] = actions
             warnings.append(f"map actions left unconverted: {exc}")
