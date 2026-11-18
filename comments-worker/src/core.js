@@ -163,6 +163,31 @@ export function isStaffName(name, staff) {
   return given !== "" && staff.map(normalizeAnswer).includes(given);
 }
 
+// Letters from other alphabets that look like a Latin letter. A name spelled
+// with them ("Edward" with a Cyrillic e) would otherwise slip past
+// isStaffName, which sees only a-z.
+const LOOKALIKES = {
+  "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "к": "k",
+  "м": "m", "т": "t", "в": "b", "н": "h", "і": "i", "ј": "j", "ѕ": "s", "ԁ": "d",
+  "ӏ": "l", "α": "a", "ε": "e", "ο": "o", "ρ": "p", "ν": "v", "ι": "i", "κ": "k",
+  "τ": "t", "υ": "u", "ω": "w", "η": "n", "ı": "i", "ł": "l", "ø": "o", "đ": "d",
+};
+
+function foldLookalikes(text) {
+  return String(text ?? "")
+    .normalize("NFKD") // fullwidth letters, accents split off
+    .toLowerCase()
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/./gu, (ch) => LOOKALIKES[ch] ?? ch);
+}
+
+// Whether a name may only be used with the staff key: our names, plus any
+// spelling that looks like one. Stricter than isStaffName, which decides how
+// an existing comment is shown, so old look-alike comments are not promoted.
+export function isReservedName(name, staff) {
+  return isStaffName(name, staff) || isStaffName(foldLookalikes(name), staff);
+}
+
 export function isStaff(shown, owner, staff) {
   if (!shown.viaSite) return shown.name.toLowerCase() === owner.toLowerCase();
   return isStaffName(shown.name, staff);

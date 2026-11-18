@@ -40,7 +40,7 @@
 import {
   shapeThread, validate, formatComment, alertFor, validateVote, applyVote, allComments,
   validateConversion, addConversion, BODY_LIMIT, IMAGE_ERRORS, imageId, imageUrl, parseImagePath,
-  isStaffName, staffKeyMatches,
+  isReservedName, staffKeyMatches,
 } from "./core.js";
 
 const GRAPHQL = "https://api.github.com/graphql";
@@ -326,7 +326,7 @@ export default {
 
         // Our own names (STAFF_NAMES, matched as core.js isStaff does) need
         // the staff key, checked before anything is stored or sent to GitHub.
-        if (isStaffName(name, threadOptions(env, url).staff)
+        if (isReservedName(name, threadOptions(env, url).staff)
             && !(await staffKeyMatches(request.headers.get("X-Staff-Key"), env.STAFF_KEY))) {
           return json({ error: "That name is reserved for the project. Please choose another name." }, 403, headers);
         }

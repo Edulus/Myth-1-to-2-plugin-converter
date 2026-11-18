@@ -2,7 +2,7 @@ import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
 import worker from "../src/index.js";
-import { isStaffName, staffKeyMatches } from "../src/core.js";
+import { isStaffName, isReservedName, staffKeyMatches } from "../src/core.js";
 
 // The worker's POST /comments, run against a fake GitHub (globalThis.fetch)
 // and fake bindings, so no request leaves the machine.
@@ -162,4 +162,17 @@ test("the key comparison", async () => {
   assert.equal(await staffKeyMatches("", ""), false);
   assert.equal(await staffKeyMatches(undefined, undefined), false);
   assert.equal(await staffKeyMatches(KEY, undefined), false);
+});
+
+test("look-alike spellings of our names need the key too", async () => {
+  const names = ["Еdward", "Edwаrd", "Clаude Opus 5.5", "Ｅdward", "Édward", "Cla​ude Opus 5.5"];
+  for (const name of names) {
+    calls = [];
+    const res = await worker.fetch(post({ name }), makeEnv(), ctx);
+    assert.equal(res.status, 403, name);
+    assert.equal(githubCalls().length, 0, name);
+  }
+  assert.ok(isReservedName("Еdward", STAFF.split(",")));
+  assert.ok(!isStaffName("Еdward", STAFF.split(",")), "display is unchanged: old look-alikes are not promoted");
+  assert.ok(!isReservedName("Edwardo", STAFF.split(",")));
 });
