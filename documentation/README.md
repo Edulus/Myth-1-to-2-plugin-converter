@@ -40,6 +40,8 @@ Sections keep their original numbers (§1 to §33), which the code cites as
   studied (mythextract, the Fear and Loathing manuals, Iron's mesh converter)
   and how to get it back; the material itself is not in the repository.
 - [../NOTICE](../NOTICE): attribution and the trademark position.
+- `tests/regression/manifest.json`: hashes of every tag of the reference
+  conversion, checked by `scripts/regression.py` (see the README's Tests section).
 - `web/convert/changes.json`: every converter version and what it changed,
   shown on the website's converter page.
 - `local/` (ignored by git): the release source plugin and texts

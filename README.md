@@ -324,6 +324,15 @@ MYTH_SAMPLE_DIR=<dir>     python -m unittest discover -s . -p "test_*.py"
 Set `MYTH_REQUIRE_SAMPLE=1` to make a *missing* sample an error rather than a skip, for a
 run that is meant to be the real gate.
 
+**Regression check on real data.** `python scripts/regression.py --tfl-tags "<TFL>/TAGS"`
+converts *Sir Mauriac's Tale* with every stock TFL tag (about 2,900 tags, 7 seconds) and
+compares each tag's body with the hashes in `tests/regression/manifest.json`; add
+`--magma "<Magma - The Fallen Lords v1.9>"` to also track how many tags are byte-identical
+to Magma's port. It prints which tag types changed. When a change is intended, run it with
+`--update` and commit the manifest with the change. `tests/test_regression.py` runs it when
+`TFL_TAGS_DIR` (and optionally `MAGMA_TFL_PORT`) is set. CI has no game files, so this runs
+on your machine only. The source plugin lives in the git-ignored `local/release/`.
+
 ## What is converted
 
 [documentation/conversion-rules.md](documentation/conversion-rules.md) lists, for
