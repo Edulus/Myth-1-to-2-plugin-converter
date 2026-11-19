@@ -1,0 +1,8 @@
+n = 2
+term = "Q2: Terrain - faithful or smooth?"
+title = "Terrain: faithful or smooth?"
+closed = "Answered by testing against Project Magma's faithful port of Crow's Bridge (The Fallen Levels v2): since version 0.3 the converter keeps every original height and blends the new points in between, as Magma's port does. Hills are smooth, not stepped."
+gist = "This asked whether converted hills should copy The Fallen Lords' coarser ground exactly, or be smoothed to look like a Myth II map. It was settled by comparing with Project Magma's hand-made Myth II version of Crow's Bridge. The converter now keeps every original height and smooths only the points in between, so hills are smooth instead of stepped."
+body = '''
+<p>TFL's terrain is a quarter of Myth II's resolution. We copy each TFL cell into a 2&times;2 block, which invents nothing but looks blockier than Myth II maps. Smoothing it would look closer to a native map, but means inventing detail.</p>
+<p>Which would players rather have?</p>'''

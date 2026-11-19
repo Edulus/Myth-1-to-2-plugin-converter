@@ -10,8 +10,8 @@ download are published. Current as of 17 November 2026.
 <https://tinyurl.com/mythconverter>).
 
 - **`docs/` is generated. Never edit it by hand.** `python scripts/keep_site.py`
-  rebuilds all of it. The generator holds the content, the stylesheet and the
-  templates; its name still says "keep" from when the site was a channel for
+  rebuilds all of it. The generator holds the stylesheet and the templates; the
+  words are in `site/content/` (below); its name still says "keep" from when the site was a channel for
   Keep alone.
 - **Hosting:** GitHub Pages serves `docs/` from `main`. Pushing publishes; a
   build takes one to five minutes. Check it with
@@ -28,15 +28,35 @@ download are published. Current as of 17 November 2026.
   the same on Windows and Linux; keep it that way (no timestamps, no
   OS-dependent bytes in generated files).
 
-What lives where in `scripts/keep_site.py`:
+### Editing the site's content
+
+The site's words live in TOML files under `site/content/`, one item per file
+where there are several. To change the site: edit the file, run
+`python scripts/keep_site.py`, check the result, and commit the file and
+`docs/` together. Files are read as UTF-8 and line endings do not matter. Long
+HTML is written between `'''` lines (literal strings: no escaping, so quotes
+and backslashes stay as they are); a `'''` inside the text is not possible,
+use a normal quoted string there. If a file is missing, is not valid TOML or
+lacks a key, the build stops and names the file. `tests/test_site_content.py`
+checks the shape of every file.
+
+| Content | File |
+|---|---|
+| "What we're working on", including the "Please test now" list at the top | `site/content/docket.toml` (`updated`, then one `[[group]]` per heading; groups show in file order) |
+| Update pages | `site/content/updates/<date>.toml` (`slug`, `term`, `date`, `title`, `summary`, `body`); newest date shows first; the file name must match `slug` |
+| Q pages, with the plain-words summary (`gist`) at the top of each | `site/content/questions/<n>.toml` (`n`, `term`, `title`, `gist`, `body`, and `closed` once answered); `gists_updated` (the date shown beside the summaries) is in `site/content/site.toml` |
+| Keep's conversation page text (`docs/keep/`) | `site/content/keep.toml` (the Fable poem is added after `body`) |
+| The poems | `site/content/poems/keep.toml`, `walter.toml`, `fable.toml` (a `[[stanza]]` has `lines`, and `image` plus `alt` if it has a picture) |
+| The table of unit settings (`docs/keep/units.html`) | `site/content/units.toml` (its prose is in `units_html`) |
+
+Keep a thread's `term` stable once published: the comments on it are tied to
+it, not to the page's address.
+
+Still in `scripts/keep_site.py`, because they are code, markup or constants
+other scripts edit:
 
 | Content | Where |
 |---|---|
-| "What we're working on", including the "Please test now" list at the top | `DOCKET`, `DOCKET_UPDATED` |
-| Update pages | `UPDATES` |
-| Q pages, and the plain-words summary at the top of each | `QUESTIONS`, `QUESTION_GISTS`, `GISTS_UPDATED` |
-| Keep's conversation page (`docs/keep/`) and its poems | `KEEP_PAGE`, `poem_html`, `walter_html`, `fable_html` |
-| The table of unit settings (`docs/keep/units.html`) | `UNIT_FIELDS`, `units_html` |
 | The ready-made download's link, size and checksum | `DOWNLOAD_*` |
 | The converter page and its list of changes | `build_converter_page`; the changes come from `web/convert/changes.json` |
 | The Civil War unit swapper page | `build_swap_page` |
@@ -111,7 +131,7 @@ delete that Discussion afterwards; never post test text on a real page.
 2. Add the version as the first entry of `web/convert/changes.json`, with what
    changed in plain words and a `test` list of what testers should check. A test
    ties `src/__init__.py` to this file.
-3. Update the "Please test now" list in `DOCKET` to match.
+3. Update the "Please test now" list in `site/content/docket.toml` to match.
 4. Run the tests, rebuild the site (`python scripts/keep_site.py`), commit and
    push. The *Convert a plugin* page then runs the new version.
 

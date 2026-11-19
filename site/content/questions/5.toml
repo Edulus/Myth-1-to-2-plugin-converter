@@ -1,0 +1,5 @@
+n = 5
+term = "Q5: Would you play-test?"
+title = "Help test converted levels"
+gist = "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now, and so is Crow's Bridge's bridge. The unit problems are still to do, and multiplayer levels don't work yet. New test reports go in Q7."
+body = "<p>A converted level played by someone who knows TFL well would find the subtle problems &mdash; wrong unit sizes, sounds, balance &mdash; that logs can't.</p>"

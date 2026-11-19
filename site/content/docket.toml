@@ -1,0 +1,46 @@
+# What we are working on, shown near the top of the home page. Update it as
+# items move along; finished work goes into web/convert/changes.json instead.
+updated = "2026-11-19"
+
+[[group]]
+title = "Please test now (converter 0.19)"
+items = [
+  "Dwarf Heroes: can they throw their molotov uphill now, with downhill and flat throws still working? (0.19)",
+  "Forest Giant and Old Growth Forest Giant pieces: after being hit, are they teal like the Yearling's? Does The Fallen Lords itself show teal there? (reported, cause found)",
+  "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? Keep is measuring this; heroes may be a little tall.",
+]
+
+[[group]]
+title = "Working on now"
+items = [
+  "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
+  "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
+]
+
+[[group]]
+title = "Up next"
+items = [
+  "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
+  "Unit animations: fixed in 0.16 (Keep: units now stand still when they stop). Some walking frames may still be missing.",
+  "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
+  "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
+  "Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
+  "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
+  "Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie's and Magma's never do. 0.19 writes it as zero. Please test.",
+  "Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow's teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.",
+  "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
+]
+
+[[group]]
+title = "Later"
+items = [
+  "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
+  "The outer edge of Crow's Bridge (south and east) sits differently from Magma's port. We checked: Magma adjusted that map's edges by hand, so this is not a converter error.",
+  "One bush on the edge of a trench on Crow's Bridge may still float.",
+]
+
+[[group]]
+title = "How we work"
+items = [
+  "One thing at a time. For each problem we compare our version with Project Magma's hand-made Myth II ports, field by field, and turn what they did into a rule the converter applies to every map. Then we check the result in the game, with screenshots.",
+]

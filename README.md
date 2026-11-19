@@ -371,6 +371,7 @@ src/swap.py        swap the units a Myth II plugin's maps place; restore stock u
 src/plugindiff.py  tag-by-tag comparison of two containers
 src/cli.py         command line entry point
 tests/             unittest suite; fixtures.py builds synthetic containers
+site/content/     the project site's words (TOML); scripts/keep_site.py builds docs/ from them
 reference/         third-party material we study but do not redistribute --
                    git-ignored except its README, which says how to get each item
 documentation/     conversion rules, research notes, the site and releases, plans

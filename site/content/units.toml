@@ -1,0 +1,47 @@
+# Keep's question (16 Nov 2026): which Myth II-only monster settings, and what
+# Magma's own value per unit looks like. From Magma - The Fallen Lords v1.9 against
+# the stock TFL monsters it carries. Built once from the tags.
+title = "The monster settings TFL never had"
+
+# [TFL unit, Magma's monster, pathfinding radius, more hack flags]
+rows = [
+  ["avatara", "avatara", 77, 100],
+  ["avatara (5 champions)", "avatara five champions", 77, 100],
+  ["avatara (pools of iron)", "avatara (pools of iron)", 77, 100],
+  ["balor", "balor", 77, 100],
+  ["berserk", "berserk", 169, 100],
+  ["berserk hero", "berserk hero", 77, 100],
+  ["containment field generator", "containment field generator", 154, 0],
+  ["dwarf", "dwarf tfl", 123, 100],
+  ["dwarf (falling)", "dwarf falling", 159, 100],
+  ["dwarf heads", "dwarf tfl (hunting)", 123, 100],
+  ["dwarven hero", "dwarf tfl (hunting)", 123, 100],
+  ["dwarven pathfinder", "dwarf tfl (hunting)", 123, 100],
+  ["fetch", "fetch tfl", 159, 100],
+  ["fir'bolg", "fir'bolg heads", 51, 0],
+  ["fir'bolg heads", "fir'bolg heads", 51, 0],
+  ["fir'bolg hero", "fir'bolg heads", 51, 0],
+  ["forest giant", "Forest Giant keep", 220, 0],
+  ["ghol", "ghol tfl", 169, 0],
+  ["great devoid mesh effect", "great devoid mesh effect", 77, 100],
+  ["journeymen", "journeyman", 67, 0],
+  ["shade", "shade", 77, 50],
+  ["soulblighter", "soulblighter forest heart", 77, 50],
+  ["soulless", "soulless", 77, 50],
+  ["soulless (flaming)", "soulless", 77, 50],
+  ["spider (netgame)", "spider", 77, 50],
+  ["spider (queen)", "spider (queen)", 169, 50],
+  ["spider (solo)", "spider (solo)", 77, 50],
+  ["target (healing)", "thrall tfl", 169, 0],
+  ["target (myrgard)", "target dummy (myrgard)", 51, 0],
+  ["target (straw)", "target dummy (myrgard)", 51, 0],
+  ["telltale", "telltale", 77, 0],
+  ["the watcher", "The Watcher", 154, 0],
+  ["thrall", "thrall tfl", 169, 0],
+  ["trow", "trow", 154, 90],
+  ["villager", "villager", 77, 50],
+  ["villager (traitor)", "villager with eyes", 77, 50],
+  ["villager (with visibility)", "villager with eyes", 77, 50],
+  ["warrior captain", "warrior captain", 77, 50],
+  ["wight", "wight tfl", 164, 50],
+]

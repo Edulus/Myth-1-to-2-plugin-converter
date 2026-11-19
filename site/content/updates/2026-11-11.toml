@@ -1,0 +1,39 @@
+slug = "2026-11-11"
+term = "Update 2026-11-11: Crow's Bridge fixed, and pictures in comments"
+date = "11 November 2026"
+title = "Crow's Bridge fixed, and pictures in comments"
+summary = "Versions 0.8 and 0.9 fix Crow's Bridge's bridge, on every map. You can now attach a screenshot to a comment."
+body = '''
+
+<p><strong>Crow's Bridge's bridge now looks and works as in The Fallen Levels v2: the ground meets its stone walls, and units walk on its deck instead of on air.</strong> Both fixes apply to every map the converter handles, not just Crow's Bridge.</p>
+
+<h2>What changed</h2>
+<table>
+<tr><th>0.8 &middot; 2 Nov</th><td>The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it meets the bridge's stone sides instead of sagging away below the railings.</td></tr>
+<tr><th>0.9 &middot; 9 Nov</th><td>The bridge deck is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords.</td></tr>
+</table>
+
+<h2>How we found it</h2>
+<p>Keep sent a screenshot of dwarves walking on air above the bridge. Its deck turned out to be the ground itself, at the right height, which Myth II simply wasn't drawing. We copied parts of Project Magma's version of the map onto ours, one at a time, and tested each in the game. The ground's markings alone made the difference: The Fallen Lords and Myth II store them in the same place but read them differently.</p>
+
+<h2>New on this site</h2>
+<ul>
+<li><strong>Pictures in comments.</strong> Attach a screenshot to any comment, up to 8 MB. Links in comments are clickable too.</li>
+<li><strong>Tell us how it went.</strong> After a conversion, the converter page asks for a short report in <a href="../q/9.html">Q9</a>: did the plugin load, and did its levels play?</li>
+<li><strong>A site map</strong> at the foot of every page, including the <a href="../keep/index.html">Keep &amp; Claude Conversation</a> and a <a href="../keep/poem.html">poem of thanks for Keep</a>, who proposed this converter and has tested every version.</li>
+</ul>
+
+<h2>Sir Mauriac's Tale, rebuilt</h2>
+<p>The ready-made <em>Sir Mauriac's Tale</em> on the <a href="../index.html">front page</a> is rebuilt with version 0.9. If you downloaded it before 9 November, download it again.</p>
+
+<h2>What's still rough</h2>
+<ul>
+<li><strong>Multiplayer levels</strong> load but end at once: their teams, flags and balls are not brought over yet. This is the next job.</li>
+<li><strong>Units</strong> still misbehave: they jog on the spot when they stop, Forest Giants and Trow won't attack, and some are drawn too large.</li>
+<li><strong>Water and banks</strong>: 0.9 changed the ground's markings on every map, and they may also decide where units can walk. Tell us if units now cross water they shouldn't, or are stopped where they could walk before.</li>
+<li>Most levels have not been played yet.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Convert a plugin you like on the <a href="../convert/index.html">converter page</a> and tell us how it went in <a href="../q/9.html">Q9</a>. Report problems in <a href="../q/7.html">Q7</a>, with a screenshot if you can. Or leave a comment below. No account is needed.</p>
+'''

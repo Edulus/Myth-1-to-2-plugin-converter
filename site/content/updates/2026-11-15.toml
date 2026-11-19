@@ -1,0 +1,25 @@
+slug = "2026-11-15"
+term = "Update 2026-11-15: swap Civil War units in your browser"
+date = "15 November 2026"
+title = "Swap the Civil War soldiers for regular units, in your browser"
+summary = "A new page lets you play the Civil War maps with regular Myth II units. Built because Obelix asked."
+body = '''
+
+<p><strong>You can now play the <em>Civil War</em> maps for Myth II with regular Myth II units, from a page in your browser.</strong> It was built because Obelix asked for it, and it has its own page: <a href="../swap/index.html">Swap the Civil War soldiers for regular units</a>.</p>
+
+<h2>What it does</h2>
+<p>You choose three things from your own computer: the Civil War maps, the Civil War tagset they need, and your Myth II folder. The page lists the units the maps place, and you pick a replacement for each, or for a whole side at once: warriors for the player's soldiers, ghols for the enemy's. Then it writes a new plugin for you to save. The original files are never changed, and nothing is uploaded.</p>
+
+<h2>How it got built</h2>
+<p>The tool itself existed already, and was checked in Myth II with <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> pack. The hard part was size: the maps alone are over 500 MB, and the new plugin is as big again. So the browser version reads each file in place, fetches only the few pieces it needs, and writes the result out in chunks. On the real Civil War files it gives exactly the same result as the original tool, in about a second.</p>
+
+<h2>What's still rough</h2>
+<ul>
+<li>The browser version has not yet been played in Myth II. The tool it copies has, and the contents are identical, but we want you to try it and tell us.</li>
+<li>Only two Civil War packs and a few replacement units have been tried.</li>
+<li>The new plugin is about 520 MB for Civil War Reloaded 1.8.4, so keep some disk space.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Open <a href="../swap/index.html">the page</a>, and tell us how it went in <a href="../q/9.html">Q9</a>, in <a href="../q/7.html">Q7</a>, or in the comments on the page itself. No account is needed.</p>
+'''

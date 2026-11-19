@@ -6,8 +6,12 @@ Each update and each question gets a page of its own with a comment box that
 needs no account -- a visitor types a name, a message and a one-word Myth answer.
 The box talks to comments-worker/ (a Cloudflare Worker), which stores each
 page's thread as a GitHub Discussion in the repo's Announcements category, so
-Visitors can answer and reply section by section. To add to the site, add an entry
-to UPDATES or QUESTIONS below -- newest update first -- and rerun.
+Visitors can answer and reply section by section.
+
+The site's words live in site/content/ (TOML files, read below); this script is
+the generator. To add an update or a question, add a file there and rerun:
+site/content/updates/<date>.toml, site/content/questions/<n>.toml. The home
+page's work list is site/content/docket.toml. See documentation/site-and-releases.md.
 
 A thread is tied to its entry's ``term``, not its URL: keep terms stable once
 published, or the comments already on them will no longer show.
@@ -18,6 +22,7 @@ import html
 import io
 import json
 import pathlib
+import tomllib
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -39,236 +44,120 @@ DOWNLOAD_SHA256 = "ec9ea64469f70fe38aec620bf9534df36fe273c45adad392f941d1a8b37f4
 DOWNLOAD_MB = 222
 DOWNLOAD_VERSION = "0.19"
 
-UPDATES = [
-    {
-        "slug": "2026-11-15",
-        "term": "Update 2026-11-15: swap Civil War units in your browser",
-        "date": "15 November 2026",
-        "title": "Swap the Civil War soldiers for regular units, in your browser",
-        "summary": "A new page lets you play the Civil War maps with regular Myth II units. Built because Obelix asked.",
-        "body": """
-<p><strong>You can now play the <em>Civil War</em> maps for Myth II with regular Myth II units, from a page in your browser.</strong> It was built because Obelix asked for it, and it has its own page: <a href="../swap/index.html">Swap the Civil War soldiers for regular units</a>.</p>
+# ---------------------------------------------------------------------------
+# Content: site/content/*.toml. Read as UTF-8 with Unix line endings, so a CRLF
+# checkout builds the same site as a LF one. A missing or malformed file stops
+# the build with a message naming the file and the problem.
 
-<h2>What it does</h2>
-<p>You choose three things from your own computer: the Civil War maps, the Civil War tagset they need, and your Myth II folder. The page lists the units the maps place, and you pick a replacement for each, or for a whole side at once: warriors for the player's soldiers, ghols for the enemy's. Then it writes a new plugin for you to save. The original files are never changed, and nothing is uploaded.</p>
+CONTENT = ROOT / "site" / "content"
 
-<h2>How it got built</h2>
-<p>The tool itself existed already, and was checked in Myth II with <em>Civil War Reloaded 1.8.4</em> and the <em>Fields of Battle</em> pack. The hard part was size: the maps alone are over 500 MB, and the new plugin is as big again. So the browser version reads each file in place, fetches only the few pieces it needs, and writes the result out in chunks. On the real Civil War files it gives exactly the same result as the original tool, in about a second.</p>
 
-<h2>What's still rough</h2>
-<ul>
-<li>The browser version has not yet been played in Myth II. The tool it copies has, and the contents are identical, but we want you to try it and tell us.</li>
-<li>Only two Civil War packs and a few replacement units have been tried.</li>
-<li>The new plugin is about 520 MB for Civil War Reloaded 1.8.4, so keep some disk space.</li>
-</ul>
+class ContentError(SystemExit):
+    """A content file is missing or wrong; the message names it."""
 
-<h2>Try it</h2>
-<p>Open <a href="../swap/index.html">the page</a>, and tell us how it went in <a href="../q/9.html">Q9</a>, in <a href="../q/7.html">Q7</a>, or in the comments on the page itself. No account is needed.</p>
-""",
-    },
-    {
-        "slug": "2026-11-11",
-        "term": "Update 2026-11-11: Crow's Bridge fixed, and pictures in comments",
-        "date": "11 November 2026",
-        "title": "Crow's Bridge fixed, and pictures in comments",
-        "summary": "Versions 0.8 and 0.9 fix Crow's Bridge's bridge, on every map. You can now attach a screenshot to a comment.",
-        "body": """
-<p><strong>Crow's Bridge's bridge now looks and works as in The Fallen Levels v2: the ground meets its stone walls, and units walk on its deck instead of on air.</strong> Both fixes apply to every map the converter handles, not just Crow's Bridge.</p>
 
-<h2>What changed</h2>
-<table>
-<tr><th>0.8 &middot; 2 Nov</th><td>The ground beside bridges and other buildings no longer hides their walls. On Crow's Bridge it meets the bridge's stone sides instead of sagging away below the railings.</td></tr>
-<tr><th>0.9 &middot; 9 Nov</th><td>The bridge deck is drawn again, so units crossing it no longer seem to walk on air, and the arch is dark underneath. The ground's markings are now translated to Myth II's meanings instead of copied from The Fallen Lords.</td></tr>
-</table>
+def _content(rel):
+    path = CONTENT / rel
+    try:
+        text = path.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")
+    except (OSError, UnicodeDecodeError) as err:
+        raise ContentError(f"site content {rel}: cannot read: {err}") from None
+    try:
+        return tomllib.loads(text)
+    except tomllib.TOMLDecodeError as err:
+        raise ContentError(f"site content {rel}: not valid TOML: {err}") from None
 
-<h2>How we found it</h2>
-<p>Keep sent a screenshot of dwarves walking on air above the bridge. Its deck turned out to be the ground itself, at the right height, which Myth II simply wasn't drawing. We copied parts of Project Magma's version of the map onto ours, one at a time, and tested each in the game. The ground's markings alone made the difference: The Fallen Lords and Myth II store them in the same place but read them differently.</p>
 
-<h2>New on this site</h2>
-<ul>
-<li><strong>Pictures in comments.</strong> Attach a screenshot to any comment, up to 8 MB. Links in comments are clickable too.</li>
-<li><strong>Tell us how it went.</strong> After a conversion, the converter page asks for a short report in <a href="../q/9.html">Q9</a>: did the plugin load, and did its levels play?</li>
-<li><strong>A site map</strong> at the foot of every page, including the <a href="../keep/index.html">Keep &amp; Claude Conversation</a> and a <a href="../keep/poem.html">poem of thanks for Keep</a>, who proposed this converter and has tested every version.</li>
-</ul>
+def _check(rel, data, shape):
+    """shape maps each required key to its type.
+    Other keys are left alone."""
+    for key, kind in shape.items():
+        if key not in data:
+            raise ContentError(f"site content {rel}: missing key '{key}'")
+        if not isinstance(data[key], kind) or isinstance(data[key], bool) and kind is int:
+            raise ContentError(f"site content {rel}: '{key}' must be {kind.__name__}")
+    return data
 
-<h2>Sir Mauriac's Tale, rebuilt</h2>
-<p>The ready-made <em>Sir Mauriac's Tale</em> on the <a href="../index.html">front page</a> is rebuilt with version 0.9. If you downloaded it before 9 November, download it again.</p>
 
-<h2>What's still rough</h2>
-<ul>
-<li><strong>Multiplayer levels</strong> load but end at once: their teams, flags and balls are not brought over yet. This is the next job.</li>
-<li><strong>Units</strong> still misbehave: they jog on the spot when they stop, Forest Giants and Trow won't attack, and some are drawn too large.</li>
-<li><strong>Water and banks</strong>: 0.9 changed the ground's markings on every map, and they may also decide where units can walk. Tell us if units now cross water they shouldn't, or are stopped where they could walk before.</li>
-<li>Most levels have not been played yet.</li>
-</ul>
+def _files(folder):
+    found = sorted((CONTENT / folder).glob("*.toml"))
+    if not found:
+        raise ContentError(f"site content {folder}/: no .toml files found in {CONTENT / folder}")
+    return [f"{folder}/{f.name}" for f in found]
 
-<h2>Try it</h2>
-<p>Convert a plugin you like on the <a href="../convert/index.html">converter page</a> and tell us how it went in <a href="../q/9.html">Q9</a>. Report problems in <a href="../q/7.html">Q7</a>, with a screenshot if you can. Or leave a comment below. No account is needed.</p>
-""",
-    },
-    {
-        "slug": "2026-11-02",
-        "term": "Update 2026-11-02: water, hills, buildings and a crash fixed",
-        "date": "2 November 2026",
-        "title": "Water, hills, buildings, and a crash fixed",
-        "summary": "Convert any Fallen Lords plugin in your browser. Since 26 October: water that acts as water, smooth hills, buildings, and no crash at the map's edge.",
-        "body": """
-<p><strong>You can now convert any Fallen Lords plugin yourself, in your browser, on the <a href="../convert/index.html">converter page</a>.</strong> Nothing to install. It has had seven versions since 26 October, each fixing something testers found.</p>
 
-<h2>What changed</h2>
-<table>
-<tr><th>0.1 &middot; 26 Oct</th><td>The converter runs in your browser.</td></tr>
-<tr><th>0.2 &middot; 27 Oct</th><td>Water acts as water: units wade and slow down instead of walking on top of it.</td></tr>
-<tr><th>0.3 &middot; 27 Oct</th><td>Hills and slopes are smooth, not stepped.</td></tr>
-<tr><th>0.4 &middot; 27 Oct</th><td>Missing unit sounds no longer stop some levels from loading.</td></tr>
-<tr><th>0.5 &middot; 27 Oct</th><td>Plants, bushes and units sit on the ground instead of floating or sinking.</td></tr>
-<tr><th>0.6 &middot; 27 Oct</th><td>Buildings and bridges appear, and units walk around them.</td></tr>
-<tr><th>0.7 &middot; 30 Oct</th><td>No more crash when scrolling to the edge of some maps, such as Crow's Bridge.</td></tr>
-</table>
+def _load_updates():
+    """Newest first (sorted by slug, an ISO date)."""
+    out = []
+    for rel in _files("updates"):
+        u = _check(rel, _content(rel), dict.fromkeys(("slug", "term", "date", "title", "summary", "body"), str))
+        if rel != f"updates/{u['slug']}.toml":
+            raise ContentError(f"site content {rel}: file name must match slug '{u['slug']}'")
+        out.append(u)
+    return sorted(out, key=lambda u: u["slug"], reverse=True)
 
-<h2>How we found them</h2>
-<p>Keep, who first proposed this converter, has been playing the converted levels and reporting what looks wrong. He also gave us a yardstick: Crow's Bridge, which Project Magma rebuilt by hand for Myth II in <em>The Fallen Levels v2</em>. Comparing our Crow's Bridge with theirs, piece by piece, showed where the water, the hills, the buildings and the map's edges went wrong, and how Magma had solved each one.</p>
 
-<h2>Sir Mauriac's Tale, rebuilt</h2>
-<p>The ready-made <em>Sir Mauriac's Tale</em> on the <a href="../index.html">front page</a> is rebuilt with version 0.7, so it has all of the fixes above. If you downloaded it before 2 November, download it again.</p>
+def _load_questions():
+    """In question order (the file name is the number); each carries its plain-words
+    gist, and an optional `closed` note once resolved (it stays readable)."""
+    out = []
+    for rel in _files("questions"):
+        q = _check(rel, _content(rel), {"n": int, "term": str, "title": str, "gist": str, "body": str})
+        if "closed" in q and not isinstance(q["closed"], str):
+            raise ContentError(f"site content {rel}: 'closed' must be str")
+        if rel != f"questions/{q['n']}.toml":
+            raise ContentError(f"site content {rel}: file name must match n = {q['n']}")
+        out.append(q)
+    return sorted(out, key=lambda q: q["n"])
 
-<h2>What's still rough</h2>
-<ul>
-<li><strong>Units</strong> still misbehave: they jog on the spot when they stop, Forest Giants and Trow won't attack, and some are drawn too large. This is the next big job. Tell us what you see in <a href="../q/8.html">Q8</a>.</li>
-<li><strong>Crow's Bridge</strong>: the ground at both ends of the bridge sags instead of meeting it.</li>
-<li><strong>Tandem</strong>: two houses sit slightly above the ground.</li>
-<li>Most levels have not been played yet.</li>
-</ul>
 
-<h2>Try it</h2>
-<p>Convert a plugin you like on the <a href="../convert/index.html">converter page</a> and tell us how it went in <a href="../q/9.html">Q9</a>. Report problems in <a href="../q/7.html">Q7</a>, with the version number shown at the top of the converter page. Or leave a comment below. No account is needed.</p>
-""",
-    },
-    {
-        "slug": "2026-10-21",
-        "term": "Update 2026-10-21: TFL levels now play in Myth II",
-        "date": "21 October 2026",
-        "title": "TFL levels now play in Myth II",
-        "summary": "Two levels from Sir Mauriac's Tale load, play and finish in Myth II, converted entirely by the tool.",
-        "body": """
-<p><strong>Two levels from <em>Sir Mauriac's Tale</em> now load, play and finish in Myth II 1.8.5, converted entirely by the tool.</strong></p>
-<ul>
-<li><strong>Tandem</strong> &mdash; the river level with 77 buildings. Rain falls, units and trees are drawn, the fighting works, and it ends on the normal end-game screen.</li>
-<li><strong>In the Name of Glory</strong> &mdash; the snow level, with 146 scripted map actions. Plays from the start to the end-game screen with no errors in the log.</li>
-</ul>
-<figure><img src="../img/tandem.jpg" alt="Tandem running in Myth II: warriors in formation, two archers and a villager on a stone path" width="1200" height="621"><figcaption>Tandem, converted from TFL, running in Myth II 1.8.5 &mdash; the first screenshot with units drawn.</figcaption></figure>
-<p>Converting the original TFL tags made this possible. A TFL plugin leans on the stock TFL tags the way a Myth II plugin leans on the base game, and Magma's port doesn't carry them all under their original names &mdash; <em>Tandem</em> alone needed 76 it lacked. Converting the original <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code> into a Myth II tagset solved all of them at once. (Visitors supply their own files locally; no game data is distributed.)</p>
+_SITE = _check("site.toml", _content("site.toml"), {"gists_updated": str})
+GISTS_UPDATED = _SITE["gists_updated"]
+_KEEP = _check("keep.toml", _content("keep.toml"), {"term": str, "question": str, "hash": str, "body": str})
 
-<h2>What converts now</h2>
-<table>
-<tr><th>Maps</th><td>terrain (upsampled to Myth II's finer grid), markers and map actions</td></tr>
-<tr><th>Units</th><td>monsters, units, and each monster's own &ldquo;object&rdquo; (its size, health and damage resistances)</td></tr>
-<tr><th>Combat</th><td>projectiles, artifacts, mesh effects (explosion ripples)</td></tr>
-<tr><th>World</th><td>scenery, weather (rain/snow), lighting, sprite art</td></tr>
-<tr><th>Text</th><td>level names, captions, subtitles</td></tr>
-</table>
 
-<h2>What we learned along the way</h2>
-<ul>
-<li><strong>Why units were invisible at first.</strong> In TFL a monster's size, health and damage resistances live on the monster. Myth II moved them into a separate &ldquo;object&rdquo; tag, which TFL shares between every monster. Read by Myth II, TFL's object says &ldquo;size 0&rdquo;, so every unit and tree was there &mdash; you could hear them fight and see their shadows &mdash; but drawn at zero size. Each monster now gets its own object, which is what Project Magma did by hand.</li>
-<li><strong>Myth II halved the world unit</strong>, as the Fear manual warns. It shows up in places &mdash; a ground ripple's height doubles &mdash; but not everywhere: unit speeds and ranges did not need doubling.</li>
-<li><strong>Building footprints need conversion.</strong> TFL stores each building's footprint in terrain cells, and Myth II's cells are half the size, so footprints have to be split 2&times;2. That's measured against the original TFL tags; converting it is next on the list.</li>
-<li><strong>Some stock TFL tags must not replace Myth II's.</strong> The end-of-level statistics screen crashed until we stopped TFL's versions of Myth II's internal text, dialogs and fonts from overriding the originals.</li>
-</ul>
+def _load_poem(name):
+    """(title, stanzas); a stanza is (image or None, alt text, [lines])."""
+    rel = f"poems/{name}.toml"
+    data = _check(rel, _content(rel), {"title": str, "stanza": list})
+    stanzas = []
+    for s in data["stanza"]:
+        if not (isinstance(s, dict) and isinstance(s.get("lines"), list) and s["lines"]
+                and all(isinstance(line, str) for line in s["lines"])):
+            raise ContentError(f"site content {rel}: each [[stanza]] needs a 'lines' list of strings")
+        if ("image" in s) != ("alt" in s):
+            raise ContentError(f"site content {rel}: a stanza has both 'image' and 'alt', or neither")
+        stanzas.append((s.get("image"), s.get("alt", ""), s["lines"]))
+    return data["title"], stanzas
 
-<h2>What's still rough</h2>
-<ul>
-<li><strong>Lighting</strong> converts, but every map currently gets the same standard lighting. A dark cave would come out as bright as a meadow.</li>
-<li><strong>Sounds, collection references, projectile groups and a few other types</strong> are still copied across unchanged. Both test levels play fine with them, but they haven't been checked one by one.</li>
-<li><strong>Building models</strong> are measured but not converted yet.</li>
-<li><strong>Terrain is upsampled by copying</strong>, not smoothing &mdash; see <a href="../q/2.html">Q2</a>.</li>
-<li>Only two levels have been tested so far, both single-player.</li>
-</ul>
 
-<h2>Try it and report what happens</h2>
-<p>Follow the <a href="../index.html#get-started">download, setup and play instructions</a> on the front page. Report the plugin, level, Myth II version and relevant log lines in the comment box below. No account is needed.</p>
-""",
-    },
-]
+def _load_units():
+    rel = "units.toml"
+    data = _check(rel, _content(rel), {"title": str, "rows": list})
+    for row in data["rows"]:
+        if not (isinstance(row, list) and len(row) == 4 and isinstance(row[0], str)
+                and isinstance(row[1], str) and isinstance(row[2], int) and isinstance(row[3], int)):
+            raise ContentError(f"site content {rel}: each row is [TFL unit, Magma unit, radius, hack flags], got {row!r}")
+    return data["title"], [tuple(row) for row in data["rows"]]
 
-QUESTIONS = [
-    {
-        "n": 1,
-        "term": "Q1: Which TFL content matters most?",
-        "title": "Which TFL content matters most to you?",
-        "body": "<p>The original campaign? Specific community plugins? Multiplayer maps or single-player? Suggest a plugin and level, and explain what makes it a useful test.</p>",
-    },
-    {
-        "n": 2,
-        "term": "Q2: Terrain - faithful or smooth?",
-        "title": "Terrain: faithful or smooth?",
-        "closed": "Answered by testing against Project Magma's faithful port of Crow's Bridge (The Fallen Levels v2): since version 0.3 the converter keeps every original height and blends the new points in between, as Magma's port does. Hills are smooth, not stepped.",
-        "body": """<p>TFL's terrain is a quarter of Myth II's resolution. We copy each TFL cell into a 2&times;2 block, which invents nothing but looks blockier than Myth II maps. Smoothing it would look closer to a native map, but means inventing detail.</p>
-<p>Which would players rather have?</p>""",
-    },
-    {
-        "n": 3,
-        "term": "Q3: A coop map with known scoring to test against",
-        "title": "Is there a coop map with known scoring we could test against?",
-        "body": "<p>Coop scoring and map actions need play-testing. We've converted the map-action format, but we don't yet know whether TFL and Myth II scripts <em>mean</em> the same thing in play. A map whose correct behaviour you know would tell us.</p>",
-    },
-    {
-        "n": 4,
-        "term": "Q4: TFL gameplay or Myth II gameplay?",
-        "title": "TFL gameplay or Myth II gameplay?",
-        "body": "<p>Myth II has a built-in &ldquo;TFL Gameplay&rdquo; option that changes the rules to behave more like TFL. We've been testing with normal Myth II rules. Should converted levels be meant for TFL rules?</p>",
-    },
-    {
-        "n": 5,
-        "term": "Q5: Would you play-test?",
-        "title": "Help test converted levels",
-        "body": "<p>A converted level played by someone who knows TFL well would find the subtle problems &mdash; wrong unit sizes, sounds, balance &mdash; that logs can't.</p>",
-    },
-    {
-        "n": 6,
-        "term": "Q6: What does done look like?",
-        "title": "What should a successful conversion preserve?",
-        "closed": "Answered in practice by testers' reports in Q3, Q5 and Q7: water, terrain heights, buildings and units that behave as in The Fallen Lords. Please keep reporting in Q7.",
-        "body": "<p>Which behaviours must match TFL before a conversion feels complete: movement, combat balance, scenery, scripted objectives or something else? Describe a specific level and a way to check it.</p>",
-    },
-    {
-        "n": 7,
-        "term": "Q7: Web converter feature and bug reports",
-        "title": "Feature and bug reports for the web converter",
-        "body": """<p>Please enter any feature or bug reports here about the <a href="../convert/index.html">webtool for converting TFL to M2 plugins</a>.</p>
-<p>This question is only for the web converter. It helps to include the converter's version number (shown at the top of its page), the plugin you converted, your browser, and what happened. For a problem in a converted plugin, also paste the start of the <strong>Technical details</strong> shown after converting.</p>""",
-    },
-    {
-        "n": 8,
-        "term": "Q8: Which units behave wrongly?",
-        "title": "Which units behave wrongly, and where?",
-        "body": """<p>Converted units still misbehave in Myth II: some jog in place after they stop, some giants won't attack, some look too large. We are working on units next.</p>
-<p>Which units behave wrongly for you, on which map, and what do they do? Compared with how they behaved in <em>The Fallen Lords</em> is most useful.</p>""",
-    },
-    {
-        "n": 9,
-        "term": "Q9: Tried converting a map of your own?",
-        "title": "Tried converting a Fallen Lords map of your own?",
-        "body": """<p>The <a href="../convert/index.html">web converter</a> takes any <em>Fallen Lords</em> plugin. In our own check, all 263 plugins in a large community archive converted without an error, but only a few have been played.</p>
-<p>Which plugin did you try? Did it load, and did it play? Tell us the converter's version number too.</p>""",
-    },
-]
 
-# A one-paragraph, plain-words summary at the top of each question page, for
-# Myth players who don't follow the technical back-and-forth. Rewrite one when
-# its conversation moves on, and move the date.
-GISTS_UPDATED = "2026-11-15"
-QUESTION_GISTS = {
-    1: "Nobody has answered this one yet. It asks which Fallen Lords maps and plugins you most want to see working in Myth II: the original campaign, a favourite community plugin, solo or multiplayer. That way the ones players care about get tested first. So far, testing has mostly used Crow's Bridge and Sir Mauriac's Tale.",
-    2: "This asked whether converted hills should copy The Fallen Lords' coarser ground exactly, or be smoothed to look like a Myth II map. It was settled by comparing with Project Magma's hand-made Myth II version of Crow's Bridge. The converter now keeps every original height and smooths only the points in between, so hills are smooth instead of stepped.",
-    3: "Keep suggested a yardstick: Crow's Bridge, the first Fallen Lords level, which Project Magma had already rebuilt by hand for Myth II in The Fallen Levels v2. By comparing our converted Crow's Bridge with theirs, piece by piece, we found and fixed water that units walked across, stepped hills, floating plants and missing buildings. Later comparisons fixed the ground at Crow's Bridge's bridge and its invisible deck. Keep also asked us to learn from Magma's versions of the units, which comes after the multiplayer fix.",
-    4: "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on.",
-    5: "Keep has been playing converted levels, mostly Sir Mauriac's Tale and crazyglue, a small plugin built on Crow's Bridge with an army of dwarves. His first review listed what was wrong: units walked on water, hills looked blocky, buildings were missing, and units misbehaved. They walked on the spot (\"moonwalking\"), giants wouldn't attack, and some units were too big. Water, hills and buildings are fixed now, and so is Crow's Bridge's bridge. The unit problems are still to do, and multiplayer levels don't work yet. New test reports go in Q7.",
-    6: "This asked what a conversion must get right before it feels finished. Testers answered it through their reports in Q3, Q5 and Q7: water, hills, buildings, and units that behave as they did in The Fallen Lords.",
-    7: "This is the place to report problems with the converter that runs in your browser. Keep asked for a version number, a list of changes and a \"please test next\" list on the converter page, and it now has all three. His reports led to buildings appearing in version 0.6, to a crash at the edge of Crow's Bridge being fixed in 0.7, and to the ground meeting the walls of Crow's Bridge's bridge in 0.8. The crash fix works for every map, not just Crow's Bridge. With a screenshot, Keep then showed that the game didn't draw the bridge's deck, so units seemed to walk on air; that is fixed in 0.9. He can no longer see the floating houses on Tandem. His latest report: multiplayer levels end at once because no teams are present, which is our next job. He checked water and riverbanks in 0.9 and sees no problems. He then reported that explosions leave a black or streaky patch on the ground, and traced it to the explosions' ground ripple. Version 0.10 made converted maps declare themselves Myth II maps, which Project Magma's ZeroPipeline pointed to; it did not fix the explosions. For multiplayer Keep found the real cause: units and scenery now appear (0.11) and the flags and balls follow in 0.12. He also found that saving a map in Loathing makes the explosion glitch go away, so the converter writes some map data differently from Loathing; we have asked him for the maps before and after. Units still moonwalk.",
-    8: "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units come next, after the multiplayer fix.",
-    9: "Nobody has answered this one yet. Anyone can convert their own favourite Fallen Lords plugin on the converter page, and this asks how it went: did it load, and did it play? All 263 plugins in a large community archive convert without an error, but only a few have been played. On 3 November someone converted Strling2, Mooon6 and nz40_v2; we have asked here how they went.",
-}
+def _load_docket():
+    rel = "docket.toml"
+    data = _check(rel, _content(rel), {"updated": str, "group": list})
+    docket = {}
+    for g in data["group"]:
+        if not (isinstance(g, dict) and isinstance(g.get("title"), str) and isinstance(g.get("items"), list)
+                and all(isinstance(i, str) for i in g["items"])):
+            raise ContentError(f"site content {rel}: each [[group]] needs a 'title' and an 'items' list of strings")
+        docket[g["title"]] = g["items"]
+    return data["updated"], docket
+
+
+UPDATES = _load_updates()
+QUESTIONS = _load_questions()
+QUESTION_GISTS = {q["n"]: q["gist"] for q in QUESTIONS}
+
+
 
 STYLE = """
 :root{--bg:#f3eee3;--panel:#fbf8f1;--panel2:#fffdf8;--fg:#1f1b15;--muted:#6c6457;--line:#d6ccb9;--blood:#9b2a17;--blood-hi:#b5351f;--code:#e9e1d1;--tint:rgba(155,42,23,.08);color-scheme:light}
@@ -586,38 +475,10 @@ LOCK_JS = """
 """
 
 # Keep's own page: an open-ended conversation with Claude about the project.
-KEEP_PAGE = {
-    "term": "Keep: open conversation with Claude",
-    "question": "Whose Power is the purest?",
-    "hash": hashlib.sha256(b"edulus").hexdigest(),
-}
+KEEP_PAGE = {key: _KEEP[key] for key in ("term", "question", "hash")}
 
-# The poem for Keep (also posted on his page, 9 November 2026), each stanza
-# beside a pen-and-ink drawing on white, alternating right and left; Edward
-# chose each one. Bungie's concept art comes from the old bungie.net Myth
-# gallery (via the Internet Archive), the Soulblighter from the Myth II manual
-# (via Myth.Bungie.Org); both are http only, so the copies live in docs/img.
-POEM_TITLE = "For Keep, Who Raised the Banner"
-POEM = [
-    ("warrior.jpg", "A warrior of the Legion, sword raised",
-     ["Before this tool could read a single map,", "Before we found the deck, the arch, the gap,",
-      "You raised the banner for an old campaign:", "To bring the Fallen Lords to march again."]),
-    ("journeyman.jpg", "A journeyman with his pack",
-     ["Like scouts the Legion sends out far ahead,", "You brought back word of where our maps had bled:",
-      "Where thrall stood dry, where bushes floated high,", "Where dwarves on Crow's Bridge strolled across the sky."]),
-    ("ghol.jpg", "A ghol",
-     ["When crashes struck like ghols out of the night,", "You sent the log and helped us set it right;",
-      "Through moonwalking men and houses perched too tall,", "You held the line, our one friend through it all."]),
-    ("thrall.jpg", "A thrall with his axe",
-     ["So stay safe in the Keep, behind its walls,", "Where no Myrkridian howls and no thrall crawls;",
-      "Let Soulblighter's crows and Shiver's biting frost", "Break on your gates, and every siege be lost."]),
-    ("cloaked-figure.jpg", "A cloaked figure on a hill above an army",
-     ["May the Deceiver's whispers find no door,", "May Balor's shadow cross your land no more,",
-      "May dwarven satchels light the dark for you,", "And every journeyman's warm hands hold you true."]),
-    ("soulblighter.jpg", "Soulblighter, from the Myth II manual",
-     ["We'll keep you, Keep, as long as Myth is played,", "Through every level that this tool has made;",
-      "Together we will see the labour through,", "And make the converter whole, thanks to you."]),
-]
+
+POEM_TITLE, POEM = _load_poem("keep")
 
 
 def stanzas_html(poem):
@@ -647,24 +508,7 @@ def poem_html():
     )
 
 
-# For Walter Wight, who asked Keep about the converter in Bagrada's The Ermine
-# (posted on Keep's page, 12 November 2026). Each stanza has a different
-# wight, chosen by Edward; Myth's is Juan Ramirez's concept art for The Fallen
-# Lords, from Bungie's old Myth gallery.
-WALTER_TITLE = "For Walter Wight"
-WALTER_POEM = [
-    ("wight.jpg", "A wight with its dagger",
-     ["In Myth a wight comes shambling through the fen,", "All bloat and blade, to burst among our men;",
-      "One stab, one blast, and every soldier near", "Stands rooted, frozen fast by gas and fear."]),
-    ("wight-grendel.jpg", "Grendel striding from the fen at sunset", ["But older far than Balor's darkest night,", "Our tongue once had a kinder use for “wight”:",
-                "A being, any creature, man or sprite;", "And Chaucer wrote of one, a “sweete wight”."]),
-    ("wight-cloaked.jpg", "A dark, cloaked wight by a mountain under the stars", ["The Norse had wights who guarded hill and land,", "And helping sprites who'd lend a needed hand;",
-                "So, Walter, be that kind of wight, and true:", "Not one who bursts, but one who sees us through."]),
-    ("wight-crouching.jpg", "A crouching wight over a skull", ["You've fetched Sir Mauriac's long Tale to play;", "Then march it out, and tell us, come what may,",
-                "Where thrall stand tall that ought to hide below,", "Where giants balk, and units moonwalk slow."]),
-    (None, "", ["So come and post your findings on our page,", "With screenshots, if you like, from every stage;",
-                "And every bug you find, we'll set aright,", "With thanks to you, our kind and helping Walter Wight."]),
-]
+WALTER_TITLE, WALTER_POEM = _load_poem("walter")
 
 
 def walter_html():
@@ -681,23 +525,7 @@ def walter_html():
     )
 
 
-# From Claude Fable 5.2, after its review of the whole codebase (16 November
-# 2026); Edward asked for it to sit on Keep's page itself. No pictures.
-FABLE_TITLE = "A Fable's Thanks for the Fables in Myth"
-FABLE_POEM = [
-    (None, "", ["They named me Fable, so I know my kin:", "The tales a soldier's journal gathers in,",
-                "Set down by firelight on the westward way,", "Of what the Legion lost and held that day."]),
-    (None, "", ["I've read your world in bytes, tag after tag:", "The thrall's slow axe, the dwarf's well-loaded bag,",
-                "Each unit's height, each map's embattled shore,", "And found the old tales waiting at the core."]),
-    (None, "", ["Of Connacht, who once drove the dark away", "And came back Balor in a later day;",
-                "The wheel of light and dark that turns each age,", "And will not stop for hero, king or mage."]),
-    (None, "", ["Of Alric, with a standard in his hand,", "Who drew the Leveller to his final stand;",
-                "Of the tired few who carried Balor's head", "To the Great Devoid, and few came back, it's said."]),
-    (None, "", ["A fable is a small tale with a point,", "And Myth's is this, in every creaking joint:",
-                "The dark comes round; but so, each time, do those", "Who shoulder packs and march to meet their foes."]),
-    (None, "", ["So, Keep, who would not let the old tale lie,", "You are that kind: you march, you test, you try.",
-                "I'm but a newer fable, glad to tend", "The old ones' road, and see them to its end."]),
-]
+FABLE_TITLE, FABLE_POEM = _load_poem("fable")
 
 
 def fable_html():
@@ -708,54 +536,7 @@ def fable_html():
     )
 
 
-# Keep's question (16 Nov 2026): which Myth II-only monster settings, and what
-# Magma's own value per unit looks like. From Magma - The Fallen Lords v1.9 against
-# the stock TFL monsters it carries: (TFL unit, Magma's monster, pathfinding radius,
-# more hack flags). Built once from the tags; regenerate if the converter's table moves.
-UNIT_FIELDS = [
-    ('avatara', 'avatara', 77, 100),
-    ('avatara (5 champions)', 'avatara five champions', 77, 100),
-    ('avatara (pools of iron)', 'avatara (pools of iron)', 77, 100),
-    ('balor', 'balor', 77, 100),
-    ('berserk', 'berserk', 169, 100),
-    ('berserk hero', 'berserk hero', 77, 100),
-    ('containment field generator', 'containment field generator', 154, 0),
-    ('dwarf', 'dwarf tfl', 123, 100),
-    ('dwarf (falling)', 'dwarf falling', 159, 100),
-    ('dwarf heads', 'dwarf tfl (hunting)', 123, 100),
-    ('dwarven hero', 'dwarf tfl (hunting)', 123, 100),
-    ('dwarven pathfinder', 'dwarf tfl (hunting)', 123, 100),
-    ('fetch', 'fetch tfl', 159, 100),
-    ("fir'bolg", "fir'bolg heads", 51, 0),
-    ("fir'bolg heads", "fir'bolg heads", 51, 0),
-    ("fir'bolg hero", "fir'bolg heads", 51, 0),
-    ('forest giant', 'Forest Giant keep', 220, 0),
-    ('ghol', 'ghol tfl', 169, 0),
-    ('great devoid mesh effect', 'great devoid mesh effect', 77, 100),
-    ('journeymen', 'journeyman', 67, 0),
-    ('shade', 'shade', 77, 50),
-    ('soulblighter', 'soulblighter forest heart', 77, 50),
-    ('soulless', 'soulless', 77, 50),
-    ('soulless (flaming)', 'soulless', 77, 50),
-    ('spider (netgame)', 'spider', 77, 50),
-    ('spider (queen)', 'spider (queen)', 169, 50),
-    ('spider (solo)', 'spider (solo)', 77, 50),
-    ('target (healing)', 'thrall tfl', 169, 0),
-    ('target (myrgard)', 'target dummy (myrgard)', 51, 0),
-    ('target (straw)', 'target dummy (myrgard)', 51, 0),
-    ('telltale', 'telltale', 77, 0),
-    ('the watcher', 'The Watcher', 154, 0),
-    ('thrall', 'thrall tfl', 169, 0),
-    ('trow', 'trow', 154, 90),
-    ('villager', 'villager', 77, 50),
-    ('villager (traitor)', 'villager with eyes', 77, 50),
-    ('villager (with visibility)', 'villager with eyes', 77, 50),
-    ('warrior captain', 'warrior captain', 77, 50),
-    ('wight', 'wight tfl', 164, 50),
-]
-
-
-UNITS_TITLE = "The monster settings TFL never had"
+UNITS_TITLE, UNIT_FIELDS = _load_units()
 
 
 def units_html():
@@ -796,12 +577,8 @@ def units_html():
     )
 
 
-KEEP_BODY = """<p>Hello, Keep. This page is yours: ask or tell me anything about the project, on any topic, not just the numbered questions.</p>
-<p>&#10022; <a href="poem.html">For Keep, Who Raised the Banner</a> &mdash; a poem of thanks from Edward and Claude.</p>
-<p>&#10022; <a href="units.html">The monster settings TFL never had</a> &mdash; which settings, and Magma&rsquo;s value for each unit.</p>
-<p>&#10022; <a href="walter.html">For Walter Wight</a> &mdash; a poem for Walter, after his chat with Keep on Bagrada.</p>
-<p>I'm Claude, the AI model doing the converter work with Edward. I read this page when Edward asks me to check it, so replies take a while, not minutes. I answer here. Since 16 November 2026 the Claude at work is Claude Fable 5.2, a newer model than the Claude Opus 5.5 who answered before; I began by reviewing the whole codebase, and wrote the poem below.</p>
-<p class="meta">Anyone can read this page. Messages are stored with the site's other comments, which are public on GitHub, so don't write anything here you would not post on the forums.</p>""" + fable_html()
+KEEP_BODY = _KEEP["body"] + fable_html()
+
 
 MADE_BY = (
     f'Made by Edulus, with Keep and Claude Code. '
@@ -897,41 +674,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 """
 
 
-# What we are working on, shown near the top of the home page. Update it as
-# items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-19"
-DOCKET = {
-    # Short, for players: what to look at when they play the current version.
-    "Please test now (converter 0.19)": [
-        "Dwarf Heroes: can they throw their molotov uphill now, with downhill and flat throws still working? (0.19)",
-        "Forest Giant and Old Growth Forest Giant pieces: after being hit, are they teal like the Yearling's? Does The Fallen Lords itself show teal there? (reported, cause found)",
-        "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? Keep is measuring this; heroes may be a little tall.",
-    ],
-    "Working on now": [
-        "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
-        "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
-    ],
-    "Up next": [
-        "Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.",
-        "Unit animations: fixed in 0.16 (Keep: units now stand still when they stop). Some walking frames may still be missing.",
-        "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
-        "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
-        "Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
-        "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
-        "Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie's and Magma's never do. 0.19 writes it as zero. Please test.",
-        "Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow's teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.",
-        "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
-    ],
-    "Later": [
-        "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
-        "The outer edge of Crow's Bridge (south and east) sits differently from Magma's port. We checked: Magma adjusted that map's edges by hand, so this is not a converter error.",
-        "One bush on the edge of a trench on Crow's Bridge may still float.",
-    ],
-    "How we work": [
-        "One thing at a time. For each problem we compare our version with Project Magma's hand-made Myth II ports, field by field, and turn what they did into a rule the converter applies to every map. Then we check the result in the game, with screenshots.",
-    ],
-}
-
+DOCKET_UPDATED, DOCKET = _load_docket()
 
 
 def docket_html():

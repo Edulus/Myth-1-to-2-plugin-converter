@@ -1,0 +1,64 @@
+# The poem for Keep (also posted on his page, 9 November 2026), each stanza
+# beside a pen-and-ink drawing; Edward chose each one. Images are in docs/img/poem/.
+# A stanza without `image` has no picture.
+title = "For Keep, Who Raised the Banner"
+
+[[stanza]]
+image = "warrior.jpg"
+alt = "A warrior of the Legion, sword raised"
+lines = [
+  "Before this tool could read a single map,",
+  "Before we found the deck, the arch, the gap,",
+  "You raised the banner for an old campaign:",
+  "To bring the Fallen Lords to march again.",
+]
+
+[[stanza]]
+image = "journeyman.jpg"
+alt = "A journeyman with his pack"
+lines = [
+  "Like scouts the Legion sends out far ahead,",
+  "You brought back word of where our maps had bled:",
+  "Where thrall stood dry, where bushes floated high,",
+  "Where dwarves on Crow's Bridge strolled across the sky.",
+]
+
+[[stanza]]
+image = "ghol.jpg"
+alt = "A ghol"
+lines = [
+  "When crashes struck like ghols out of the night,",
+  "You sent the log and helped us set it right;",
+  "Through moonwalking men and houses perched too tall,",
+  "You held the line, our one friend through it all.",
+]
+
+[[stanza]]
+image = "thrall.jpg"
+alt = "A thrall with his axe"
+lines = [
+  "So stay safe in the Keep, behind its walls,",
+  "Where no Myrkridian howls and no thrall crawls;",
+  "Let Soulblighter's crows and Shiver's biting frost",
+  "Break on your gates, and every siege be lost.",
+]
+
+[[stanza]]
+image = "cloaked-figure.jpg"
+alt = "A cloaked figure on a hill above an army"
+lines = [
+  "May the Deceiver's whispers find no door,",
+  "May Balor's shadow cross your land no more,",
+  "May dwarven satchels light the dark for you,",
+  "And every journeyman's warm hands hold you true.",
+]
+
+[[stanza]]
+image = "soulblighter.jpg"
+alt = "Soulblighter, from the Myth II manual"
+lines = [
+  "We'll keep you, Keep, as long as Myth is played,",
+  "Through every level that this tool has made;",
+  "Together we will see the labour through,",
+  "And make the converter whole, thanks to you.",
+]
