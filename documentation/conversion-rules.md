@@ -1,6 +1,6 @@
 # Conversion rules, per tag type
 
-What the converter does to each kind of tag, as of **converter 0.18 (17 November
+What the converter does to each kind of tag, as of **converter 0.19 (19 November
 2026)**. Each rule cites the section of the notes that measured it; the section
 numbers (§) are listed by file in [README.md](README.md). When this page and an
 older passage of the notes disagree, this page is current.
@@ -13,7 +13,7 @@ as unconverted. It is never presented as converted.
 | `text`, `stli` | **converts** | TFL's `\` markup lead-in becomes Myth II's `\|`; a literal `\` followed by `i`, `b` or `p` cannot be told from markup | -- |
 | `.256` | **converts** | none: records shared; Myth II's data block gains 32 bytes (every internal offset moves) and TFL's saved runtime pointers are zeroed; 48 of 79 unedited Magma collections reproduce byte for byte (§18). A landscape's stray extra bitmap after its tiles is dropped from the count (§21) | -- |
 | `d256` | pass-through | body unconverted | -- |
-| `mons` | **converts** | TFL-only fields dropped (`visual_distance`, `sound_pitch_*`, `melee_power`, `intelligence`); scale, vitality and effect modifiers move to the monster's own `obje`. `sequence_indexes` 16 slots to 26, an empty pause or turning slot taking idle or moving (§29). Attacks rebuilt 32 to 64 bytes; flag bits 12-13 move to 11-12 and bit 11 is dropped; other attacks of a unit with a giants-only attack are prohibited against giants (§30) | `size`: man, giant for `ent.` and `trra` (§30). `pathfinding_radius` and `more_hack_flags` per collection from Magma's port (§28). 15 other Myth II-only fields at Magma's value for every unit (§16). `use_attack_frequency` on. Friendly-use flag on special abilities that fire a healing projectile (§31) |
+| `mons` | **converts** | TFL-only fields dropped (`visual_distance`, `sound_pitch_*`, `melee_power`, `intelligence`); scale, vitality and effect modifiers move to the monster's own `obje`. `sequence_indexes` 16 slots to 26, an empty pause or turning slot taking idle or moving (§29). Attacks rebuilt 32 to 64 bytes; flag bits 12-13 move to 11-12 and bit 11 is dropped; other attacks of a unit with a giants-only attack are prohibited against giants (§30); a negative initial velocity spread becomes 0 (§35) | `size`: man, giant for `ent.` and `trra` (§30). `pathfinding_radius` and `more_hack_flags` per collection from Magma's port (§28). 15 other Myth II-only fields at Magma's value for every unit (§16). `use_attack_frequency` on. Friendly-use flag on special abilities that fire a healing projectile (§31) |
 | `unit` | **converts** | none: same 128-byte layout; only its two tag references may be remapped | -- |
 | `obje` | **converts**, and each monster gets its own | TFL bytes 6-16 (zero in stock) | scale, vitality and 9 effect modifiers: from the monster for per-monster objects, scale times 0.728 and its random spread divided by 12 (§32), the 7 TFL modifiers as the first 7 of 9 (§18); 1.0 otherwise |
 | `proj` | **converts** | TFL's 4 bytes at 76-80 dropped (meaning unknown); TFL flag bit 1 (thrown debris) cleared, as Myth II reads it as *guided* (§18) | zero references written as none |
@@ -62,4 +62,5 @@ On Myth II 1.8.5:
 
 **Not yet checked in the game:** unit size since 0.13 (Keep is measuring), any
 level beyond the ones above. **Known bugs:** Yearling death pieces turn teal
-after promotion; Dwarf Heroes cannot throw uphill.
+when hit (they are trow chunks without the trow's colouring; §34). Dwarf Heroes
+not throwing uphill has a likely fix in 0.19 (§35), not yet checked.

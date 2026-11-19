@@ -19,8 +19,11 @@
   Growth Forest Giants and Trow attack (0.17); Journeymen and Heron Guards heal
   themselves and others, Yearlings heal themselves only (0.18; 19 November).
   Heroes may still be 10-14% taller than Magma's; Keep is measuring (§32).
+- A negative attack velocity spread becomes 0, for the Dwarf Heroes' uphill
+  throws (0.19, §35; not yet confirmed in game).
 - Open, reported by Keep against 0.18: Yearling death pieces turn bright teal
-  after being hit and promoted; Dwarf Heroes cannot throw their molotov uphill.
+  after being hit. They are the trow's chunks drawn without the trow's
+  colouring; the fix waits for one more test in game (§34).
 
 ## 16. `mons`/`unit` conversion, and the world-unit-doubling question resolved
 
@@ -324,3 +327,90 @@ the Shade x0.80) are not modelled.
 **Open.** Heroes may come out 10-14% taller than in Magma's port: ours give the
 berserk hero and fir'bolg hero about 0.80, Magma's about 0.70. Waiting for Keep's
 measurements against the Butcher's shop on Crow's Bridge before changing it.
+
+## 34. Why the Yearlings' death pieces turn teal (open; Keep, 0.18)
+
+Keep: a dead Yearling's pieces look like a forest giant's, but once hit they
+become bright teal chunks; they should be an earth tone. Measured in the stock
+TFL tags, the 0.18 build of *Sir Mauriac's Tale*, Magma's ports and 22 other
+Myth II plugins; not a converter format bug, and not yet fixed.
+
+**The chain.** The Yearling (`yeme`, unit core `ents`) explodes into the stock
+group `enpi`, as do the Forest Giant (`ent `, unit `enfg`) and Old Growth Forest
+Giant (`enlo`); all three units use the same core `ents`. Of `enpi`'s pieces,
+the arm, head and leg (`enar`, `enhe`, `enle`) detonate when hit into `trpe`,
+"trow piece explosion", which throws `trpi`, the **trow's** stone chunk, drawn
+from the trow collection `trra`, plus blood. Nothing is promoted: no piece has a
+promoted projectile or promotion group. `trpi` carries Myth II's "uses owner
+colour table" flag (bit 0, which means the same in TFL: it agrees in 98 of 104
+same-id pairs with Magma's port and 117 of 129 with Bungie's tags), so it takes
+its colours from the dead giant.
+
+**Where the teal comes from.** `trra`'s own palette is teal: 134 of its 255
+colours have a hue of 144-216 degrees (mean RGB 61, 115, 101); `ent.`'s has none.
+Real trow units are grey because their cores (`trow`, `trrh`, `trsg`) recolour
+`trra`'s two hue ranges. The giants' core is TFL's `ents (uncolored)`: white and
+yellow, both flagged "is unused" (Fear: bit 2), which leaves the forest giant's
+own sprites as they are, and so leaves the trow chunk teal as well. Bungie's own
+`trpi` is only ever thrown by trow pieces (collection `trow` all the way down),
+so this never arises in Myth II's stock: only the trow's head, leg and torso
+pieces detonate into `trpe`.
+
+**What the converter does to the chain.** Nothing that matters: `core`, `prgr`
+are copied; `.256` `trra` and `ent.` convert with colour tables (2,080 bytes)
+and hue changes identical to Magma's; our `trpi` differs from Magma's only in
+contrail, object, bytes 56, 90-91, 101-102 and 144-147 (unit reference), none a
+colour. TFL's `ents` reaches Myth II byte for byte.
+
+**How Myth II ports dealt with it.** Two ways, neither Bungie's:
+
+- Magma's *MythPack* 1 and 2 port the same pieces under the same ids with **no
+  detonation group**: `enar`, `enhe`, `enle` have 0xFFFFFFFF where TFL has
+  `trpe`, 3 of 3, and `enpi` lists only head, leg, arm and big piece. The same
+  tags are in 22 plugins, all alike.
+- Magma's *The Fallen Lords v1.9* uses its own pieces (`fogl`, `fogh`, `fogb`,
+  `foga`, still detonating into `trpe` and Magma's `trra` `trpi`) and instead
+  **recolours `ents`**: colour 0 white becomes RGB 0x85, 0xbe, 0x8d (a grey
+  green), its only edit to that tag. 8 plugins carry that `ents`; 3 keep TFL's.
+
+**Not known.** Whether The Fallen Lords itself showed teal chunks (the engine
+rule for an owner colour applied to another collection is not documented), and
+which of the two remedies Myth II needs. Forest Giant and Old Growth pieces
+should show the same teal: same group, same core (not yet checked in game).
+
+**Next experiment.** Keep: blow up a Forest Giant's pieces in the 0.19 build
+(expect teal), and if possible the same in The Fallen Lords. If TFL shows grey
+chunks, the minimal fix is one of: (1) write the pieces' detonation group as
+none, as MythPack does (loses the chunks); (2) give the converted `ents` Magma's
+colours (keeps the chunks, may also tint the giants). A test build of each is
+the way to choose.
+
+## 35. Why the Dwarf Heroes would not throw uphill (0.19; Keep, 0.18)
+
+Keep: Dwarf Heroes cannot throw their molotov uphill; they walk up to the
+clicked spot looking for a clear shot. Ordinary dwarves throw fine.
+
+**Measured.** The converted dwarf (`dwar`) and dwarf hero (`dwhe`) attacks are
+alike in everything that aims a throw: flags 0x060f, range 1,536-5,120, the same
+single Normal sequence, error 2. Their bottles (`dwbo`, `dwbd`) differ only in
+detonation frequency. What differs is the throwing speed: the dwarf 66 with a
+random spread of 8, the hero **92 with a spread of -81**. TFL has three negative
+spreads in its 79 attacks: the hero's throw, the Dwarven Pathfinder's first
+throw (`dwpa`, also 92 and -81), and the thrall's second attack, which fires no
+projectile. None of the 238 attacks in Bungie's tags and Magma's port has one
+(among their 109 projectile attacks: 62 with spread 0, 47 positive). Magma's
+four ports of these two throws (`dwht` hero, `dwpt`, `dwpb`, `dwpu` pathfinders)
+all have spread 0, at 92 to 97. If Myth II takes lower bound plus spread as the
+fastest throw, the hero's tops out at 11: far enough for nothing uphill.
+
+For reference, Bungie's throws: dwarf 77+11, dwarf hero 113+19, pathfinder 97+12,
+mortar 102+7, mortar hero 123+11; Magma's: dwarf 68+7 and 66+8, hero 94+0,
+pathfinders 97+0, 92+0 (second throw 92+11). Bungie's dwarf throws also set
+`IS_FIXED_PITCH` (bit 13; 5 of 5) and Magma's set "don't shoot over" or "lob"
+(bits 14-15), which TFL has no bits for; the ordinary dwarf throws fine without
+them, so they are not the cause and are not added.
+
+**The rule.** A negative initial velocity delta becomes 0 (`convert_attack`),
+so the hero throws at 92. Changes 5 `mons` in the regression build: `dwhe`,
+`dwpa`, `thra`, and Mauriac's thralls `suth`, `thmo` (the no-projectile attack,
+harmless). Not yet confirmed in game.

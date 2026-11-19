@@ -1,4 +1,11 @@
 [
+ {"version": "0.19", "date": "2026-11-19", "change": "A likely fix for Dwarf Heroes that would not throw uphill. In The Fallen Lords the hero's bottle throw has a throwing speed of 92 with a random spread of minus 81, and the converter copied that. Myth II has no negative spread in any of Bungie's or Magma's attacks, and Magma's own port of this throw has none, so it is now 0: the hero always throws at 92 (an ordinary dwarf throws at 66 to 74). The Dwarven Pathfinder's bottle throw had the same setting and gets the same fix. The teal Yearling pieces are not fixed yet: the chunks are trow pieces (the Forest Giants' pieces break into them when hit) drawn without the trow's colouring, and we need one more test in the game before choosing a fix.",
+  "test": [
+   "Dwarf Heroes: can they throw uphill now, without walking up to the spot first? Downhill and on flat ground still fine?",
+   "Dwarven Pathfinders (if a level has them): the same question for their bottle throw.",
+   "Forest Giants and Old Growth Forest Giants: when one dies and its pieces are blown up, are the chunks teal like the Yearlings'? (We expect yes.)",
+   "If you can still run The Fallen Lords itself: what colour are those chunks there?"
+  ]},
  {"version": "0.18", "date": "2026-11-17", "change": "Heals should work now. Myth II refuses to let an ability be used on friendly units unless it says so, and The Fallen Lords never had that setting, so converted Journeymen and Heron Guards could heal neither other units nor themselves. A special ability that fires a healing projectile now carries the setting, as it does in Bungie's own Journeymen and Heron Guards. This also covers the Yearlings' mandrake heal, which is less certain.",
   "test": [
    "Journeymen and Heron Guards: can they heal themselves? Other units, friend and foe?",

@@ -157,6 +157,13 @@ def convert_attack(tfl_bytes):
     mythextract's own empty-slot convention. A slot whose TFL index is -1
     (unset) is written as empty too, rather than as a hollow "normal" sequence.
 
+    A negative initial velocity delta becomes 0. TFL has three (the dwarven
+    hero's and pathfinder's bottle throws, 92 and -81, and a thrall attack with
+    no projectile); none of the 238 attacks in Bungie's tags and Magma's port
+    has one, and Magma's ports of the hero and pathfinder throws have 0.
+    Copied, it left the hero unable to throw uphill (Keep, 0.18;
+    documentation/notes/units.md section 35).
+
     Returns raw Myth II attack-definition bytes, ``ATTACK_SIZE[formats.SB]``
     long.
     """
@@ -185,7 +192,7 @@ def convert_attack(tfl_bytes):
         sequences=sequences,
         repetitions=tfl.repetitions,
         initial_velocity_lower_bound=tfl.initial_velocity_lower_bound,
-        initial_velocity_delta=tfl.initial_velocity_delta,
+        initial_velocity_delta=max(0, tfl.initial_velocity_delta),
         initial_velocity_error=tfl.initial_velocity_error,
         recovery_time=tfl.recovery_time,
         recovery_time_experience_delta=tfl.recovery_time_experience_delta,

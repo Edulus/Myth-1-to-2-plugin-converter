@@ -902,10 +902,10 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 DOCKET_UPDATED = "2026-11-19"
 DOCKET = {
     # Short, for players: what to look at when they play the current version.
-    "Please test now (converter 0.18)": [
+    "Please test now (converter 0.19)": [
+        "Dwarf Heroes: can they throw their molotov uphill now, with downhill and flat throws still working? (0.19)",
+        "Forest Giant and Old Growth Forest Giant pieces: after being hit, are they teal like the Yearling's? Does The Fallen Lords itself show teal there? (reported, cause found)",
         "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? Keep is measuring this; heroes may be a little tall.",
-        "Yearling death pieces: after being hit they turn bright teal. Do they in your game too? (known, being looked into)",
-        "Dwarf Heroes: can they throw their molotov uphill? (known, being looked into)",
     ],
     "Working on now": [
         "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
@@ -918,7 +918,8 @@ DOCKET = {
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
         "Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
         "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
-        "Two new unit bugs from Keep, both present in 0.18: Yearling death pieces turn bright teal after being hit, and Dwarf Heroes cannot throw their molotov uphill. We are comparing both with Bungie's and Magma's versions.",
+        "Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie's and Magma's never do. 0.19 writes it as zero. Please test.",
+        "Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow's teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [

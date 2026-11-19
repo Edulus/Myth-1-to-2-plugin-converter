@@ -20,7 +20,7 @@ the measurements behind it. Written as the work happened, so a section can be
 overturned by a later one; each file opens with a short "Where this stands"
 summary, and overturned passages carry an **Update** note.
 
-Sections keep their original numbers (§1 to §33), which the code cites as
+Sections keep their original numbers (§1 to §35), which the code cites as
 `documentation/notes/<file>.md section N`. There is no §10.
 
 | File | Sections | Topic |
@@ -28,7 +28,7 @@ Sections keep their original numbers (§1 to §33), which the code cites as
 | [notes/prior-art.md](notes/prior-art.md) | 1, 2, 7 | mythextract: what it gave us, file by file, and its bugs |
 | [notes/containers.md](notes/containers.md) | 3, 4, 5, 6, 8, 9, 11 | Container and tag-header layout, the round-trip gate, checksums, the 32-character filename limit |
 | [notes/maps.md](notes/maps.md) | 12, 13, 14, 15, 20, 21, 22, 23, 24, 27 | Mesh header, entrypoints, markers and map actions, terrain resolution, heights, edges, cell flags, map version, the level-of-detail block |
-| [notes/units.md](notes/units.md) | 16, 28, 29, 30, 31, 32 | `mons` and `unit`: attacks, Myth II-only fields, animations, size, attack flags, heals, Assassin targets, scale |
+| [notes/units.md](notes/units.md) | 16, 28, 29, 30, 31, 32, 34, 35 | `mons` and `unit`: attacks, Myth II-only fields, animations, size, attack flags, heals, Assassin targets, scale, teal death pieces, uphill throws |
 | [notes/models.md](notes/models.md) | 17 | `mode` and `geom`: footprints, anchors |
 | [notes/stock-tags.md](notes/stock-tags.md) | 18, 33 | Converting the stock TFL tags layer by layer until levels played; the types still copied unchanged |
 | [notes/multiplayer.md](notes/multiplayer.md) | 26 | Netgame types on palette entries; flags and balls |

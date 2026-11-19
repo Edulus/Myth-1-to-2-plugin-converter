@@ -31,11 +31,11 @@
 <section class="release docket" aria-labelledby="docket">
 <h2 id="docket">What we're working on</h2>
 <p class="meta">Updated 19 November 2026. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
-<h3>Please test now (converter 0.18)</h3>
+<h3>Please test now (converter 0.19)</h3>
 <ul>
+<li>Dwarf Heroes: can they throw their molotov uphill now, with downhill and flat throws still working? (0.19)</li>
+<li>Forest Giant and Old Growth Forest Giant pieces: after being hit, are they teal like the Yearling&#x27;s? Does The Fallen Lords itself show teal there? (reported, cause found)</li>
 <li>Do units look the right size, for example next to the Butcher&#x27;s shop on Crow&#x27;s Bridge? Keep is measuring this; heroes may be a little tall.</li>
-<li>Yearling death pieces: after being hit they turn bright teal. Do they in your game too? (known, being looked into)</li>
-<li>Dwarf Heroes: can they throw their molotov uphill? (known, being looked into)</li>
 </ul>
 <h3>Working on now</h3>
 <ul>
@@ -50,7 +50,8 @@
 <li>Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords&#x27; format, not translated. We will translate it, starting with the effects Keep has seen fail.</li>
 <li>Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.</li>
 <li>Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).</li>
-<li>Two new unit bugs from Keep, both present in 0.18: Yearling death pieces turn bright teal after being hit, and Dwarf Heroes cannot throw their molotov uphill. We are comparing both with Bungie&#x27;s and Magma&#x27;s versions.</li>
+<li>Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie&#x27;s and Magma&#x27;s never do. 0.19 writes it as zero. Please test.</li>
+<li>Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow&#x27;s teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.</li>
 <li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map. Keep has checked, and sees no problems with where units can walk.</li>
 </ul>
 <h3>Later</h3>

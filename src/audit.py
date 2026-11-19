@@ -37,7 +37,8 @@ _CHANGED_WHY = {
     "attacks": ("TFL's attack records are 32 bytes, Myth II's 64; each attack is rebuilt field by field. "
                 "The flag word's giant bits are moved (TFL bits 12-13 to Myth II 11-12) and the random-sequences "
                 "bit dropped; a unit with a giants-only attack has its other attacks prohibited against giants; a "
-                "special ability that fires a healing projectile may be used on friendly units"),
+                "special ability that fires a healing projectile may be used on friendly units; a negative "
+                "initial velocity delta becomes 0, as in Magma's port"),
 }
 _FORCED = {
     "use_attack_frequency": (1, "TFL always used the attack frequency; Myth II only does when this is on"),

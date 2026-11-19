@@ -141,6 +141,18 @@ class TestAttackConversion(unittest.TestCase):
         self.assertEqual(b"proj", sb.projectile_tag)
         self.assertEqual(0, sb.mana_cost, "TFL attacks never cost mana")
 
+    def test_a_negative_velocity_delta_becomes_zero(self):
+        """The dwarven hero's bottle throw: 92 and -81 in TFL. No Myth II attack
+        has a negative delta, and Magma's port of this throw has 0."""
+        raw = self._tfl_attack(initial_velocity_lower_bound=92, initial_velocity_delta=-81)
+        sb = mons.SBAttackDef.unpack(mons.convert_attack(raw))
+        self.assertEqual((92, 0), (sb.initial_velocity_lower_bound, sb.initial_velocity_delta))
+
+    def test_a_positive_velocity_delta_is_kept(self):
+        raw = self._tfl_attack(initial_velocity_lower_bound=66, initial_velocity_delta=8)
+        sb = mons.SBAttackDef.unpack(mons.convert_attack(raw))
+        self.assertEqual((66, 8), (sb.initial_velocity_lower_bound, sb.initial_velocity_delta))
+
     def test_convert_attacks_only_converts_real_slots(self):
         """A regression test for a real bug: unused TFL attack slots are
         zero-filled, and zero is not a valid TFL sequence_index (it decodes as
