@@ -613,6 +613,8 @@ HONEST = (
 CREDIT = (
     "Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> "
     "box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. "
+    "Conversion rules learned by comparison with Project Magma&rsquo;s hand-made ports, above all "
+    "<em>The Fallen Levels v2</em> by IronDuke, Haravikk, Infininight and Grasshopper. "
     "An unofficial, non-commercial fan project."
 )
 

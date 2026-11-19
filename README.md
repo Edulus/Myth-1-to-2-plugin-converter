@@ -413,6 +413,11 @@ This project would not exist without [jwheare/mythextract](https://github.com/jw
 [documentation/notes/prior-art.md](documentation/notes/prior-art.md) documents what was
 taken from it, file by file, with citations at each use site in the source.
 
+The conversion rules were worked out by comparing our output with Project Magma's
+hand-made Myth II ports, above all *The Fallen Levels v2* by IronDuke, Haravikk,
+Infininight and Grasshopper, and *Magma - The Fallen Lords v1.9*. Nothing from them is
+included here; they were the yardstick.
+
 Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights
 holders. This is an unofficial, non-commercial interoperability tool, not affiliated with
 or endorsed by any rights holder.
