@@ -57,5 +57,9 @@ On Myth II 1.8.5:
   the directory is optional; a plugin filename over 32 characters is silently
   ignored; only plugins without entrypoints can be tagsets (§11, §13).
 
-**Not yet checked in the game:** Forest Giants and Trow attacking smaller units
-(0.17), heals (0.18), unit size since 0.13, any level beyond the ones above.
+- Forest Giants, Old Growth Forest Giants and Trow attack (0.17); healers heal
+  and Yearlings heal themselves only (0.18) (Keep, 19 November; §30, §31).
+
+**Not yet checked in the game:** unit size since 0.13 (Keep is measuring), any
+level beyond the ones above. **Known bugs:** Yearling death pieces turn teal
+after promotion; Dwarf Heroes cannot throw uphill.

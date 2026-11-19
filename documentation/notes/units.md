@@ -15,8 +15,12 @@
 - Each monster gets its own object with its vitality and effect modifiers (§18,
   in [stock-tags.md](stock-tags.md)) and its scale times 0.728, random spread
   divided by 12 (§32).
-- In game: moonwalking fixed (Keep, 0.16). Giants and heals (0.17, 0.18) await
-  testing. Heroes may still be 10-14% taller than Magma's (§32).
+- In game, confirmed by Keep: moonwalking fixed (0.16); Forest Giants, Old
+  Growth Forest Giants and Trow attack (0.17); Journeymen and Heron Guards heal
+  themselves and others, Yearlings heal themselves only (0.18; 19 November).
+  Heroes may still be 10-14% taller than Magma's; Keep is measuring (§32).
+- Open, reported by Keep against 0.18: Yearling death pieces turn bright teal
+  after being hit and promoted; Dwarf Heroes cannot throw their molotov uphill.
 
 ## 16. `mons`/`unit` conversion, and the world-unit-doubling question resolved
 
