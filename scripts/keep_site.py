@@ -899,14 +899,13 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-DOCKET_UPDATED = "2026-11-17"
+DOCKET_UPDATED = "2026-11-19"
 DOCKET = {
     # Short, for players: what to look at when they play the current version.
     "Please test now (converter 0.18)": [
-        "Do Forest Giants and Trow attack smaller units, such as Berserks and Thrall? (0.17)",
-        "Can Journeymen and Heron Guards heal other units, and can Yearlings heal themselves? (0.18)",
-        "Do units stand still when they stop, with no moonwalking? (0.16)",
-        "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? (0.13)",
+        "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? Keep is measuring this; heroes may be a little tall.",
+        "Yearling death pieces: after being hit they turn bright teal. Do they in your game too? (known, being looked into)",
+        "Dwarf Heroes: can they throw their molotov uphill? (known, being looked into)",
     ],
     "Working on now": [
         "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
@@ -917,8 +916,9 @@ DOCKET = {
         "Unit animations: fixed in 0.16 (Keep: units now stand still when they stop). Some walking frames may still be missing.",
         "Water: the tag that describes water is still copied in The Fallen Lords' format, and a comparison with Magma's shows it differs. It needs translating.",
         "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
-        "Unit behaviour: Forest Giants and Trow still do not attack men (Keep's tests of 0.16). 0.17 fixes two bugs that may be the reason: every unit was marked giant-sized in Myth II, and each attack's flags, which say whether an attack is for giants or not for giants, were scrambled. They now match Bungie's own versions of the Forest Giant and trow. Please test. Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
-        "Heals: Journeymen and Heron Guards could not heal themselves or others, and the Yearlings' mandrake heal did not work (Keep). Myth II needs an ability to say it may be used on friendly units; The Fallen Lords never had that setting, so the converter never wrote it. 0.18 sets it on special abilities that fire a healing projectile, as in Bungie's own Journeymen. The Yearlings' case is less certain. Please test.",
+        "Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
+        "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
+        "Two new unit bugs from Keep, both present in 0.18: Yearling death pieces turn bright teal after being hit, and Dwarf Heroes cannot throw their molotov uphill. We are comparing both with Bungie's and Magma's versions.",
         "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
     ],
     "Later": [
