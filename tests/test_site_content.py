@@ -32,7 +32,7 @@ class ContentShape(unittest.TestCase):
         self.assertEqual(len(set(terms)), len(terms))
 
     def test_unanswered_is_a_flag(self):
-        self.assertEqual([q["n"] for q in keep_site.QUESTIONS if q.get("unanswered")], [1, 4, 8])
+        self.assertEqual([q["n"] for q in keep_site.QUESTIONS if q.get("unanswered")], [1, 4, 8, 9])
 
     def test_poems(self):
         for title, poem in (
