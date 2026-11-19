@@ -734,7 +734,7 @@ def docket_html():
     groups = "\n".join(group(title, items) for title, items in ordered)
     return f"""<section class="release docket" aria-labelledby="docket">
 <h2 id="docket">What we're working on</h2>
-<p class="meta">Updated {_long_date(DOCKET_UPDATED)}. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
+<p class="meta">Updated {_long_date(DOCKET_UPDATED)}. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>. Keep introduced the project to the Myth community on The Tain&rsquo;s forum: <a href="https://forum.totalcodex.net/forum/viewtopic.php?p=73436#p73436">TFL &gt; M2 Myth Project c/o Edulus</a>.</p>
 {groups}
 </section>"""
 
