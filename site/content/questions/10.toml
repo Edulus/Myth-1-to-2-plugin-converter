@@ -1,0 +1,10 @@
+n = 10
+term = "Q10: High-res units and detail textures"
+title = "High-resolution units and detail textures: what do you know?"
+gist = "As of 19 November 2026 nobody has answered this one. Keep would like converted levels such as Sir Mauriac's Tale to use high-resolution units and detail textures (the extra ground texture Myth II 1.8 can draw), to bring the old coop into the new century. We have not looked into either yet. Two Project Magma works look like the place to start: IronDuke's Iron TagSet, which gives Myth II's units high-resolution models, and Magma's Detail Texture Megapack. If you know how they work, or have used them, please tell us here."
+# True as of 2026-11-19: nobody has replied yet (shows a quiet tag on the home page).
+unanswered = true
+body = '''
+<p>Keep asked whether converted <em>Fallen Lords</em> levels could use high-resolution units and Myth II's detail textures (<code>dtex</code>). We have not researched either yet, so we are asking first.</p>
+<p>What we know so far, from the Mythipedia wiki: IronDuke's <em>Iron TagSet</em> gives Myth II's units high-resolution models, and was made for Myth II 1.8 together with Project Magma's <em>Detail Texture Megapack</em>. The wiki says the tagset only partly worked in its first version, and that support for <em>The Fallen Levels</em> was planned for later.</p>
+<p>Have you used either with a Fallen Lords port? Do you know how a map or plugin turns on detail textures, or how a plugin picks up high-resolution units? Anything you can tell us, including where the files are, helps.</p>'''

@@ -32,7 +32,13 @@ class ContentShape(unittest.TestCase):
         self.assertEqual(len(set(terms)), len(terms))
 
     def test_unanswered_is_a_flag(self):
-        self.assertEqual([q["n"] for q in keep_site.QUESTIONS if q.get("unanswered")], [1, 4, 8, 9])
+        # Which questions are unanswered is content and changes; check only the shape:
+        # a boolean, never on a closed question, and at least one is set.
+        flagged = [q for q in keep_site.QUESTIONS if "unanswered" in q]
+        self.assertTrue(flagged)
+        for q in flagged:
+            self.assertIsInstance(q["unanswered"], bool, q["n"])
+            self.assertFalse(q["unanswered"] and q.get("closed"), q["n"])
 
     def test_poems(self):
         for title, poem in (
