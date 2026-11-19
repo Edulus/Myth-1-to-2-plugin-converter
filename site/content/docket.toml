@@ -14,6 +14,7 @@ items = [
 title = "Working on now"
 items = [
   "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
+  "TFL Gameplay (vTFL): Keep sees a warning whenever TFL Gameplay is ticked, and names vTFL compatibility as an open issue. Our maps are not marked as made for TFL gameplay. Magma's The Fallen Lords v1.9 marks every map that way, though two of Magma's other ports mark none. We left the mark off because it makes a plugin need a vTFL tagset loaded alongside it. We have asked Keep what vTFL compatibility should mean for converted levels before changing anything; others who play with TFL Gameplay are welcome in Q4.",
   "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
 ]
 
@@ -35,7 +36,6 @@ items = [
 [[group]]
 title = "Later"
 items = [
-  "The warning that appears whenever TFL Gameplay (vTFL) is ticked.",
   "The outer edge of Crow's Bridge (south and east) sits differently from Magma's port. We checked: Magma adjusted that map's edges by hand, so this is not a converter error.",
   "One bush on the edge of a trench on Crow's Bridge may still float.",
 ]
