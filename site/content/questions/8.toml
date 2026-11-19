@@ -1,7 +1,9 @@
 n = 8
 term = "Q8: Which units behave wrongly?"
 title = "Which units behave wrongly, and where?"
-gist = "Nobody has answered this one yet. It asks which units misbehave, on which map, and what they do. From Keep's testing we already know of three problems. Units jog on the spot when they stop, Forest Giants and Trow won't attack, and some units are too big, so Thrall hiding in water stick out above it. Units come next, after the multiplayer fix."
+gist = "As of 19 November 2026 nobody has answered this one. It asks which units misbehave, on which map, and what they do. Keep's testing has already led to fixes he confirmed in the game: units no longer jog on the spot when they stop, Forest Giants, Old Growth Forest Giants and Trow attack, and Journeymen, Heron Guards and Yearlings heal. Still open: unit size needs fine tuning (Keep is measuring it against the Butcher's shop on Crow's Bridge); Dwarf Heroes could not throw uphill (a fix is in 0.19, not yet tested); Yearling and Forest Giant death pieces turn teal when hit; the Assassin targets in multiplayer can't be worked out from the original maps; and some death and explosion effects are missing."
+# True as of 2026-11-19: nobody has replied yet (shows a quiet tag on the home page).
+unanswered = true
 body = '''
-<p>Converted units still misbehave in Myth II: some jog in place after they stop, some giants won't attack, some look too large. We are working on units next.</p>
+<p>Converted units can still misbehave in Myth II: some may look the wrong size, and some death and explosion effects are missing. (Earlier versions also made units jog in place after they stopped and kept giants from attacking; both are fixed and confirmed.) Unit speeds and how much harm fire, explosions and magic do to each unit come next.</p>
 <p>Which units behave wrongly for you, on which map, and what do they do? Compared with how they behaved in <em>The Fallen Lords</em> is most useful.</p>'''

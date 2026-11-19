@@ -2,7 +2,7 @@
 
 How the project's public site works, how testers' comments are stored and
 answered, and how a converter version and the ready-made *Sir Mauriac's Tale*
-download are published. Current as of 17 November 2026.
+download are published. Current as of 19 November 2026.
 
 ## The site
 
@@ -44,9 +44,9 @@ checks the shape of every file.
 |---|---|
 | "What we're working on", including the "Please test now" list at the top | `site/content/docket.toml` (`updated`, then one `[[group]]` per heading; groups show in file order) |
 | Update pages | `site/content/updates/<date>.toml` (`slug`, `term`, `date`, `title`, `summary`, `body`); newest date shows first; the file name must match `slug` |
-| Q pages, with the plain-words summary (`gist`) at the top of each | `site/content/questions/<n>.toml` (`n`, `term`, `title`, `gist`, `body`, and `closed` once answered); `gists_updated` (the date shown beside the summaries) is in `site/content/site.toml` |
-| Keep's conversation page text (`docs/keep/`) | `site/content/keep.toml` (the Fable poem is added after `body`) |
-| The poems | `site/content/poems/keep.toml`, `walter.toml`, `fable.toml` (a `[[stanza]]` has `lines`, and `image` plus `alt` if it has a picture) |
+| Q pages, with the plain-words summary (`gist`) at the top of each | `site/content/questions/<n>.toml` (`n`, `term`, `title`, `gist`, `body`; `closed` once answered; `unanswered = true` while nobody has replied, which puts a quiet "no replies yet" tag on the home page's list, true as of `gists_updated`: remove it when someone answers); `gists_updated` (the date shown beside the summaries, and on the "Updated" notes of the converter, swapper and monster-settings pages) is in `site/content/site.toml` |
+| Keep's conversation page text (`docs/keep/`) | `site/content/keep.toml` |
+| The poems (all on `docs/keep/poems.html`, anchors `#keep`, `#walter`, `#fable`) | `site/content/poems/keep.toml`, `walter.toml`, `fable.toml` (a `[[stanza]]` has `lines`, and `image` plus `alt` if it has a picture) |
 | The table of unit settings (`docs/keep/units.html`) | `site/content/units.toml` (its prose is in `units_html`) |
 
 Keep a thread's `term` stable once published: the comments on it are tied to
@@ -63,6 +63,24 @@ other scripts edit:
 
 Questions are never deleted: a finished one is marked closed, stays readable
 and keeps its number.
+
+**Merged pages and old addresses.** The three poems share `keep/poems.html`;
+`keep/poem.html` and `keep/walter.html` are small redirect pages (a meta refresh
+and a visible link) to its anchors. Closed questions (those with a `closed`
+key, today Q2 and Q6) share `q/closed.html`, one section each with its own
+comment box that keeps the question's original `term`, so their old threads are
+preserved; `q/2.html` and `q/6.html` redirect to their sections. The comment
+script starts one thread per `section.reply` on the page. Closing another
+question moves it onto that page automatically.
+
+**Folded lists.** On the home page the command-line steps, "Before you test",
+and the docket's "Up next" and "Later" groups are `<details class="fold">`,
+closed until opened, and work without JavaScript. "Please test now" always
+comes first in the docket.
+
+`tests/test_site_pages.py` checks the built `docs/`: every internal link and
+anchor resolves, the redirects point at real targets, pages carry their dates,
+and `docs/google5781bd5b5c2cd529.html` is unchanged.
 
 ## The in-browser converter
 

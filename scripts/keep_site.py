@@ -99,12 +99,15 @@ def _load_updates():
 
 def _load_questions():
     """In question order (the file name is the number); each carries its plain-words
-    gist, and an optional `closed` note once resolved (it stays readable)."""
+    gist, an optional `closed` note once resolved (it stays readable), and an
+    optional `unanswered = true` (nobody has replied as of the gists' date)."""
     out = []
     for rel in _files("questions"):
         q = _check(rel, _content(rel), {"n": int, "term": str, "title": str, "gist": str, "body": str})
         if "closed" in q and not isinstance(q["closed"], str):
             raise ContentError(f"site content {rel}: 'closed' must be str")
+        if "unanswered" in q and not isinstance(q["unanswered"], bool):
+            raise ContentError(f"site content {rel}: 'unanswered' must be true or false")
         if rel != f"questions/{q['n']}.toml":
             raise ContentError(f"site content {rel}: file name must match n = {q['n']}")
         out.append(q)
@@ -267,6 +270,12 @@ figcaption{color:var(--muted);font-size:.9rem;margin-top:.4rem;font-style:italic
 .gist{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.8rem 1rem;margin:1rem 0 1.4rem}
 .cards.closed .card{opacity:.75}
 details{margin:1rem 0}
+details.fold{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:0 .9rem;margin:.8rem 0}
+details.fold>summary{padding:.55rem 0;color:var(--fg);font-family:Cinzel,"Trajan Pro",Georgia,serif;letter-spacing:.04em;font-size:.95rem}
+details.fold>summary:hover{color:var(--blood-hi)}
+details.fold>summary:focus-visible{outline:2px solid var(--blood-hi);outline-offset:2px;border-radius:3px}
+details.fold[open]>summary{border-bottom:1px solid var(--line);margin-bottom:.6rem}
+.quiet{display:inline-block;margin-left:.5rem;padding:0 .45rem;border:1px solid var(--line);border-radius:4px;font-size:.82rem;color:var(--muted)}
 .release{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blood);border-radius:8px;padding:.9rem 1.2rem;margin:0 0 1.5rem}
 .release h2{margin:0 0 .4rem}
 .release h3{margin:.9rem 0 .3rem}
@@ -326,8 +335,8 @@ THEME_JS = """
 """
 
 GIVE_ANSWER = """
-<section class="reply" id="answer" data-term="{term}" data-api="{api}">
-<h2>&#9998; Your answer</h2>
+<section class="reply" id="{id}" data-term="{term}" data-api="{api}">
+<h2>&#9998; {label}</h2>
 <p class="meta">No sign-up, no account &mdash; just type and press <strong>Send</strong>.</p>
 <form class="say" novalidate>
 <p class="replying" hidden></p>
@@ -345,7 +354,10 @@ GIVE_ANSWER = """
 
 COMMENTS_JS = """
 (function(){
-  var box=document.getElementById("answer"); if(!box) return;
+  // Every comment box on the page (a page may carry more than one thread).
+  var boxes=document.querySelectorAll("section.reply[data-term]");
+  for(var n=0;n<boxes.length;n++) start(boxes[n]);
+  function start(box){
   var api=box.dataset.api, term=box.dataset.term, form=box.querySelector("form");
   var list=box.querySelector(".thread"), status=form.querySelector(".status");
   var replying=form.querySelector(".replying"), replyTo=null, send=form.querySelector(".send");
@@ -445,6 +457,7 @@ COMMENTS_JS = """
     .catch(function(e){status.textContent=(e&&e.say)||"That didn't go through \u2014 please try again.";})
     .then(function(){send.disabled=false;});
   });
+  }
 })();
 """
 
@@ -496,43 +509,46 @@ def stanzas_html(poem):
     return "".join(out)
 
 
-def poem_html():
+WALTER_TITLE, WALTER_POEM = _load_poem("walter")
+FABLE_TITLE, FABLE_POEM = _load_poem("fable")
+
+
+def _poem_section(anchor, title, poem, sign, notes=""):
     return (
-        '<div class="poem">' + stanzas_html(POEM)
-        + '<p class="sign">With thanks from Edward and Claude</p></div>'
-        + '<p class="meta">Drawings &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> and '
-        '<em>Myth II: Soulblighter</em> by Juan Ramirez, from Bungie&rsquo;s old Myth gallery, and Soulblighter '
-        'from the <em>Myth II</em> manual, via <a href="http://myth.bungie.org/legends/journal/">Myth.Bungie.Org</a>. '
-        'The thrall&rsquo;s and the cloaked figure&rsquo;s artists are unknown to us.</p>'
-        '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
+        f'<section id="{anchor}"><h2>{html.escape(title)}</h2>'
+        '<div class="poem">' + stanzas_html(poem) + f'<p class="sign">{sign}</p></div>{notes}</section>'
     )
 
 
-WALTER_TITLE, WALTER_POEM = _load_poem("walter")
+POEM_ANCHORS = {"keep": POEM_TITLE, "walter": WALTER_TITLE, "fable": FABLE_TITLE}
 
 
-def walter_html():
-    return (
-        '<div class="poem">' + stanzas_html(WALTER_POEM)
-        + '<p class="sign">From Edward and Claude</p></div>'
-        + '<p class="meta">Myth&rsquo;s wight &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> by '
+def poems_html():
+    """All three poems on one page, each a titled section with an anchor
+    (keep/poems.html#keep, #walter, #fable)."""
+    contents = "".join(
+        f'<li><a href="#{anchor}">{html.escape(title)}</a></li>' for anchor, title in POEM_ANCHORS.items()
+    )
+    keep = _poem_section(
+        "keep", POEM_TITLE, POEM, "With thanks from Edward and Claude",
+        '<p class="meta">Drawings &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> and '
+        '<em>Myth II: Soulblighter</em> by Juan Ramirez, from Bungie&rsquo;s old Myth gallery, and Soulblighter '
+        'from the <em>Myth II</em> manual, via <a href="http://myth.bungie.org/legends/journal/">Myth.Bungie.Org</a>. '
+        'The thrall&rsquo;s and the cloaked figure&rsquo;s artists are unknown to us.</p>',
+    )
+    walter = _poem_section(
+        "walter", WALTER_TITLE, WALTER_POEM, "From Edward and Claude",
+        '<p class="meta">Myth&rsquo;s wight &copy; Bungie: concept art for <em>Myth: The Fallen Lords</em> by '
         'Juan Ramirez, from Bungie&rsquo;s old Myth gallery. Grendel, whom <em>Beowulf</em> calls a <em>wiht</em>: '
         'painting by J. R. Skelton for <em>Stories of Beowulf</em> (1908). The other two wights are signed by their '
         'artists, whom we have not yet identified. &ldquo;Sweete wight&rdquo; is Chaucer&rsquo;s, from '
         '<em>The Reeve&rsquo;s Tale</em>. Walter, tell us how Sir Mauriac&rsquo;s Tale plays in '
-        '<a href="../q/7.html">Q7</a>, or how a plugin of your own converts in <a href="../q/9.html">Q9</a>.</p>'
-        '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
+        '<a href="../q/7.html">Q7</a>, or how a plugin of your own converts in <a href="../q/9.html">Q9</a>.</p>',
     )
-
-
-FABLE_TITLE, FABLE_POEM = _load_poem("fable")
-
-
-def fable_html():
+    fable = _poem_section("fable", FABLE_TITLE, FABLE_POEM, "Claude Fable 5.2, 16 November 2026")
     return (
-        f'<h2>{html.escape(FABLE_TITLE)}</h2>'
-        '<div class="poem">' + stanzas_html(FABLE_POEM)
-        + '<p class="sign">Claude Fable 5.2, 16 November 2026</p></div>'
+        f'<ul>{contents}</ul>' + keep + walter + fable
+        + '<div class="nav"><a href="index.html">&larr; Keep &amp; Claude Conversation</a></div>'
     )
 
 
@@ -546,6 +562,9 @@ def units_html():
         for tfl, magma, path, hack in UNIT_FIELDS
     )
     return (
+        f'<p class="gist"><strong>Updated {_long_date(GISTS_UPDATED)}</strong> <span class="meta">Checked against '
+        "converter 0.19.</span> The table and the settings are unchanged; the paragraph on why the Forest Giant and the "
+        "trow would not attack is corrected.</p>"
         "<p>An answer to Keep's question in Bagrada chat: <em>which</em> settings, and what does "
         "&ldquo;Magma's own version of each unit&rdquo; mean?</p>"
         "<h2>Which settings</h2>"
@@ -565,7 +584,8 @@ def units_html():
         "with, so a plugin's own unit built on thrall sprites gets the thrall's values.</p>"
         "<p>Two units stand out: the <strong>Forest Giant</strong> (220 in Magma, 77 from us before) and the "
         "<strong>trow</strong> (154 and 90, against 77 and 0). They are the two Keep found would not attack. "
-        "A big unit given a small unit's room may be the reason; that is a guess until someone tests 0.15.</p>"
+        "The room was not the cause: they began to attack in version 0.17, which fixed two other bugs (every unit "
+        "had been marked giant-sized, and each attack's giant flags were scrambled), and Keep confirmed it in the game.</p>"
         '<div class="scroll"><table><thead><tr><th>TFL unit</th><th>Magma&rsquo;s unit</th>'
         "<th>Pathfinding radius, before</th><th>Magma and 0.15</th><th>More hack flags, before</th>"
         "<th>Magma and 0.15</th></tr></thead><tbody>" + rows + "</tbody></table></div>"
@@ -577,7 +597,7 @@ def units_html():
     )
 
 
-KEEP_BODY = _KEEP["body"] + fable_html()
+KEEP_BODY = _KEEP["body"]
 
 
 MADE_BY = (
@@ -607,10 +627,11 @@ STYLE_VERSION = __import__("hashlib").sha1(STYLE.encode()).hexdigest()[:8]
 def sitemap(up):
     rows = [
         ("", [("Home", "index.html"), ("Convert a plugin", "convert/index.html"),
-              ("Swap Civil War units", "swap/index.html"), ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poem for Keep", "keep/poem.html"),
-              ("Poem for Walter", "keep/walter.html"), ("Monster settings", "keep/units.html")]),
+              ("Swap Civil War units", "swap/index.html"), ("Keep &amp; Claude Conversation", "keep/index.html"), ("Poems", "keep/poems.html"),
+              ("Monster settings", "keep/units.html")]),
         ("Updates", [(u["date"], f"updates/{u['slug']}.html") for u in reversed(UPDATES)]),
-        ("Questions", [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS]),
+        ("Questions", [(f"Q{q['n']}", f"q/{q['n']}.html") for q in QUESTIONS if "closed" not in q]
+         + [("Closed: " + ", ".join(f"Q{q['n']}" for q in QUESTIONS if "closed" in q), "q/closed.html")]),
     ]
     html_rows = "".join(
         f'<ul>{f"<li class=label>{label}</li>" if label else ""}'
@@ -621,11 +642,28 @@ def sitemap(up):
     return f'<nav class="sitemap" aria-label="Site map">{html_rows}</nav>'
 
 
-def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None, body_class=""):
+def answer_box(term, box_id="answer", label="Your answer"):
+    """A comment box for one thread; a page may carry several (distinct ids)."""
+    return GIVE_ANSWER.format(term=html.escape(term), api=html.escape(COMMENTS_API), id=box_id, label=label)
+
+
+def redirect_page(path, target, title, label):
+    """A small page in the site's chrome that sends visitors on to `target`
+    (relative to the page); the old address keeps working."""
+    body = f'<p>This page has moved: <a href="{target}">{html.escape(label)}</a>.</p>'
+    path.write_text(
+        page(title, title, body, 1, kicker="Moved", head=f'<meta http-equiv="refresh" content="0; url={target}">\n'),
+        encoding="utf-8",
+    )
+
+
+def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=None, body_class="", head="",
+         comments_js=False):
     up = "../" * depth
     answer = scripts = gate = ""
     if term:
-        answer = GIVE_ANSWER.format(term=html.escape(term), api=html.escape(COMMENTS_API))
+        answer = answer_box(term)
+    if term or comments_js:
         scripts = f"<script>{COMMENTS_JS}</script>"
     if lock:
         gate = LOCK_HTML.format(question=html.escape(lock["question"]))
@@ -639,7 +677,7 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>{html.escape(title)} &middot; {SITE_NAME}</title>
+{head}<title>{html.escape(title)} &middot; {SITE_NAME}</title>
 <script>try{{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -677,21 +715,32 @@ def page(title, heading, body, depth, term=None, kicker="", subtitle="", lock=No
 DOCKET_UPDATED, DOCKET = _load_docket()
 
 
+# Groups folded away by default on the home page (the summary shows the count).
+FOLDED_GROUPS = ("Up next", "Later")
+
+
 def docket_html():
-    groups = "\n".join(
-        f"<h3>{html.escape(title)}</h3>\n<ul>\n"
-        + "\n".join(f"<li>{html.escape(item)}</li>" for item in items)
-        + "\n</ul>"
-        for title, items in DOCKET.items()
-    )
-    year, month, day = (int(p) for p in DOCKET_UPDATED.split("-"))
-    months = ("January February March April May June July August September "
-              "October November December").split()
+    def group(title, items):
+        lis = "\n".join(f"<li>{html.escape(item)}</li>" for item in items)
+        if title in FOLDED_GROUPS:
+            return (f'<details class="fold"><summary>{html.escape(title)} ({len(items)} items)</summary>\n'
+                    f"<ul>\n{lis}\n</ul>\n</details>")
+        return f"<h3>{html.escape(title)}</h3>\n<ul>\n{lis}\n</ul>"
+
+    # "Please test now" first, whatever its place in the file; the rest in file order.
+    ordered = sorted(DOCKET.items(), key=lambda kv: not kv[0].startswith("Please test now"))
+    groups = "\n".join(group(title, items) for title, items in ordered)
     return f"""<section class="release docket" aria-labelledby="docket">
 <h2 id="docket">What we're working on</h2>
-<p class="meta">Updated {day} {months[month - 1]} {year}. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
+<p class="meta">Updated {_long_date(DOCKET_UPDATED)}. What's already done is listed on the <a href="convert/index.html">converter page</a>. Found something else? Tell us in <a href="q/7.html">Q7</a>.</p>
 {groups}
 </section>"""
+
+
+def q_href(q, base=""):
+    """Where a question lives, relative to `base` (the q/ folder): its own page,
+    or its section on the Closed questions page."""
+    return f'{base}closed.html#q{q["n"]}' if "closed" in q else f'{base}{q["n"]}.html'
 
 
 def build(stock_dir=None):
@@ -713,9 +762,15 @@ def build(stock_dir=None):
         card(f'updates/{u["slug"]}.html', u["date"], u["title"], html.escape(u["summary"]))
         for u in UPDATES
     )
-    questions = "\n".join(card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"]) for q in QUESTIONS if "closed" not in q)
+    def question_card(q):
+        sub = f'Summary of {_long_date(GISTS_UPDATED)}'
+        if q.get("unanswered"):
+            sub += f'<span class="quiet" title="as of {_long_date(GISTS_UPDATED)}">no replies yet</span>'
+        return card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"], sub)
+
+    questions = "\n".join(question_card(q) for q in QUESTIONS if "closed" not in q)
     closed = "\n".join(
-        card(f'q/{q["n"]}.html', f'Q{q["n"]}', q["title"], "Closed: " + html.escape(q["closed"]))
+        card(q_href(q, "q/"), f'Q{q["n"]}', q["title"], "Closed: " + html.escape(q["closed"]))
         for q in QUESTIONS if "closed" in q
     )
     index = f"""{docket_html()}
@@ -743,17 +798,18 @@ def build(stock_dir=None):
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude). Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="{DOWNLOAD_URL}">&darr; Download Sir Mauriac&rsquo;s Tale ({DOWNLOAD_MB} MB zip of Myth II plugin files; no program to run)</a></p>
 <ul>
-<li><strong>Beta, converter {DOWNLOAD_VERSION}</strong> (updated 17 November 2026; until then this download was 0.12). <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen with earlier versions; the other levels are untested. This {DOWNLOAD_VERSION} download has not been played in the game yet.</li>
+<li><strong>Beta, converter {DOWNLOAD_VERSION}</strong> (updated 19 November 2026; the first download was 0.12). <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen with earlier versions; the other levels are untested. This {DOWNLOAD_VERSION} download has not been played in the game yet.</li>
 <li>Quit Myth II and extract the zip <strong>straight into</strong> Myth II's <code>plugins</code> folder, not a subfolder (Myth II only finds plugins sitting directly in it). You get the plugin <code>ZZ Mauriac TFL2SB</code> plus a read-me and CbC's credits. Then choose <strong>New Game</strong> &rarr; the campaign <em>ZZ Mauriac TFL2SB</em> &rarr; a level. Leave Tagsets empty.</li>
 </ul>
 </section>
 <section aria-labelledby="get-started">
 <h2 id="get-started">Get started &mdash; public beta</h2>
-<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. The command-line steps below are for those who want more control; no Python packages need installing.</p>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. If you only want to play, the <a href="{DOWNLOAD_URL}">ready-made <em>Sir Mauriac's Tale</em> download</a> above needs none of this. The command-line steps below are for those who want more control; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
 <p>Bought the discs but lost or damaged them? The game's files can be found at <a href="https://www.myabandonware.com/game/myth-the-fallen-lords-3no">My Abandonware</a> or on the <a href="https://archive.org/details/MythTheFallenLordsUSA">Internet Archive</a>. (The in-browser converter doesn't need them: it brings its own.)</p>
+<details class="fold"><summary>The command-line steps (five steps, for more control)</summary>
 <ol>
-<li><strong>Download and unzip.</strong> Open <a href="{REPO_URL}">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
+<li><strong>Download and unzip.</strong> Open <a href="{REPO_URL}">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. This ZIP holds the converter's code and is only for the command-line route; the ready-made download and the in-browser converter need no download of the code. With Git, you can instead run:
 <pre><code>git clone {REPO_URL}.git
 cd Myth-1-to-2-plugin-converter</code></pre></li>
 <li><strong>Set up Python.</strong> On Windows, double-click <code>launch.bat</code> in the extracted folder. It looks for Python 3.12+ and attempts to install it with winget if missing; follow its instructions and run it again after installation. If winget is unavailable, it opens the Python download page. On other systems, install Python 3.12+ first.
@@ -767,7 +823,9 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p>No decisions file is required for this baseline workflow. Conversion warnings identify unsupported content; producing a file does not guarantee that every level will play.</p></li>
 <li><strong>Play in Myth II.</strong> Start the game &rarr; <strong>New Game</strong> &rarr; choose the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <strong>ZZ TFL stock</strong> &rarr; pick a level &rarr; <strong>OK</strong>. Choose the tagset <em>after</em> the campaign, because changing campaigns can clear the selection.</li>
 </ol>
-<h3>Before you test</h3>
+<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</details>
+<details class="fold"><summary>Before you test (five points)</summary>
 <ul>
 <li>Quit Myth II before converting or replacing plugin files; the game holds them open. Restart after adding files.</li>
 <li>Keep output filenames at most 32 characters. The internal plugin name defaults to that filename; use distinct names so plugins do not hide each other.</li>
@@ -775,14 +833,15 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <li>Only one campaign can load at a time. The stock tagset contains no selectable levels, so it can load alongside your converted campaign.</li>
 <li>If writing to the install folder fails, write to a folder you can access and copy the finished files into Myth II's <code>plugins</code> folder while the game is closed.</li>
 </ul>
-<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</details>
 </section>
 <h2>What works &mdash; and what needs testing</h2>
 <p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
 <ul>
-<li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
+<li>Converted: terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, particle effects, mesh effects, lighting, ambient sounds, sprite collections, 3D models and text.</li>
 <li>Buildings and other 3D models are converted and placed. Lighting uses standard values for every map. Terrain is redrawn on Myth II's finer grid, with heights blended between the original points.</li>
-<li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
+<li>Copied unchanged and reported as not converted: the water settings, which are known to differ from Myth II's own and still need a converter (water behaved correctly where Keep checked it), and a few minor kinds of data we have too few examples to judge. Sounds, collection references, projectile groups and physics settings are also copied unchanged, because comparing them with Myth II's own files and Project Magma's showed no systematic difference. Some death and explosion effects are still missing.</li>
+<li>Confirmed in the game by Keep: water, riverbanks and heights; Crow's Bridge's bridge; buildings; hosted multiplayer games with units, scenery, flags and balls; no black ground after explosions; units that stand still when they stop; Forest Giants, Old Growth Forest Giants and Trow that attack; healers that heal. Not yet checked: unit size (Keep is measuring it), Dwarf Heroes throwing uphill (a 0.19 fix), other levels, and multiplayer in general.</li>
 </ul>
 <h2>Help test or report a problem</h2>
 <p>Every visitor can help. Try a level you know and report what differs from TFL. Open a question or progress update below and use its comment box: a name, message and one-word Myth check &mdash; <strong>no account or sign-in</strong>.</p>
@@ -809,15 +868,18 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
             encoding="utf-8",
         )
 
-    for i, q in enumerate(QUESTIONS):
+    def neighbours(i):
         prev = (
-            f'<a href="{QUESTIONS[i - 1]["n"]}.html">&larr; Q{QUESTIONS[i - 1]["n"]}</a>'
+            f'<a href="{q_href(QUESTIONS[i - 1])}">&larr; Q{QUESTIONS[i - 1]["n"]}</a>'
             if i else '<a href="../index.html">&larr; All updates and questions</a>'
         )
         nxt = (
-            f'<a href="{QUESTIONS[i + 1]["n"]}.html">Q{QUESTIONS[i + 1]["n"]} &rarr;</a>'
+            f'<a href="{q_href(QUESTIONS[i + 1])}">Q{QUESTIONS[i + 1]["n"]} &rarr;</a>'
             if i + 1 < len(QUESTIONS) else '<a href="../index.html">All updates and questions &rarr;</a>'
         )
+        return f'<div class="nav">{prev}{nxt}</div>'
+
+    def question_body(q, i, box_id):
         closed_note = (
             f'<p class="problem"><strong>Closed.</strong> {html.escape(q["closed"])}</p>\n' if "closed" in q else ""
         )
@@ -825,22 +887,47 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
             f'<p class="gist"><strong>In short</strong> <span class="meta">(as of {_long_date(GISTS_UPDATED)})</span> '
             f'{html.escape(QUESTION_GISTS[q["n"]])}</p>\n'
         )
-        body = f"""{gist}{closed_note}{q["body"]}
-<p class="answer-top"><a class="btn" href="#answer">&#9998; Answer this &darr;</a></p>
-<div class="nav">{prev}{nxt}</div>"""
+        return f"""{gist}{closed_note}{q["body"]}
+<p class="answer-top"><a class="btn" href="#{box_id}">&#9998; Answer this &darr;</a></p>
+{neighbours(i)}"""
+
+    for i, q in enumerate(QUESTIONS):
+        if "closed" in q:
+            continue
         (OUT / "q" / f'{q["n"]}.html').write_text(
-            page(f'Q{q["n"]}', f'Q{q["n"]}. {q["title"]}', body, 1, q["term"],
+            page(f'Q{q["n"]}', f'Q{q["n"]}. {q["title"]}', question_body(q, i, "answer"), 1, q["term"],
                  kicker=f'Question {q["n"]} of {len(QUESTIONS)}'),
             encoding="utf-8",
         )
 
+    # Closed questions share one page, each with its own comment thread (its
+    # original term, so the comments already there are kept); the old
+    # q/<n>.html addresses redirect to its section.
+    closed_qs = [(i, q) for i, q in enumerate(QUESTIONS) if "closed" in q]
+    sections = "".join(
+        f'<section id="q{q["n"]}"><h2>Q{q["n"]}. {q["title"]}</h2>\n{question_body(q, i, "answer-%d" % q["n"])}\n'
+        + answer_box(q["term"], "answer-%d" % q["n"], "Your answer to Q%d" % q["n"]) + "</section>"
+        for i, q in closed_qs
+    )
+    (OUT / "q" / "closed.html").write_text(
+        page("Closed questions", "Closed questions",
+             '<p class="meta">Questions that have been answered. They stay readable, and you can still add to their threads.</p>'
+             + sections + '<div class="nav"><a href="../index.html">&larr; All updates and questions</a></div>',
+             1, kicker="Questions", comments_js=True),
+        encoding="utf-8",
+    )
+    for i, q in closed_qs:
+        redirect_page(OUT / "q" / f'{q["n"]}.html', f'closed.html#q{q["n"]}', f'Q{q["n"]}',
+                      f'Q{q["n"]}. {q["title"]} (on the Closed questions page)')
+
     (OUT / "keep").mkdir(exist_ok=True)
-    (OUT / "keep" / "poem.html").write_text(
-        page(POEM_TITLE, POEM_TITLE, poem_html(), 1, kicker="For Keep", body_class="white"), encoding="utf-8"
+    (OUT / "keep" / "poems.html").write_text(
+        page("Poems", "Poems", poems_html(), 1, kicker="For Keep and Walter", body_class="white"), encoding="utf-8"
     )
-    (OUT / "keep" / "walter.html").write_text(
-        page(WALTER_TITLE, WALTER_TITLE, walter_html(), 1, kicker="For Walter", body_class="white"), encoding="utf-8"
-    )
+    redirect_page(OUT / "keep" / "poem.html", "poems.html#keep", "Poem for Keep",
+                  f"{POEM_TITLE} (on the Poems page)")
+    redirect_page(OUT / "keep" / "walter.html", "poems.html#walter", "Poem for Walter",
+                  f"{WALTER_TITLE} (on the Poems page)")
     (OUT / "keep" / "units.html").write_text(
         page(UNITS_TITLE, UNITS_TITLE, units_html(), 1, kicker="For Keep"), encoding="utf-8"
     )
@@ -955,6 +1042,7 @@ def changes_html():
 
 
 CONVERT_BODY = """
+<p class="gist"><strong>Updated {updated}:</strong> this page offers converter {version}. The list below says what changed in each version; what Keep has confirmed in the game is on the <a href="../index.html">home page</a>.</p>
 {changes}
 <div id="converter" data-worker="worker.js?v={worker_v}" data-code="converter.zip?v={code_v}" data-manifest="stock/manifest.json?v={stock_v}" data-api="{api}" data-version="{version}">
 <p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> Only the plugin's name, its number of levels, the converter version and the date are added to the public list further down, and only while the box below stays ticked. Untick it to keep your conversion off the list.</p>
@@ -1007,7 +1095,7 @@ def build_converter_page(stock_dir=None):
         versions["stock_v"], stock_mb = "none", "about 320"
     (out / "index.html").write_text(
         page("Convert a plugin", "Convert a plugin", CONVERT_BODY.format(
-            stock_mb=stock_mb, changes=changes_html(), api=html.escape(COMMENTS_API),
+            stock_mb=stock_mb, changes=changes_html(), api=html.escape(COMMENTS_API), updated=_long_date(GISTS_UPDATED),
             version=html.escape(CHANGES[0]["version"]), **versions,
         ), 1,
              kicker="In your browser &middot; beta"),
@@ -1032,6 +1120,7 @@ OBELIX_POEM = (
 )
 
 SWAP_BODY = """
+<p class="gist"><strong>Updated {updated}:</strong> checked again. The tool and what has been tried with it are unchanged.</p>
 <p class="intro">Play the <em>Civil War</em> maps for <em>Myth II</em> with regular Myth II units. Choose which ordinary units, such as warriors or ghols, stand in place of the Civil War soldiers, and this page writes a new plugin. <strong>It runs entirely in this browser tab: your files are not uploaded anywhere</strong>, the new plugin is written on your own computer, and your original files are never changed.</p>
 
 <section class="honour" aria-labelledby="obelix">
@@ -1108,7 +1197,7 @@ def build_swap_page():
     poem = "<br>".join(html.escape(line) for line in OBELIX_POEM)
     (out / "index.html").write_text(
         page("Swap the Civil War units", "Swap the Civil War soldiers for regular units",
-             SWAP_BODY.format(poem=poem, **versions), 1, term=SWAP_TERM,
+             SWAP_BODY.format(poem=poem, updated=_long_date(GISTS_UPDATED), **versions), 1, term=SWAP_TERM,
              kicker="In your browser &middot; beta &middot; requested by Obelix"),
         encoding="utf-8",
     )

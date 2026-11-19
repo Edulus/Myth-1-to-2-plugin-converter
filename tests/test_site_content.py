@@ -31,6 +31,9 @@ class ContentShape(unittest.TestCase):
         terms = [q["term"] for q in keep_site.QUESTIONS] + [u["term"] for u in keep_site.UPDATES]
         self.assertEqual(len(set(terms)), len(terms))
 
+    def test_unanswered_is_a_flag(self):
+        self.assertEqual([q["n"] for q in keep_site.QUESTIONS if q.get("unanswered")], [1, 4, 8])
+
     def test_poems(self):
         for title, poem in (
             (keep_site.POEM_TITLE, keep_site.POEM),
@@ -83,6 +86,12 @@ class BadContent(unittest.TestCase):
         path = self.tmp / "content" / "questions" / "1.toml"
         path.write_text(path.read_text(encoding="utf-8").replace("gist =", "gisx ="), encoding="utf-8")
         self.fails(keep_site._load_questions, "questions/1.toml", "missing key 'gist'")
+
+    def test_unanswered_must_be_true_or_false(self):
+        path = self.tmp / "content" / "questions" / "1.toml"
+        path.write_text(path.read_text(encoding="utf-8").replace("unanswered = true", 'unanswered = "yes"'),
+                        encoding="utf-8")
+        self.fails(keep_site._load_questions, "questions/1.toml", "'unanswered' must be true or false")
 
     def test_file_name_must_match(self):
         (self.tmp / "content" / "questions" / "1.toml").rename(self.tmp / "content" / "questions" / "01.toml")

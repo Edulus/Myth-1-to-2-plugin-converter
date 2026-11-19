@@ -1,5 +1,7 @@
 n = 4
 term = "Q4: TFL gameplay or Myth II gameplay?"
 title = "TFL gameplay or Myth II gameplay?"
-gist = "Nobody has answered this one yet. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks which of the two converted levels should be meant for. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on."
+gist = "As of 19 November 2026 nobody has answered this one. Myth II can play with rules that make it feel more like The Fallen Lords, and so far we have tested with normal Myth II rules. It asks whether converted levels should be made for the Fallen Lords rules instead. Keep has said elsewhere that units should work with the Fallen Lords rules too, and that a warning keeps showing when they are on; the warning is still on our list."
+# True as of 2026-11-19: nobody has replied yet (shows a quiet tag on the home page).
+unanswered = true
 body = "<p>Myth II has a built-in &ldquo;TFL Gameplay&rdquo; option that changes the rules to behave more like TFL. We've been testing with normal Myth II rules. Should converted levels be meant for TFL rules?</p>"

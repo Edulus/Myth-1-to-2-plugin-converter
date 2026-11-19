@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
-<link rel="stylesheet" href="style.css?v=377d03ad">
+<link rel="stylesheet" href="style.css?v=10208255">
 </head>
 <body>
 <header class="hero">
@@ -42,7 +42,7 @@
 <li>Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords&#x27; maps says which unit is the target. Keep&#x27;s idea, that targets are the units players cannot trade, holds in Bungie&#x27;s maps, but in Sir Mauriac&#x27;s two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.</li>
 <li>Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher&#x27;s shop on Crow&#x27;s Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie&#x27;s own: units were drawn about a third too large, and Myth II&#x27;s files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.</li>
 </ul>
-<h3>Up next</h3>
+<details class="fold"><summary>Up next (9 items)</summary>
 <ul>
 <li>Civil War unit swapper: more testing. The browser version is out, built because Obelix asked for it. We need Obelix and others to try more maps, more replacement units and other Civil War packs, and to play the result in Myth II, then tell us how it went on its page or in Q9.</li>
 <li>Unit animations: fixed in 0.16 (Keep: units now stand still when they stop). Some walking frames may still be missing.</li>
@@ -54,12 +54,14 @@
 <li>Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow&#x27;s teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.</li>
 <li>Water and banks: version 0.9 changed the ground&#x27;s markings on every map. Keep has checked, and sees no problems with where units can walk.</li>
 </ul>
-<h3>Later</h3>
+</details>
+<details class="fold"><summary>Later (3 items)</summary>
 <ul>
 <li>The warning that appears whenever TFL Gameplay (vTFL) is ticked.</li>
 <li>The outer edge of Crow&#x27;s Bridge (south and east) sits differently from Magma&#x27;s port. We checked: Magma adjusted that map&#x27;s edges by hand, so this is not a converter error.</li>
 <li>One bush on the edge of a trench on Crow&#x27;s Bridge may still float.</li>
 </ul>
+</details>
 <h3>How we work</h3>
 <ul>
 <li>One thing at a time. For each problem we compare our version with Project Magma&#x27;s hand-made Myth II ports, field by field, and turn what they did into a rule the converter applies to every map. Then we check the result in the game, with screenshots.</li>
@@ -89,17 +91,18 @@
 <p>Skip the setup and play a plugin that is already converted. <em>Sir Mauriac's Tale</em> is a Fallen Lords campaign by CbC (the Crow's Bridge Cartographers), converted for Myth II 1.8.5 by Edulus, the co-creator of this plugin (with Keep and Claude). Nothing else to install: the Fallen Lords tags it relies on are inside the plugin.</p>
 <p><a class="btn" href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/releases/download/sir-mauriac-sb-1/Sir-Mauriac-Tale-for-Myth-II.zip">&darr; Download Sir Mauriac&rsquo;s Tale (222 MB zip of Myth II plugin files; no program to run)</a></p>
 <ul>
-<li><strong>Beta, converter 0.19</strong> (updated 17 November 2026; until then this download was 0.12). <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen with earlier versions; the other levels are untested. This 0.19 download has not been played in the game yet.</li>
+<li><strong>Beta, converter 0.19</strong> (updated 19 November 2026; the first download was 0.12). <em>Tandem</em> and <em>In the Name of Glory</em> have been played to the end-game screen with earlier versions; the other levels are untested. This 0.19 download has not been played in the game yet.</li>
 <li>Quit Myth II and extract the zip <strong>straight into</strong> Myth II's <code>plugins</code> folder, not a subfolder (Myth II only finds plugins sitting directly in it). You get the plugin <code>ZZ Mauriac TFL2SB</code> plus a read-me and CbC's credits. Then choose <strong>New Game</strong> &rarr; the campaign <em>ZZ Mauriac TFL2SB</em> &rarr; a level. Leave Tagsets empty.</li>
 </ul>
 </section>
 <section aria-labelledby="get-started">
 <h2 id="get-started">Get started &mdash; public beta</h2>
-<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. The command-line steps below are for those who want more control; no Python packages need installing.</p>
+<p>Convert a <em>Myth: The Fallen Lords</em> plugin for <em>Myth II: Soulblighter</em>. The easiest way is the <a href="convert/index.html">in-browser converter</a>. If you only want to play, the <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/releases/download/sir-mauriac-sb-1/Sir-Mauriac-Tale-for-Myth-II.zip">ready-made <em>Sir Mauriac's Tale</em> download</a> above needs none of this. The command-line steps below are for those who want more control; no Python packages need installing.</p>
 <p><strong>You need:</strong> Myth II 1.8.5, Python 3.12 or later, a TFL plugin (<code>.gor</code>), and your own TFL game's <code>tags</code> folder containing <code>TAGS.GOR</code> and <code>ARTSOUND.GOR</code>. Game files are not included.</p>
 <p>Bought the discs but lost or damaged them? The game's files can be found at <a href="https://www.myabandonware.com/game/myth-the-fallen-lords-3no">My Abandonware</a> or on the <a href="https://archive.org/details/MythTheFallenLordsUSA">Internet Archive</a>. (The in-browser converter doesn't need them: it brings its own.)</p>
+<details class="fold"><summary>The command-line steps (five steps, for more control)</summary>
 <ol>
-<li><strong>Download and unzip.</strong> Open <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. There is no packaged release yet. With Git, you can instead run:
+<li><strong>Download and unzip.</strong> Open <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">the repository</a> and choose <strong>Code &rarr; Download ZIP</strong>, then extract it. This ZIP holds the converter's code and is only for the command-line route; the ready-made download and the in-browser converter need no download of the code. With Git, you can instead run:
 <pre><code>git clone https://github.com/Edulus/Myth-1-to-2-plugin-converter.git
 cd Myth-1-to-2-plugin-converter</code></pre></li>
 <li><strong>Set up Python.</strong> On Windows, double-click <code>launch.bat</code> in the extracted folder. It looks for Python 3.12+ and attempts to install it with winget if missing; follow its instructions and run it again after installation. If winget is unavailable, it opens the Python download page. On other systems, install Python 3.12+ first.
@@ -113,7 +116,9 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p>No decisions file is required for this baseline workflow. Conversion warnings identify unsupported content; producing a file does not guarantee that every level will play.</p></li>
 <li><strong>Play in Myth II.</strong> Start the game &rarr; <strong>New Game</strong> &rarr; choose the converted campaign &rarr; <strong>Tagsets</strong> &rarr; activate <strong>ZZ TFL stock</strong> &rarr; pick a level &rarr; <strong>OK</strong>. Choose the tagset <em>after</em> the campaign, because changing campaigns can clear the selection.</li>
 </ol>
-<h3>Before you test</h3>
+<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</details>
+<details class="fold"><summary>Before you test (five points)</summary>
 <ul>
 <li>Quit Myth II before converting or replacing plugin files; the game holds them open. Restart after adding files.</li>
 <li>Keep output filenames at most 32 characters. The internal plugin name defaults to that filename; use distinct names so plugins do not hide each other.</li>
@@ -121,30 +126,31 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <li>Only one campaign can load at a time. The stock tagset contains no selectable levels, so it can load alongside your converted campaign.</li>
 <li>If writing to the install folder fails, write to a folder you can access and copy the finished files into Myth II's <code>plugins</code> folder while the game is closed.</li>
 </ul>
-<p><strong>Optional guided app:</strong> run <code>python -m src studio</code> or double-click <code>launch.bat</code>. It can preview and convert an individual plugin and read the game log. Build the stock tagset with the command above first. Its missing-reference suggestions are not a check against the complete stock tagset; the command-line route above is the tested starting point.</p>
+</details>
 </section>
 <h2>What works &mdash; and what needs testing</h2>
 <p><strong>Two levels have reached the end-game screen in Myth II 1.8.5:</strong> <em>Tandem</em> and <em>In the Name of Glory</em> from <em>Sir Mauriac's Tale</em>. This is a beta, not a claim that every TFL plugin works.</p>
 <ul>
-<li>Converts terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, weather, mesh effects, lighting, sprite collections and text.</li>
+<li>Converted: terrain, markers, map actions, monsters and units, objects, projectiles, artifacts, scenery, particle effects, mesh effects, lighting, ambient sounds, sprite collections, 3D models and text.</li>
 <li>Buildings and other 3D models are converted and placed. Lighting uses standard values for every map. Terrain is redrawn on Myth II's finer grid, with heights blended between the original points.</li>
-<li>Sounds, collection references, projectile groups and other unsupported bodies are copied unchanged and reported. Other levels and multiplayer remain unverified.</li>
+<li>Copied unchanged and reported as not converted: the water settings, which are known to differ from Myth II's own and still need a converter (water behaved correctly where Keep checked it), and a few minor kinds of data we have too few examples to judge. Sounds, collection references, projectile groups and physics settings are also copied unchanged, because comparing them with Myth II's own files and Project Magma's showed no systematic difference. Some death and explosion effects are still missing.</li>
+<li>Confirmed in the game by Keep: water, riverbanks and heights; Crow's Bridge's bridge; buildings; hosted multiplayer games with units, scenery, flags and balls; no black ground after explosions; units that stand still when they stop; Forest Giants, Old Growth Forest Giants and Trow that attack; healers that heal. Not yet checked: unit size (Keep is measuring it), Dwarf Heroes throwing uphill (a 0.19 fix), other levels, and multiplayer in general.</li>
 </ul>
 <h2>Help test or report a problem</h2>
 <p>Every visitor can help. Try a level you know and report what differs from TFL. Open a question or progress update below and use its comment box: a name, message and one-word Myth check &mdash; <strong>no account or sign-in</strong>.</p>
 <p>Include the plugin and level names, Myth II version, what you expected, what happened, and the final lines of <code>myth_log.txt</code> from the Myth II folder. For a crash, include relevant lines from the newest <code>myth_crashlog- &lt;date&gt;.txt</code>. Check that the log lists both your campaign and stock tagset after <code>Starting mesh</code>. Share logs and observations, not game files; remove private paths if needed.</p>
 <p>Code contributions are welcome through <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">GitHub</a>; the <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/blob/main/README.md">README</a> and <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter/tree/main/documentation">documentation</a> describe current support and research.</p>
 <h2>Open questions for testers</h2>
-<ul class="cards"><li class="card"><a href="q/1.html"><span class="body"><span class="title"><span class="tag">Q1</span>Which TFL content matters most to you?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/3.html"><span class="body"><span class="title"><span class="tag">Q3</span>Is there a coop map with known scoring we could test against?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/4.html"><span class="body"><span class="title"><span class="tag">Q4</span>TFL gameplay or Myth II gameplay?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/5.html"><span class="body"><span class="title"><span class="tag">Q5</span>Help test converted levels</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/7.html"><span class="body"><span class="title"><span class="tag">Q7</span>Feature and bug reports for the web converter</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/8.html"><span class="body"><span class="title"><span class="tag">Q8</span>Which units behave wrongly, and where?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/9.html"><span class="body"><span class="title"><span class="tag">Q9</span>Tried converting a Fallen Lords map of your own?</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
+<ul class="cards"><li class="card"><a href="q/1.html"><span class="body"><span class="title"><span class="tag">Q1</span>Which TFL content matters most to you?</span><span class="sub">Summary of 19 November 2026<span class="quiet" title="as of 19 November 2026">no replies yet</span></span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/3.html"><span class="body"><span class="title"><span class="tag">Q3</span>Is there a coop map with known scoring we could test against?</span><span class="sub">Summary of 19 November 2026</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/4.html"><span class="body"><span class="title"><span class="tag">Q4</span>TFL gameplay or Myth II gameplay?</span><span class="sub">Summary of 19 November 2026<span class="quiet" title="as of 19 November 2026">no replies yet</span></span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/5.html"><span class="body"><span class="title"><span class="tag">Q5</span>Help test converted levels</span><span class="sub">Summary of 19 November 2026</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/7.html"><span class="body"><span class="title"><span class="tag">Q7</span>Feature and bug reports for the web converter</span><span class="sub">Summary of 19 November 2026</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/8.html"><span class="body"><span class="title"><span class="tag">Q8</span>Which units behave wrongly, and where?</span><span class="sub">Summary of 19 November 2026<span class="quiet" title="as of 19 November 2026">no replies yet</span></span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/9.html"><span class="body"><span class="title"><span class="tag">Q9</span>Tried converting a Fallen Lords map of your own?</span><span class="sub">Summary of 19 November 2026<span class="quiet" title="as of 19 November 2026">no replies yet</span></span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
 <h3>Closed questions</h3>
-<ul class="cards closed"><li class="card"><a href="q/2.html"><span class="body"><span class="title"><span class="tag">Q2</span>Terrain: faithful or smooth?</span><span class="sub">Closed: Answered by testing against Project Magma&#x27;s faithful port of Crow&#x27;s Bridge (The Fallen Levels v2): since version 0.3 the converter keeps every original height and blends the new points in between, as Magma&#x27;s port does. Hills are smooth, not stepped.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
-<li class="card"><a href="q/6.html"><span class="body"><span class="title"><span class="tag">Q6</span>What should a successful conversion preserve?</span><span class="sub">Closed: Answered in practice by testers&#x27; reports in Q3, Q5 and Q7: water, terrain heights, buildings and units that behave as in The Fallen Lords. Please keep reporting in Q7.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
+<ul class="cards closed"><li class="card"><a href="q/closed.html#q2"><span class="body"><span class="title"><span class="tag">Q2</span>Terrain: faithful or smooth?</span><span class="sub">Closed: Answered by testing against Project Magma&#x27;s faithful port of Crow&#x27;s Bridge (The Fallen Levels v2): since version 0.3 the converter keeps every original height and blends the new points in between, as Magma&#x27;s port does. Hills are smooth, not stepped.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
+<li class="card"><a href="q/closed.html#q6"><span class="body"><span class="title"><span class="tag">Q6</span>What should a successful conversion preserve?</span><span class="sub">Closed: Answered in practice by testers&#x27; reports in Q3, Q5 and Q7: water, terrain heights, buildings and units that behave as in The Fallen Lords. Please keep reporting in Q7.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li></ul>
 <h2>Progress log</h2>
 <ul class="cards"><li class="card"><a href="updates/2026-11-15.html"><span class="body"><span class="title"><span class="tag">15 November 2026</span>Swap the Civil War soldiers for regular units, in your browser</span><span class="sub">A new page lets you play the Civil War maps with regular Myth II units. Built because Obelix asked.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
 <li class="card"><a href="updates/2026-11-11.html"><span class="body"><span class="title"><span class="tag">11 November 2026</span>Crow's Bridge fixed, and pictures in comments</span><span class="sub">Versions 0.8 and 0.9 fix Crow&#x27;s Bridge&#x27;s bridge, on every map. You can now attach a screenshot to a comment.</span></span><span class="btn">Read &amp; reply &rarr;</span></a></li>
@@ -155,7 +161,7 @@ cd Myth-1-to-2-plugin-converter</code></pre></li>
 <p>Myth: The Fallen Lords and Myth II: Soulblighter are trademarks of their respective rights holders. This is an unofficial, non-commercial interoperability tool, not affiliated with or endorsed by any rights holder. The in-browser converter serves the original <em>Fallen Lords</em> game files (&copy; Bungie) so that converted plugins need nothing else installed; otherwise users supply their own copies.</p>
 
 </main>
-<footer><nav class="sitemap" aria-label="Site map"><ul><li><a href="index.html">Home</a></li><li><a href="convert/index.html">Convert a plugin</a></li><li><a href="swap/index.html">Swap Civil War units</a></li><li><a href="keep/index.html">Keep &amp; Claude Conversation</a></li><li><a href="keep/poem.html">Poem for Keep</a></li><li><a href="keep/walter.html">Poem for Walter</a></li><li><a href="keep/units.html">Monster settings</a></li></ul><ul><li class=label>Updates</li><li><a href="updates/2026-10-21.html">21 October 2026</a></li><li><a href="updates/2026-11-02.html">2 November 2026</a></li><li><a href="updates/2026-11-11.html">11 November 2026</a></li><li><a href="updates/2026-11-15.html">15 November 2026</a></li></ul><ul><li class=label>Questions</li><li><a href="q/1.html">Q1</a></li><li><a href="q/2.html">Q2</a></li><li><a href="q/3.html">Q3</a></li><li><a href="q/4.html">Q4</a></li><li><a href="q/5.html">Q5</a></li><li><a href="q/6.html">Q6</a></li><li><a href="q/7.html">Q7</a></li><li><a href="q/8.html">Q8</a></li><li><a href="q/9.html">Q9</a></li></ul></nav><p class="made">Made by Edulus, with Keep and Claude Code. The code is on <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">GitHub</a>.</p><p class="made">An unofficial, non-commercial fan project for the 1990s games <em>Myth: The Fallen Lords</em> and <em>Myth II</em>, not affiliated with Bungie. It never asks for an email address, a password or a payment. Its downloads are Myth plugin data files for the game to read, not programs to install or run.</p><p>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</p></footer>
+<footer><nav class="sitemap" aria-label="Site map"><ul><li><a href="index.html">Home</a></li><li><a href="convert/index.html">Convert a plugin</a></li><li><a href="swap/index.html">Swap Civil War units</a></li><li><a href="keep/index.html">Keep &amp; Claude Conversation</a></li><li><a href="keep/poems.html">Poems</a></li><li><a href="keep/units.html">Monster settings</a></li></ul><ul><li class=label>Updates</li><li><a href="updates/2026-10-21.html">21 October 2026</a></li><li><a href="updates/2026-11-02.html">2 November 2026</a></li><li><a href="updates/2026-11-11.html">11 November 2026</a></li><li><a href="updates/2026-11-15.html">15 November 2026</a></li></ul><ul><li class=label>Questions</li><li><a href="q/1.html">Q1</a></li><li><a href="q/3.html">Q3</a></li><li><a href="q/4.html">Q4</a></li><li><a href="q/5.html">Q5</a></li><li><a href="q/7.html">Q7</a></li><li><a href="q/8.html">Q8</a></li><li><a href="q/9.html">Q9</a></li><li><a href="q/closed.html">Closed: Q2, Q6</a></li></ul></nav><p class="made">Made by Edulus, with Keep and Claude Code. The code is on <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">GitHub</a>.</p><p class="made">An unofficial, non-commercial fan project for the 1990s games <em>Myth: The Fallen Lords</em> and <em>Myth II</em>, not affiliated with Bungie. It never asks for an email address, a password or a payment. Its downloads are Myth plugin data files for the game to read, not programs to install or run.</p><p>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. An unofficial, non-commercial fan project.</p></footer>
 <script>
 (function(){
   var root=document.documentElement, btn=document.querySelector(".theme");
