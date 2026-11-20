@@ -29,7 +29,7 @@ items = [
   "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
   "Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie's and Magma's never do. 0.19 writes it as zero. Please test.",
   "Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow's teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.",
-  "High-resolution units and detail textures (Keep, 19 November): not researched yet. IronDuke's Iron TagSet and Project Magma's Detail Texture Megapack look like the place to start. If you know how they work, please tell us in Q10.",
+  "High-resolution units and detail textures (Keep, 19 November): not researched yet. Twice Born Edition and IronDuke's Iron TagSet (high-resolution units) and Jon God's Detail Texture Megapack (detail textures) look like the place to start. If you know how they work, please tell us in Q10.",
   "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",
 ]
 
