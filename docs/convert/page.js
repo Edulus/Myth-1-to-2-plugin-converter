@@ -154,13 +154,14 @@
       "Quit Myth II if it is running.",
       "Move the saved file straight into Myth II's plugins folder, for example C:\\Program Files (x86)\\Myth II\\plugins. Not into a folder inside it: Myth II only looks at files sitting directly in plugins.",
       "Keep the name as it is, with no ending such as .gor. If your browser added one (for example .bin), remove it.",
+      "The name ends with the converter version (v" + box.dataset.version + "). Delete copies of the same map made by older versions, or move them out of plugins, so you can't pick an old one by mistake.",
       "Start Myth II, choose New Game, pick the campaign \u201c" + res.filename + "\u201d, then a level, then OK. Leave Tagsets empty: the original game files it needs are already inside.",
     ].forEach(function (s) { steps.append(el("li", s)); });
     parts.push(steps);
     parts.push(el("h3", "Then tell us how it went"));
     var ask = el("p", "Once you've tried it in Myth II, please leave a short report in ");
     ask.append(link("Q9: Tried converting a map of your own?", "../q/9.html"),
-      ": the plugin's name, whether it loaded, and whether the levels played. A line or two is plenty, and a report that it worked helps us as much as one that it didn't.");
+      ": the plugin's name (with its version), whether it loaded, and whether the levels played. A line or two is plenty, and a report that it worked helps us as much as one that it didn't.");
     parts.push(ask);
     var tell = el("p", "If a level doesn't load or looks wrong, the details go in ", "meta");
     tell.append(link("Q7: feature and bug reports", "../q/7.html"), ", with the technical details below.");

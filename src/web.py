@@ -18,11 +18,18 @@ _UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _SUFFIX = " for M2"
 
 
+def _suffix():
+    """" for M2 v0.20": the converter version is in the name, so a tester can
+    see in Myth II's own lists which version made a plugin. Keep tested a level
+    converted by 0.18 believing it was 0.19 (22 November 2026)."""
+    return f"{_SUFFIX} v{__version__}"
+
+
 def output_name(upload_name):
     """The converted plugin's filename, which is also its in-game name.
 
-    The upload's name, without ``.gor``, plus " for M2", at most 32
-    characters: Myth II does not list a plugin with a longer filename. Dots
+    The upload's name, without ``.gor``, plus " for M2" and the converter
+    version (" for M2 v0.20"), at most 32 characters: Myth II does not list a plugin with a longer filename. Dots
     become spaces: Chrome took ``cbc.TFL.mauriac for M2`` to end in a file
     type and saved it as ``cbc.TFL.mauriac for M2.mauriac for M2.mauriac for M2``.
     """
@@ -30,8 +37,9 @@ def output_name(upload_name):
     if stem.lower().endswith(".gor"):
         stem = stem[:-4]
     stem = " ".join(stem.replace(".", " ").split()) or "Converted plugin"
-    stem = stem[: plugin.MAX_PLUGIN_FILENAME - len(_SUFFIX)].rstrip()
-    return stem + _SUFFIX
+    suffix = _suffix()
+    stem = stem[: plugin.MAX_PLUGIN_FILENAME - len(suffix)].rstrip()
+    return stem + suffix
 
 
 def convert(plugin_path, upload_name, out_dir, stock_paths):

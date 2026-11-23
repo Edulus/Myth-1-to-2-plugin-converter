@@ -29,19 +29,19 @@
 
 <main class="wrap">
 
-<p class="gist"><strong>Updated 19 November 2026:</strong> this page offers converter 0.19. The list below says what changed in each version; what Keep has confirmed in the game is on the <a href="../index.html">home page</a>.</p>
+<p class="gist"><strong>Updated 23 November 2026:</strong> this page offers converter 0.20. The list below says what changed in each version; what Keep has confirmed in the game is on the <a href="../index.html">home page</a>.</p>
 <section class="release" aria-labelledby="release">
-<h2 id="release">Version 0.19 &middot; built 19 November 2026</h2>
+<h2 id="release">Version 0.20 &middot; built 23 November 2026</h2>
 <h3>Please test next</h3>
 <ul>
-<li>Dwarf Heroes: can they throw uphill now, without walking up to the spot first? Downhill and on flat ground still fine?</li>
-<li>Dwarven Pathfinders (if a level has them): the same question for their bottle throw.</li>
-<li>Forest Giants and Old Growth Forest Giants: when one dies and its pieces are blown up, are the chunks teal like the Yearlings&#x27;? (We expect yes.)</li>
-<li>If you can still run The Fallen Lords itself: what colour are those chunks there?</li>
+<li>Convert a map again: does its name in Myth II end with v0.20? Delete or move out older copies of the same map first.</li>
+<li>When you report a bug, please give the plugin&#x27;s full name, with its version.</li>
+<li>Dwarven Pathfinders (0.19): do their bottle throws land where you click, uphill too?</li>
 </ul>
 <p>Report what you find in <a href="../q/7.html">Q7: feature and bug reports</a>, with the version number.</p>
 <h3>What changed</h3>
 <ul class="changes">
+<li><strong>0.20</strong> (23 November 2026): A converted plugin&#x27;s name now ends with the converter version that made it, for example “nz40 v2 for M2 v0.20”, so you can see in Myth II&#x27;s own lists which version you are playing. Nothing else in the conversion changed. Keep confirmed the 0.19 fix: Dwarf Heroes now throw uphill and land on the clicked spot.</li>
 <li><strong>0.19</strong> (19 November 2026): A likely fix for Dwarf Heroes that would not throw uphill. In The Fallen Lords the hero&#x27;s bottle throw has a throwing speed of 92 with a random spread of minus 81, and the converter copied that. Myth II has no negative spread in any of Bungie&#x27;s or Magma&#x27;s attacks, and Magma&#x27;s own port of this throw has none, so it is now 0: the hero always throws at 92 (an ordinary dwarf throws at 66 to 74). The Dwarven Pathfinder&#x27;s bottle throw had the same setting and gets the same fix. The teal Yearling pieces are not fixed yet: the chunks are trow pieces (the Forest Giants&#x27; pieces break into them when hit) drawn without the trow&#x27;s colouring, and we need one more test in the game before choosing a fix.</li>
 <li><strong>0.18</strong> (17 November 2026): Heals should work now. Myth II refuses to let an ability be used on friendly units unless it says so, and The Fallen Lords never had that setting, so converted Journeymen and Heron Guards could heal neither other units nor themselves. A special ability that fires a healing projectile now carries the setting, as it does in Bungie&#x27;s own Journeymen and Heron Guards. This also covers the Yearlings&#x27; mandrake heal, which is less certain.</li>
 <li><strong>0.17</strong> (17 November 2026): Two bugs found that may be why Forest Giants and Trow never attacked. First, every unit was marked giant-sized in Myth II (the converter read The Fallen Lords&#x27; AI-intelligence setting as the size); now only the Forest Giant and the trow are, as in Bungie&#x27;s and Magma&#x27;s versions, and everyone else is man-sized. Second, each attack&#x27;s flags were copied raw, which scrambled the bits that say whether an attack is for giants or not for giants; they are now translated, so the Forest Giant&#x27;s and trow&#x27;s attacks come out exactly as in Bungie&#x27;s own tags.</li>
@@ -63,7 +63,7 @@
 <li><strong>0.1</strong> (26 October 2026): First beta: convert a plugin in your browser.</li>
 </ul>
 </section>
-<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=80b69567ce2b" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.19">
+<div id="converter" data-worker="worker.js?v=ea18ff586acf" data-code="converter.zip?v=1b204e40eae7" data-manifest="stock/manifest.json?v=d37fb8c0bb01" data-api="https://keep-comments.edyersh.workers.dev" data-version="0.20">
 <p class="intro">Turn a <em>Myth: The Fallen Lords</em> plugin into one that <em>Myth II: Soulblighter</em> 1.8.5 can play. It runs entirely in this browser tab: <strong>your file is not uploaded anywhere.</strong> Only the plugin's name, its number of levels, the converter version and the date are added to the public list further down, and only while the box below stays ticked. Untick it to keep your conversion off the list.</p>
 <label class="share"><input type="checkbox" id="share" checked> Add this plugin's name to the public list of converted maps</label>
 <label class="drop" id="drop"><input type="file" id="pick" accept=".gor,.GOR">
@@ -89,7 +89,7 @@
 <li>Found a bug, or want a feature? Tell us in <a href="../q/7.html">Q7: feature and bug reports</a>.</li>
 </ul>
 <div class="nav"><a href="../index.html">&larr; Back to the home page</a></div>
-<script src="page.js?v=10df356b52cc"></script>
+<script src="page.js?v=945f1385f02b"></script>
 
 </main>
 <footer><nav class="sitemap" aria-label="Site map"><ul><li><a href="../index.html">Home</a></li><li><a href="../convert/index.html">Convert a plugin</a></li><li><a href="../swap/index.html">Swap Civil War units</a></li><li><a href="../keep/index.html">Keep &amp; Claude Conversation</a></li><li><a href="../keep/poems.html">Poems</a></li><li><a href="../keep/units.html">Monster settings</a></li></ul><ul><li class=label>Updates</li><li><a href="../updates/2026-10-21.html">21 October 2026</a></li><li><a href="../updates/2026-11-02.html">2 November 2026</a></li><li><a href="../updates/2026-11-11.html">11 November 2026</a></li><li><a href="../updates/2026-11-15.html">15 November 2026</a></li></ul><ul><li class=label>Questions</li><li><a href="../q/1.html">Q1</a></li><li><a href="../q/3.html">Q3</a></li><li><a href="../q/4.html">Q4</a></li><li><a href="../q/5.html">Q5</a></li><li><a href="../q/7.html">Q7</a></li><li><a href="../q/8.html">Q8</a></li><li><a href="../q/9.html">Q9</a></li><li><a href="../q/10.html">Q10</a></li><li><a href="../q/closed.html">Closed: Q2, Q6</a></li></ul></nav><p class="made">Made by Edulus, with Keep and Claude Code. The code is on <a href="https://github.com/Edulus/Myth-1-to-2-plugin-converter">GitHub</a>.</p><p class="made">An unofficial, non-commercial fan project for the 1990s games <em>Myth: The Fallen Lords</em> and <em>Myth II</em>, not affiliated with Bungie. It never asks for an email address, a password or a payment. Its downloads are Myth plugin data files for the game to read, not programs to install or run.</p><p>Artwork: <em>Myth II: Soulblighter</em> desktop picture and <em>Myth: The Fallen Lords</em> box art, &copy; Bungie / Take-Two, shown in black and white. Screenshot from our own testing. Conversion rules learned by comparison with Project Magma&rsquo;s hand-made ports, above all <em>The Fallen Levels v2</em> by IronDuke, Haravikk, Infininight and Grasshopper. An unofficial, non-commercial fan project.</p></footer>

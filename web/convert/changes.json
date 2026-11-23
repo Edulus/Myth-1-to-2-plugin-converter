@@ -1,4 +1,10 @@
 [
+ {"version": "0.20", "date": "2026-11-23", "change": "A converted plugin's name now ends with the converter version that made it, for example “nz40 v2 for M2 v0.20”, so you can see in Myth II's own lists which version you are playing. Nothing else in the conversion changed. Keep confirmed the 0.19 fix: Dwarf Heroes now throw uphill and land on the clicked spot.",
+  "test": [
+   "Convert a map again: does its name in Myth II end with v0.20? Delete or move out older copies of the same map first.",
+   "When you report a bug, please give the plugin's full name, with its version.",
+   "Dwarven Pathfinders (0.19): do their bottle throws land where you click, uphill too?"
+  ]},
  {"version": "0.19", "date": "2026-11-19", "change": "A likely fix for Dwarf Heroes that would not throw uphill. In The Fallen Lords the hero's bottle throw has a throwing speed of 92 with a random spread of minus 81, and the converter copied that. Myth II has no negative spread in any of Bungie's or Magma's attacks, and Magma's own port of this throw has none, so it is now 0: the hero always throws at 92 (an ordinary dwarf throws at 66 to 74). The Dwarven Pathfinder's bottle throw had the same setting and gets the same fix. The teal Yearling pieces are not fixed yet: the chunks are trow pieces (the Forest Giants' pieces break into them when hit) drawn without the trow's colouring, and we need one more test in the game before choosing a fix.",
   "test": [
    "Dwarf Heroes: can they throw uphill now, without walking up to the spot first? Downhill and on flat ground still fine?",

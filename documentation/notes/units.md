@@ -414,3 +414,11 @@ them, so they are not the cause and are not added.
 so the hero throws at 92. Changes 5 `mons` in the regression build: `dwhe`,
 `dwpa`, `thra`, and Mauriac's thralls `suth`, `thmo` (the no-projectile attack,
 harmless). Not yet confirmed in game.
+
+**Confirmed (Keep, 22 November, on 0.19):** the hero lands on the clicked spot
+and throws uphill without moving. An earlier report of overshooting came from a
+0.18 conversion. The high flag bits Myth II's own dwarf throws carry (0x8000 on
+the dwarf and hero, 0x4000 and 0xc000 on the Pathfinder's two throws; Magma's
+port and Unity alike, and the only TFL attacks with flag words 0x060f, 0x060a,
+0x069a are these dwarves) were tried and reverted: not needed for the throw to
+work. They remain a candidate if a dwarf behaviour difference turns up.

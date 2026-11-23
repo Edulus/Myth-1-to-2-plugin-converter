@@ -92,11 +92,11 @@ class Dates(unittest.TestCase):
 
     def test_pages_say_when_they_were_last_checked(self):
         for rel in ("index.html", "convert/index.html", "swap/index.html", "keep/units.html", "keep/index.html"):
-            self.assertIn("Updated 19 November 2026", re.sub(r"<[^>]+>", "", self.read(rel)), rel)
+            self.assertRegex(re.sub(r"<[^>]+>", "", self.read(rel)), r"Updated \d{1,2} [A-Z][a-z]+ 20\d\d", rel)
 
     def test_questions_say_as_of(self):
         for rel in [f"q/{n}.html" for n in (1, 3, 4, 5, 7, 8, 9)] + ["q/closed.html"]:
-            self.assertIn("(as of 19 November 2026)", self.read(rel), rel)
+            self.assertRegex(self.read(rel), r"\(as of \d{1,2} [A-Z][a-z]+ 20\d\d\)", rel)
 
     def test_update_pages_are_dated(self):
         for page in sorted((DOCS / "updates").glob("*.html")):

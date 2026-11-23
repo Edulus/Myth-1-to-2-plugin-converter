@@ -1,11 +1,12 @@
 # What we are working on, shown near the top of the home page. Update it as
 # items move along; finished work goes into web/convert/changes.json instead.
-updated = "2026-11-19"
+updated = "2026-11-23"
 
 [[group]]
-title = "Please test now (converter 0.19)"
+title = "Please test now (converter 0.20)"
 items = [
-  "Dwarf Heroes: can they throw their molotov uphill now, with downhill and flat throws still working? (0.19)",
+  "First, check your version. Since 0.20 a converted plugin's name ends with the converter version, for example “nz40 v2 for M2 v0.20”. Convert your map again on the Convert a plugin page, delete or move out older copies of it, and give the full name with its version when you report.",
+  "Dwarven Pathfinders: do their bottle throws land where you click, uphill too? Keep confirmed this for Dwarf Heroes on 0.19.",
   "Forest Giant and Old Growth Forest Giant pieces: after being hit, are they teal like the Yearling's? Does The Fallen Lords itself show teal there? (reported, cause found)",
   "Do units look the right size, for example next to the Butcher's shop on Crow's Bridge? Keep is measuring this; heroes may be a little tall.",
 ]
@@ -14,7 +15,7 @@ items = [
 title = "Working on now"
 items = [
   "Multiplayer levels: flags and balls are fixed (0.12, confirmed by Keep). Free-for-all and team levels now show teams, units, scenery, flags and balls. Still open: Assassin targets. Nothing in The Fallen Lords' maps says which unit is the target. Keep's idea, that targets are the units players cannot trade, holds in Bungie's maps, but in Sir Mauriac's two Assassin maps every unit is tradable, so a unit would have to be added in Loathing.",
-  "TFL Gameplay (vTFL): Keep sees a warning whenever TFL Gameplay is ticked, and names vTFL compatibility as an open issue. Our maps are not marked as made for TFL gameplay. Magma's The Fallen Lords v1.9 marks every map that way, though two of Magma's other ports mark none. We left the mark off because it makes a plugin need a vTFL tagset loaded alongside it. We have asked Keep what vTFL compatibility should mean for converted levels before changing anything; others who play with TFL Gameplay are welcome in Q4.",
+  "TFL Gameplay (vTFL): Keep sees a warning whenever TFL Gameplay is ticked, and names vTFL compatibility as an open issue. Our maps are not marked as made for TFL gameplay. Magma's The Fallen Lords v1.9 marks every map that way, though two of Magma's other ports mark none. We left the mark off because it makes a plugin need a vTFL tagset loaded alongside it. In a test on 21 November a converted level loaded with TFL Gameplay ticked, after the warning, with Full TFL chosen. Keep's answer (22 November): work out objectively what Unity's TFL gameplay changes (projectiles, physics, artifacts, monsters) and map our tags to that. That comparison is next; others who play with TFL Gameplay are welcome in Q4.",
   "Unit size: Keep reports it needs fine tuning, and is lining units up against the Butcher's shop on Crow's Bridge to measure it, which we welcome. The size fix in 0.13 follows Bungie's own: units were drawn about a third too large, and Myth II's files hold several Fallen Lords units with the same pictures, drawn at 0.73 of the old size. Thrall in deep water still to be checked.",
 ]
 
@@ -27,7 +28,13 @@ items = [
   "Deaths and explosions: some death and explosion effects are missing. The data behind them is still copied in The Fallen Lords' format, not translated. We will translate it, starting with the effects Keep has seen fail.",
   "Unit behaviour: Forest Giants, Old Growth Forest Giants and Trow now attack (fixed in 0.17, confirmed by Keep). Unit speeds, and how much harm fire, explosions and magic do to each unit, come next.",
   "Heals: Journeymen and Heron Guards heal themselves and others, and Yearlings heal themselves only (fixed in 0.18, confirmed by Keep).",
-  "Dwarf Heroes could not throw uphill (Keep, 0.18). Their throw had a negative speed spread, which only they and the Dwarven Pathfinders had; Bungie's and Magma's never do. 0.19 writes it as zero. Please test.",
+  "Dwarf Heroes now throw uphill and land on the clicked spot (fixed in 0.19, confirmed by Keep; it also fixed alricvso's Smurfa).",
+  "Shadowmines (Light, Dark, Dark Plus, Champions) in Sir Mauriac's Tale do not load: Myth II rejects one small picture in the mushroom scenery, and the game can crash afterwards. Cause found, fix not yet.",
+  "Scenery that should not break, such as trees, rocks, pebbles and mandrake roots, can be blown up (Keep, 0.19). Explosions should only push it about.",
+  "Dwarven Pathfinder's artillery signal grenade: the satchels that rain down do not explode (Keep, 0.19). The same mechanism is behind other air strikes, such as the Bow of Hellfire on Mazzarin's Demise.",
+  "Heals: a special ability used on bare ground wastes a mandrake root (Keep, 0.19; Journeymen, Heron Guards, alricvso's shaman). Bungie's own Journeyman shows how Myth II prevents this.",
+  "alricvso: Soulblighter's ranged attack does not work at all, and Alric's special should work on friend and foe as in The Fallen Lords (Keep, 0.19).",
+  "Water: units passing through it make no ripples and show no reflection (Keep, 0.19). Likely tied to the water tag that is still in The Fallen Lords' format.",
   "Yearling death pieces turn bright teal after being hit (Keep, 0.18). The cause is found: a hit piece throws a stone chunk drawn in the trow's teal colours, and nothing recolours it for forest giants. Which fix is right depends on what The Fallen Lords itself showed, so we are asking before changing anything.",
   "High-resolution units and detail textures (Keep, 19 November): not researched yet. Twice Born Edition and IronDuke's Iron TagSet (high-resolution units) and Jon God's Detail Texture Megapack (detail textures) look like the place to start. If you know how they work, please tell us in Q10.",
   "Water and banks: version 0.9 changed the ground's markings on every map. Keep has checked, and sees no problems with where units can walk.",

@@ -50,24 +50,29 @@ class TestChanges(unittest.TestCase):
             self.assertTrue(c["change"].strip())
 
 
+V = " v" + __version__
+
+
 class TestOutputName(unittest.TestCase):
+    def test_the_name_says_which_converter_version_made_it(self):
+        self.assertEqual("Mauriac for M2" + V, web.output_name("Mauriac.gor"))
     def test_drops_the_extension_and_says_what_it_is_for(self):
-        self.assertEqual("Mauriac for M2", web.output_name("Mauriac.gor"))
-        self.assertEqual("Mauriac for M2", web.output_name("Mauriac.GOR"))
+        self.assertEqual("Mauriac for M2" + V, web.output_name("Mauriac.gor"))
+        self.assertEqual("Mauriac for M2" + V, web.output_name("Mauriac.GOR"))
 
     def test_no_dots_for_a_browser_to_mistake_for_a_file_type(self):
-        self.assertEqual("cbc TFL mauriac for M2", web.output_name("cbc.TFL.mauriac.gor"))
+        self.assertEqual("cbc TFL mauriac for M2" + V, web.output_name("cbc.TFL.mauriac.gor"))
 
     def test_never_longer_than_myth_ii_lists(self):
         name = web.output_name("A very long plugin name that goes on and on.gor")
         self.assertLessEqual(len(name), 32)
-        self.assertTrue(name.endswith(" for M2"))
+        self.assertTrue(name.endswith(" for M2" + V))
 
     def test_characters_a_filename_cannot_hold_are_removed(self):
-        self.assertEqual("ab for M2", web.output_name('a:b?.gor'))
+        self.assertEqual("ab for M2" + V, web.output_name('a:b?.gor'))
 
     def test_an_empty_name_still_gives_a_name(self):
-        self.assertEqual("Converted plugin for M2", web.output_name(".gor"))
+        self.assertEqual("Converted plugin for M2" + V, web.output_name(".gor"))
 
 
 class TestConvert(unittest.TestCase):
@@ -89,10 +94,10 @@ class TestConvert(unittest.TestCase):
 
     def test_writes_a_myth_ii_plugin_named_for_the_upload(self):
         result = self.convert()
-        self.assertEqual("Crows Bridge for M2", result["filename"])
+        self.assertEqual("Crows Bridge for M2" + V, result["filename"])
         written = reader.read(result["path"])
         self.assertTrue(written.is_sb)
-        self.assertEqual("Crows Bridge for M2", written.header.name.rstrip(b"\0").decode())
+        self.assertEqual("Crows Bridge for M2" + V, written.header.name.rstrip(b"\0").decode())
         self.assertEqual(pathlib.Path(result["path"]).stat().st_size, result["bytes"])
 
     def test_lists_the_levels_the_game_will_show(self):

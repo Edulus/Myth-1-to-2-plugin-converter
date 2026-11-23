@@ -6,9 +6,9 @@ committed locally but not yet released). The review covered `src/`, `tests/`,
 made for this document against the stock TFL tags, Myth II's stock tags and
 *Magma - The Fallen Lords v1.9*. What was not reviewed is listed at the end.
 
-## Status (17 November 2026)
+## Status (23 November 2026)
 
-Converter 0.18. The plan below is kept as written on 16 November; this table
+Converter 0.20. The plan below is kept as written on 16 November; this table
 says what has happened to each item since.
 
 | Item | Status |
@@ -16,7 +16,7 @@ says what has happened to each item since.
 | A1 Level-of-detail block | **Done** in 0.14: written as `00f0` words, as Loathing does ([notes §27](../notes/maps.md)). Keep confirmed on 0.16: no black ground after explosions |
 | A2 Types copied unchanged | `amso` **done** (0.13, [§33](../notes/stock-tags.md)). `prgr`, `phys`, `core`, `soun`: no change needed. `medi` **open** (needs a converter). `lpgr` undecided. `ligh`, `wind`: need samples |
 | A3 References in map-action parameters | **Done** 18 November: sound and projectile ids follow the ID map and are counted as references ([notes §14](../notes/maps.md)) |
-| A4 Unit behaviour, per unit | **Done** in substance: per-collection values (0.15, §28), pause and turning animations (0.16, §29), size and attack flags (0.17, §30), heals (0.18, §31), in [notes/units.md](../notes/units.md). Moonwalking confirmed fixed; 0.17 and 0.18 await testing. Still open: per-map lighting, the villager and Shade scale exceptions, hero height (§32) |
+| A4 Unit behaviour, per unit | **Done** in substance: per-collection values (0.15, §28), pause and turning animations (0.16, §29), size and attack flags (0.17, §30), heals (0.18, §31), in [notes/units.md](../notes/units.md). Moonwalking, giant attacks (0.17), heals (0.18) and the Dwarf Hero throw (0.19, §35) confirmed by Keep. Still open: per-map lighting, the villager and Shade scale exceptions, hero height (§32) |
 | A5 One bad tag stops a conversion | **Done** in 0.13 (§33) |
 | B1 Compare command | **Done** 18 November: `python -m src compare --ours ... --ref ...` pairs tags by id (or name), and per type reports identical and resized pairs, the byte ranges that differ systematically, their commonest value changes and, where the layout is declared, the fields. About 2 seconds on Myth II's whole stock. Reproduces the [§33](../notes/stock-tags.md) table |
 | B2 Real-data regression gate | **Done** 18 November: `scripts/regression.py` converts *Sir Mauriac's Tale* with every stock tag and checks every tag's hash against `tests/regression/manifest.json`, plus per-type counts of tags identical to Magma's port. Proved by changing the scale rule (caught: 14 objects). Runs locally, not in CI (no game files there) |
@@ -31,6 +31,10 @@ says what has happened to each item since.
 | E2 Split `src/mesh.py` | Done 18 November: the conversion policy (terrain upsampling, grounding and anchoring, LOD, netgame masks, map-action fix-ups, ID remapping) moved to `src/convert/meshrules.py`; `src/mesh.py` keeps the layouts. |
 | E3 Browser memory | Open; no failures reported |
 | F Documentation | **Done** on 17 November: NOTES.md split by topic into [../notes/](../notes/), superseded passages marked, current rules in [../conversion-rules.md](../conversion-rules.md) |
+| G1 Testers on old versions | **Done** in 0.20: a converted plugin's name ends with the converter version (`src/web.py` `output_name`), the converter page tells testers to remove older copies, and the "Please test now" list asks for the version in every report. Keep had tested a 0.18 conversion as 0.19 (22 November) |
+| G2 Shadowmines does not load | **Open.** Myth II's log: invalid bitmap data, bitmap 29 (8x8, raw) of Sir Mauriac's `mush` collection; the following loads can crash. Our bytes match the source; clearing flag bit 0 did not help. Not in Magma or Unity to compare |
+| G3 Keep's 0.19 reports (22 November) | **Open:** indestructible scenery is destroyed; artillery-signal satchels do not detonate; a heal used on bare ground wastes a root; alricvso Soulblighter's ranged attack and Alric's special; no water ripples or reflections (likely the `medi` item in A2); vTFL as an objective comparison with Unity |
+| G4 Dwarf throw high bits | **Not applied.** Bungie's, Unity's and Magma's dwarf throws carry 0x8000 (dwarf, hero) or 0x4000/0xc000 (pathfinder) that TFL has no bits for. Tried 22 November in answer to an overshoot report that turned out to be from 0.18, reverted: 0.19 already throws correctly (§35) |
 
 ## Summary
 
